@@ -1,9 +1,9 @@
 pipeline {
   agent any
   stages {
-    stage('Build') {
+    stage('ADSCXD') {
       steps {
-        echo 'Hello World'
+        sh 'echo "Hello Abhinav, How are you today ?" '
       }
     }
   }
