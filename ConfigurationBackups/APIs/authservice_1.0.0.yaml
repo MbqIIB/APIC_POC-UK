@@ -5,7 +5,6 @@ info:
   version: 1.0.0
 schemes:
 - https
-host: $(catalog.host)
 basePath: /auth
 consumes:
 - application/xml
@@ -124,9 +123,9 @@ x-ibm-configuration:
                 \   xmlns:str=\"http://exslt.org/strings\" extension-element-prefixes=\"dp
                 apim str\">\r\n    <xsl:import href=\"local:///isp/policy/apim.custom.xsl\"/>\r\n
                 \   <xsl:output omit-xml-declaration=\"yes\" indent=\"yes\" method=\"xml\"/>\r\n
-                \   <xsl:strip-space elements=\"*\"/>\r\n\r\n    <xsl:template match=\"/\">\r\n
-                \       <!--record time in ms just after the invoke policy-->\r\n
-                \       <xsl:variable name=\"clientId\" select=\"apim:getContext('client.app.id')\"/>\r\n
+                \   <xsl:strip-space elements=\"*\"/>\r\n    \r\n    <xsl:template
+                match=\"/\">\r\n        <!--record time in ms just after the invoke
+                policy-->\r\n        <xsl:variable name=\"clientId\" select=\"apim:getContext('client.app.id')\"/>\r\n
                 \       <xsl:call-template name=\"apim:setVariable\">\r\n            <xsl:with-param
                 name=\"varName\" select=\"'message.headers.x-ibm-client-id'\"/>\r\n
                 \           <xsl:with-param name=\"value\" select=\"$clientId\"/>\r\n
@@ -146,9 +145,9 @@ x-ibm-configuration:
                 \       <xsl:call-template name=\"apim:setVariable\">\r\n            <xsl:with-param
                 name=\"varName\" select=\"'policyName'\" />\r\n            <xsl:with-param
                 name=\"value\" select=\"'Invoke-aaaConfig'\" />\r\n        </xsl:call-template>\r\n
-                \       <xsl:aaaConfig>\r\n            <dp:url-open target=\"{$aaaConfigURL}\"\r\n
-                \               http-headers=\"apim:getVariable('message.headers.x-ibm-client-id')\"
-                http-method=\"get\"\r\n            />\r\n        </xsl:aaaConfig>\r\n
+                \       <xsl:variable name=\"aaaConfig\">\r\n            <dp:url-open
+                target=\"{$aaaConfigURL}\"\r\n                http-headers=\"apim:getVariable('message.headers.x-ibm-client-id')\"
+                http-method=\"get\"\r\n            />\r\n        </xsl:variable>\r\n
                 \       <xsl:variable name=\"endTimeMS\" select=\"dp:time-value()\"/>\r\n
                 \       <xsl:variable name=\"timeTakenByPreviousPolicy\"  select=\"($endTimeMS
                 - apim:getVariable('startTimeMS'))\"/>\r\n        <xsl:variable name=\"logString\"
@@ -156,8 +155,16 @@ x-ibm-configuration:
                 := ',$timeTakenByPreviousPolicy,' ms' )\"/>\r\n        <xsl:call-template
                 name=\"apim:setVariable\">\r\n            <xsl:with-param name=\"varName\"
                 select=\"'logString'\" />\r\n            <xsl:with-param name=\"value\"
-                select=\"$logString\" />\r\n        </xsl:call-template>\r\n        <xsl:if
-                test=\"string-length($aaaConfig) != 0\">\r\n            <xsl:variable
+                select=\"$logString\" />\r\n        </xsl:call-template>\r\n        <xsl:choose>\r\n
+                \       <xsl:when test=\"string-length($aaaConfig) = 0\">\r\n            <xsl:call-template
+                name=\"apim:setVariable\">\r\n                <xsl:with-param name=\"varName\"
+                select=\"'errorName'\"/>\r\n                <xsl:with-param name=\"value\"
+                select=\"'ConnectionError'\"/>\r\n            </xsl:call-template>\r\n
+                \           <xsl:call-template name=\"apim:error\">\r\n                <xsl:with-param
+                name=\"httpCode\" select=\"'500'\"/>\r\n                <xsl:with-param
+                name=\"httpReasonPhrase\" select=\"'Internal Error'\"/>\r\n                <xsl:with-param
+                name=\"errorMessage\" select=\"'Connection error'\"/>\r\n            </xsl:call-template>\r\n
+                \           </xsl:when>\r\n            <xsl:otherwise>\r\n            <xsl:variable
                 name=\"aaaConfiguration\" select=\"$aaaConfig\"/>\r\n            <xsl:call-template
                 name=\"apim:setVariable\">\r\n                <xsl:with-param name=\"varName\"
                 select=\"'ipAddressMatched'\"/>\r\n                <xsl:with-param
@@ -250,8 +257,8 @@ x-ibm-configuration:
                 name=\"httpCode\" select=\"'400'\"/>\r\n                                        <xsl:with-param
                 name=\"httpReasonPhrase\"\r\n                                            select=\"'Invalid
                 request'\"/>\r\n                                        <xsl:with-param
-                name=\"errorMessage\"\r\n                                            select=\"concat('Authentication
-                failed.')\"/>\r\n                                    </xsl:call-template>\r\n
+                name=\"errorMessage\"\r\n                                            select=\"'Authentication
+                failed.'\"/>\r\n                                    </xsl:call-template>\r\n
                 \                               </xsl:otherwise>\r\n                            </xsl:choose>\r\n
                 \                       </xsl:if>\r\n                    </xsl:for-each>\r\n
                 \               </xsl:otherwise>\r\n            </xsl:choose>\r\n
@@ -280,18 +287,9 @@ x-ibm-configuration:
                 name=\"apim:error\">\r\n                        <xsl:with-param name=\"httpCode\"
                 select=\"'401'\"/>\r\n                        <xsl:with-param name=\"httpReasonPhrase\"
                 select=\"'Invalid request'\"/>\r\n                        <xsl:with-param
-                name=\"errorMessage\" select=\"concat('Authorization failed.')\"\r\n
-                \                       />\r\n                    </xsl:call-template>\r\n
-                \               </xsl:if>\r\n            </xsl:if>\r\n        </xsl:if>\r\n
-                \       <xsl:if test=\"string-length($aaaConfig) = 0\">\r\n            <xsl:call-template
-                name=\"apim:setVariable\">\r\n                <xsl:with-param name=\"varName\"
-                select=\"'errorName'\"/>\r\n                <xsl:with-param name=\"value\"
-                select=\"'ConnectionError'\"/>\r\n            </xsl:call-template>\r\n
-                \           <xsl:call-template name=\"apim:error\">\r\n                <xsl:with-param
-                name=\"httpCode\" select=\"'500'\"/>\r\n                <xsl:with-param
-                name=\"httpReasonPhrase\" select=\"'Internal Error'\"/>\r\n                <xsl:with-param
-                name=\"errorMessage\" select=\"concat('Connection error')\"/>\r\n
-                \           </xsl:call-template>\r\n        </xsl:if>\r\n    </xsl:template>\r\n</xsl:stylesheet>\r\n"
+                name=\"errorMessage\" select=\"'Authorization failed.'\"/>\r\n                    </xsl:call-template>\r\n
+                \               </xsl:if>\r\n            </xsl:if>\r\n            </xsl:otherwise>\r\n
+                \       </xsl:choose>\r\n    </xsl:template>\r\n</xsl:stylesheet>\r\n"
           - gatewayscript:
               title: GS-CreateRequestforAuthcodeandAccessToken
               version: 1.0.0
@@ -369,9 +367,9 @@ x-ibm-configuration:
                 \   xmlns:str=\"http://exslt.org/strings\" extension-element-prefixes=\"dp
                 apim str\">\r\n    <xsl:import href=\"local:///isp/policy/apim.custom.xsl\"/>\r\n
                 \   <xsl:output omit-xml-declaration=\"yes\" indent=\"yes\" method=\"xml\"/>\r\n
-                \   <xsl:strip-space elements=\"*\"/>\r\n\r\n    <xsl:template match=\"/\">\r\n
-                \       <!--record time in ms just after the invoke policy-->\r\n
-                \       <xsl:variable name=\"clientId\" select=\"apim:getContext('client.app.id')\"/>\r\n
+                \   <xsl:strip-space elements=\"*\"/>\r\n    \r\n    <xsl:template
+                match=\"/\">\r\n        <!--record time in ms just after the invoke
+                policy-->\r\n        <xsl:variable name=\"clientId\" select=\"apim:getContext('client.app.id')\"/>\r\n
                 \       <xsl:call-template name=\"apim:setVariable\">\r\n            <xsl:with-param
                 name=\"varName\" select=\"'message.headers.x-ibm-client-id'\"/>\r\n
                 \           <xsl:with-param name=\"value\" select=\"$clientId\"/>\r\n
@@ -391,9 +389,9 @@ x-ibm-configuration:
                 \       <xsl:call-template name=\"apim:setVariable\">\r\n            <xsl:with-param
                 name=\"varName\" select=\"'policyName'\" />\r\n            <xsl:with-param
                 name=\"value\" select=\"'Invoke-aaaConfig'\" />\r\n        </xsl:call-template>\r\n
-                \       <xsl:aaaConfig>\r\n            <dp:url-open target=\"{$aaaConfigURL}\"\r\n
-                \               http-headers=\"apim:getVariable('message.headers.x-ibm-client-id')\"
-                http-method=\"get\"\r\n            />\r\n        </xsl:aaaConfig>\r\n
+                \       <xsl:variable name=\"aaaConfig\">\r\n            <dp:url-open
+                target=\"{$aaaConfigURL}\"\r\n                http-headers=\"apim:getVariable('message.headers.x-ibm-client-id')\"
+                http-method=\"get\"\r\n            />\r\n        </xsl:variable>\r\n
                 \       <xsl:variable name=\"endTimeMS\" select=\"dp:time-value()\"/>\r\n
                 \       <xsl:variable name=\"timeTakenByPreviousPolicy\"  select=\"($endTimeMS
                 - apim:getVariable('startTimeMS'))\"/>\r\n        <xsl:variable name=\"logString\"
@@ -401,8 +399,16 @@ x-ibm-configuration:
                 := ',$timeTakenByPreviousPolicy,' ms' )\"/>\r\n        <xsl:call-template
                 name=\"apim:setVariable\">\r\n            <xsl:with-param name=\"varName\"
                 select=\"'logString'\" />\r\n            <xsl:with-param name=\"value\"
-                select=\"$logString\" />\r\n        </xsl:call-template>\r\n        <xsl:if
-                test=\"string-length($aaaConfig) != 0\">\r\n            <xsl:variable
+                select=\"$logString\" />\r\n        </xsl:call-template>\r\n        <xsl:choose>\r\n
+                \       <xsl:when test=\"string-length($aaaConfig) = 0\">\r\n            <xsl:call-template
+                name=\"apim:setVariable\">\r\n                <xsl:with-param name=\"varName\"
+                select=\"'errorName'\"/>\r\n                <xsl:with-param name=\"value\"
+                select=\"'ConnectionError'\"/>\r\n            </xsl:call-template>\r\n
+                \           <xsl:call-template name=\"apim:error\">\r\n                <xsl:with-param
+                name=\"httpCode\" select=\"'500'\"/>\r\n                <xsl:with-param
+                name=\"httpReasonPhrase\" select=\"'Internal Error'\"/>\r\n                <xsl:with-param
+                name=\"errorMessage\" select=\"'Connection error'\"/>\r\n            </xsl:call-template>\r\n
+                \           </xsl:when>\r\n            <xsl:otherwise>\r\n            <xsl:variable
                 name=\"aaaConfiguration\" select=\"$aaaConfig\"/>\r\n            <xsl:call-template
                 name=\"apim:setVariable\">\r\n                <xsl:with-param name=\"varName\"
                 select=\"'ipAddressMatched'\"/>\r\n                <xsl:with-param
@@ -495,8 +501,8 @@ x-ibm-configuration:
                 name=\"httpCode\" select=\"'400'\"/>\r\n                                        <xsl:with-param
                 name=\"httpReasonPhrase\"\r\n                                            select=\"'Invalid
                 request'\"/>\r\n                                        <xsl:with-param
-                name=\"errorMessage\"\r\n                                            select=\"concat('Authentication
-                failed.')\"/>\r\n                                    </xsl:call-template>\r\n
+                name=\"errorMessage\"\r\n                                            select=\"'Authentication
+                failed.'\"/>\r\n                                    </xsl:call-template>\r\n
                 \                               </xsl:otherwise>\r\n                            </xsl:choose>\r\n
                 \                       </xsl:if>\r\n                    </xsl:for-each>\r\n
                 \               </xsl:otherwise>\r\n            </xsl:choose>\r\n
@@ -525,18 +531,9 @@ x-ibm-configuration:
                 name=\"apim:error\">\r\n                        <xsl:with-param name=\"httpCode\"
                 select=\"'401'\"/>\r\n                        <xsl:with-param name=\"httpReasonPhrase\"
                 select=\"'Invalid request'\"/>\r\n                        <xsl:with-param
-                name=\"errorMessage\" select=\"concat('Authorization failed.')\"\r\n
-                \                       />\r\n                    </xsl:call-template>\r\n
-                \               </xsl:if>\r\n            </xsl:if>\r\n        </xsl:if>\r\n
-                \       <xsl:if test=\"string-length($aaaConfig) = 0\">\r\n            <xsl:call-template
-                name=\"apim:setVariable\">\r\n                <xsl:with-param name=\"varName\"
-                select=\"'errorName'\"/>\r\n                <xsl:with-param name=\"value\"
-                select=\"'ConnectionError'\"/>\r\n            </xsl:call-template>\r\n
-                \           <xsl:call-template name=\"apim:error\">\r\n                <xsl:with-param
-                name=\"httpCode\" select=\"'500'\"/>\r\n                <xsl:with-param
-                name=\"httpReasonPhrase\" select=\"'Internal Error'\"/>\r\n                <xsl:with-param
-                name=\"errorMessage\" select=\"concat('Connection error')\"/>\r\n
-                \           </xsl:call-template>\r\n        </xsl:if>\r\n    </xsl:template>\r\n</xsl:stylesheet>\r\n"
+                name=\"errorMessage\" select=\"'Authorization failed.'\"/>\r\n                    </xsl:call-template>\r\n
+                \               </xsl:if>\r\n            </xsl:if>\r\n            </xsl:otherwise>\r\n
+                \       </xsl:choose>\r\n    </xsl:template>\r\n</xsl:stylesheet>\r\n"
           - gatewayscript:
               title: GS-CreateRequestforAuthcodeandAccessToken
               version: 1.0.0

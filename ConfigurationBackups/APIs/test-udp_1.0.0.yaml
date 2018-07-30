@@ -5,7 +5,7 @@ info:
   version: 1.0.0
 schemes:
 - https
-basePath: /test
+basePath: /ps
 securityDefinitions:
   clientIdHeader:
     type: apiKey
@@ -26,14 +26,27 @@ x-ibm-configuration:
     certificate: false
   assembly:
     execute:
-    - ip-basicauth-aaa:
+    - fetch-configs:
         version: 1.0.0
-        title: ip-basicauth-aaa
+        title: fetch-configs
+        fileType: xml
+        responseContext: fetchResponse
+        fileName: aaaconfig
+    - xslt:
+        version: 1.0.0
+        title: xslt
+        input: false
+        source: "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"
+          xmlns:apim=\"http://www.ibm.com/apimanagement\" xmlns:dp=\"http://www.datapower.com/extensions\"
+          extension-element-prefixes=\"dp\" exclude-result-prefixes=\"dp apim\"> \n
+          \   <!-- Contains the APIM functions --> \n    <xsl:include href=\"local:///isp/policy/apim.custom.xsl\"
+          />\n    <xsl:template match=\"/\">\n        <xsl:copy-of select=\"dp:variable('var://context/fetch-configs/fetchResponse')\"/>\n
+          \   </xsl:template>\n</xsl:stylesheet>"
     catch: []
   gateway: datapower-gateway
   type: rest
 paths:
-  /checkauthorization:
+  /v1/device/auth:
     get:
       responses:
         "200":
