@@ -27,6 +27,6 @@ plans:
         hard-limit: false
 apis:
   o2apic-authservice:
-    $ref: 20180730\153141\Products\o2apic-authservice_1.0.0.yaml
+    $ref: 20180730\163322\Products\o2apic-authservice_1.0.0.yaml
   o2apic-novum-configapi:
-    $ref: 20180730\153141\Products\o2apic-novum-configapi_1.0.0.yaml
+    $ref: 20180730\163322\Products\o2apic-novum-configapi_1.0.0.yaml
