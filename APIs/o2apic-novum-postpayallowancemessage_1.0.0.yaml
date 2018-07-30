@@ -1,0 +1,675 @@
+swagger: "2.0"
+info:
+  title: o2apic-novum-postpayallowancemessage
+  x-ibm-name: o2apic-novum-postpayallowancemessage
+  version: 1.0.0
+host: $(catalog.host)
+schemes:
+- https
+basePath: /apic
+produces:
+- application/json
+consumes:
+- application/json
+security:
+- clientIdHeader: []
+securityDefinitions:
+  clientIdHeader:
+    type: apiKey
+    name: X-IBM-Client-Id
+    in: header
+x-ibm-configuration:
+  phase: realized
+  testable: true
+  enforced: true
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  cors:
+    enabled: true
+  application-authentication:
+    certificate: false
+  assembly:
+    execute:
+    - activity-log:
+        title: Log:Payload
+        content: payload
+        error-content: payload
+        version: 1.0.0
+    - gatewayscript:
+        version: 1.0.0
+        title: GS:FetchValidationConfig
+        description: This GW Script will create URL to fetch validation config for
+          all apis
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* FetchValidationConfig.js      1.0        Dinesh Tomar                                          04-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will create URL to fetch validation config for all apis                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          var clientId = apim.getvariable('client.app.id');
+          apim.setvariable('message.headers.x-ibm-client-id', clientId);
+          apim.setvariable('message.headers.content-type', 'application/json');
+          //form url for to fetch errorConfig JSON
+          var requestURL = apim.getvariable('request.uri');
+          var orgName = apim.getvariable('api.org.name');
+          var hostName = requestURL.substr(0, requestURL.indexOf(orgName));
+          var catalog = apim.getvariable('env.path');
+          var validationConfigURL = hostName+orgName+'/'+catalog+'/'+'config/validationconfig';
+          apim.setvariable('validationConfigURL', validationConfigURL);
+    - invoke:
+        version: 1.0.0
+        title: Invoke:ValidationConfig
+        timeout: 60
+        verb: GET
+        cache-response: protocol
+        cache-ttl: 900
+        target-url: $(validationConfigURL)
+        output: validationConfig
+    - gatewayscript:
+        version: 1.0.0
+        title: GS:ValidateParams
+        description: This GW Script file will return all API configurations to be
+          used for validating input params
+        source: "/* **********************************************************************************************************
+          */\n/* **********************************************************************************************************
+          */\n/* FileName                   Version    Created By                  Modified
+          By               Date           */\n/* ValidateParams.js          1.0        Dinesh
+          Tomar                                          03-July-2018   */\n/*                                                                                                            */\n/*
+          **********************************************************************************************************
+          */\n/* Purpose: This GW Script file will return all API configurations to
+          be used for validating input params     */\n/*                                                                                                            */\n/*
+          Required params:                                                                                           */\n/*
+          ************************************************************************************************************/\nvar
+          validationConfig = apim.getvariable('validationConfig.body');\nif (validationConfig
+          == null || isJSONEmpty(validationConfig)){\n    apim.setvariable('errorName',
+          'ConnectionError');\n    apim.error('ConnectionError', 500, 'Internal Error',
+          'Connection error');\n}\nelse {\n    var apiName = apim.getvariable('api.name');\n
+          \   var operationName = apim.getvariable('api.operation.path');\n    var
+          apiConfig = validationConfig.apisConfig[apiName][operationName];\n    var
+          paramsConfig = validationConfig.paramsConfig;\n    var requiredPathParams
+          = apiConfig.requiredPathParams;\n    var requiredQueryParams = apiConfig.requiredQueryParams;\n
+          \   var requiredHeaderParams = apiConfig.requiredHeaderParams;\n    validateRequiredParams('headers',
+          requiredHeaderParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredQueryParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredPathParams, paramsConfig);\n}\n\nfunction validateRequiredParams(paramType,
+          requiredParams, paramsConfig){\n    if (requiredParams !== \"\"){\n        var
+          reqParams = requiredParams.split('|');\n        for (var i = 0; i < reqParams.length;
+          i++){\n            var paramConfig = paramsConfig[reqParams[i]];\n            var
+          inputParam = apim.getvariable('request.'+paramType+'.'+reqParams[i]);\n
+          \           var nullValidation = ((inputParam != undefined) || (inputParam
+          != null));\n            if (nullValidation){\n                var dataTypeValidation
+          = true;\n                dataTypeValidation = validateDataType(inputParam,
+          paramConfig);\n                var lengthValidation = true;\n                var
+          allowedValuesValidation = true;\n                if (paramConfig.manLength
+          || paramConfig.maxLength){\n                    lengthValidation = validateLength(inputParam,
+          paramConfig);\n                }\n                if (paramConfig.allowedValues){\n
+          \                   allowedValuesValidation = validateAllowedValues(inputParam,
+          paramConfig);\n                }\n                if (!(dataTypeValidation)
+          || !(lengthValidation) || !(allowedValuesValidation)){\n                    apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                    apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \                   return;\n                }\n                else {\n
+          \                   apim.setvariable('message.headers.'+reqParams[i], inputParam);\n
+          \               }\n            }\n            else {\n                apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \               return;\n            }\n            \n        }\n    }\n}\n\nfunction
+          validateDataType(inputParam, paramConfig){\n    if (paramConfig.dataType
+          == 'number'){\n        return !(isNaN(parseInt(inputParam)));\n    }\n    else
+          if (paramConfig.dataType == 'email'){ \n        if (inputParam.includes('.')
+          && inputParam.includes('@') && (! inputParam.includes(' ')))\n            return
+          true;\n        else\n            return false;\n    }\n    else if (paramConfig.dataType
+          == 'string'){\n        if (inputParam != null && inputParam.length != 0)\n
+          \           return true;\n        else\n            return false;\n    }\n
+          \   else if (paramConfig.dataType == 'version'){\n        if (inputParam
+          == null || inputParam.length == 0)\n            return false;\n        else
+          if (inputParam.includes('.')) {\n            var splittedArray = inputParam.split('.');\n
+          \           var result = true;\n            for (var i = 0; i < splittedArray.length;
+          i++){\n                if (isNaN(parseInt(splittedArray[i]))){\n                    result
+          = false;\n                    return result;\n                }\n            }\n
+          \           return result;\n        }\n        else{\n            return
+          !(isNaN(parseInt(inputParam)));\n        }\n    }\n    else\n        return
+          true;\n}\n\nfunction validateLength(inputParam, paramConfig){\n    var minLength
+          = paramConfig.minLength;\n    var maxLength = paramConfig.maxLength;\n    if
+          ((inputParam.length >= minLength) && (inputParam.length <= maxLength))\n
+          \       return true;\n    else\n        return false;\n}\n\nfunction validateAllowedValues(inputParam,
+          paramConfig){\n    var allowedValues = paramConfig.allowedValues;\n    var
+          allowedValuesArray = allowedValues.split('|');\n    var result = false;\n
+          \   for (var i = 0; i < allowedValuesArray.length; i++){\n        if (allowedValuesArray[i]
+          == inputParam){\n            result = true;\n            return result;\n
+          \       }\n    }\n    return result;\n}\n\nfunction isJSONEmpty(jsonObject)
+          {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+          {\n        if (jsonObject[member] != null) {\n            result = false;\n
+          \       }\n    }\n    return result;\n}"
+    - gatewayscript:
+        title: GS:FetchProperties
+        version: 1.0.0
+        source: |-
+          /* ****************************************************************************************************************** */
+          /* ****************************************************************************************************************** */
+          /* FileName                           Version    Created By                  Modified By               Date           */
+          /* FetchProperties.js                 1.0        Dinesh Tomar                                          14-June-2018   */
+          /*                                                                                                                    */
+          /* ****************************************************************************************************************** */
+          /* Purpose: This GW Script will create URL to fetch properties from config api                                        */
+          /*                                                                                                                    */
+          /* Required params:                                                                                                   */
+          /* ****************************************************************************************************************** */
+          var clientId = apim.getvariable('client.app.id');
+          apim.setvariable('message.headers.x-ibm-client-id', clientId);
+          apim.setvariable('message.headers.content-type',
+          'application/json');
+
+          //form url for to fetch errorConfig JSON
+          var requestURL = apim.getvariable('request.uri');
+          var orgName = apim.getvariable('api.org.name');
+          var hostName = requestURL.substr(0, requestURL.indexOf(orgName));
+          var catalog = apim.getvariable('env.path');
+          var configPropertiesURL =hostName + orgName + '/' + catalog + '/' + 'config/properties';
+          apim.setvariable('configPropertiesURL', configPropertiesURL);
+    - invoke:
+        title: Invoke:PropertiesHandler
+        timeout: 60
+        verb: GET
+        cache-response: protocol
+        cache-ttl: 900
+        version: 1.0.0
+        target-url: $(configPropertiesURL)
+        output: business-property
+    - gatewayscript:
+        title: GS:GetAccessToken
+        version: 1.0.0
+        source: "/* ***********************************************************************************************************************
+          */\r\n/* ***********************************************************************************************************************
+          */\r\n/* FileName                                Version    Created By                  Modified
+          By               Date           */\r\n/* GetAccessToken.js                       1.0
+          \       Dinesh Tomar                                          08-May-2018
+          \   */\r\n/*                                                                                                                         */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n/* Purpose: This GW Script file will create request to get access
+          token for the auth code received                         */\r\n/*                                                                                                                         */\r\n/*
+          Required params:                                                                                                        */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n//load properties configuration from context variable\r\nvar messages
+          = apim.getvariable('business-property.body');\r\n//get all headers\r\nvar
+          clientId = apim.getvariable('client.app.id');\r\nvar msisdn = apim.getvariable('request.parameters.msisdn');\r\nvar
+          authCode = apim.getvariable('request.headers.x-authcode');\r\nvar deviceType
+          = apim.getvariable('request.headers.x-device');\r\nvar userId = apim.getvariable('request.headers.x-user-id');\r\nvar
+          correlator = apim.getvariable('request.headers.x-correlator');\r\nif (messages
+          == null || isJSONEmpty(messages)) {\r\n    apim.setvariable('errorName',
+          'ConnectionError');\r\n    apim.error('ConnectionError', 500, 'Internal
+          Error', 'Connection error');\r\n} else {\r\n    apim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\r\n    apim.setvariable('message.headers.msisdn', msisdn);\r\n
+          \   apim.setvariable('message.headers.x-authcode', authCode);\r\n    var
+          requestURL = apim.getvariable('request.uri');\r\n    var orgName = apim.getvariable('api.org.name');\r\n
+          \   var hostName = requestURL.substr(0, requestURL.indexOf(orgName));\r\n
+          \   var catalog = apim.getvariable('env.path');\r\n    var apicDisambiguationIdURL
+          = hostName+orgName+'/'+catalog+messages.authserver.generateDisambiguationId.apicURI;\r\n
+          \   apim.setvariable('apicDisambiguationIdURL', apicDisambiguationIdURL);\r\n}\r\n\r\nfunction
+          isJSONEmpty(jsonObject) {\r\n    var member;\r\n    var result = true;\r\n
+          \   for (member in jsonObject) {\r\n        if (jsonObject[member] != null)
+          {\r\n            result = false;\r\n        }\r\n    }\r\n    return result;\r\n}"
+    - invoke:
+        title: Invoke:GetDisambiguationId
+        timeout: 60
+        verb: GET
+        cache-response: protocol
+        cache-ttl: 900
+        version: 1.0.0
+        target-url: $(apicDisambiguationIdURL)
+        output: disambiguationId
+    - gatewayscript:
+        title: GS:GetPhoneDetails
+        version: 1.0.0
+        source: "/* ***********************************************************************************************************************
+          */\r\n/* ***********************************************************************************************************************
+          */\r\n/* FileName                                Version    Created By                  Modified
+          By               Date           */\r\n/* GetPhoneDetails.js                      1.0
+          \       Dinesh Tomar                                          08-May-2018
+          \   */\r\n/*                                                                                                                         */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n/* Purpose: This GW Script file will create request to get phone details
+          \                                                  */\r\n/*                                                                                                                         */\r\n/*
+          Required params:                                                                                                        */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n//load properties configuration from context variable\r\nvar messages
+          = apim.getvariable('business-property.body');\r\n//get access token and
+          Disambiguation Id from context variables\r\n//if (isJSONEmpty(apim.getvariable('accessToken.body')))
+          {\r\n //   apim.setvariable('errorName', ConnectionError);\r\n   // apim.error('ConnectionError',
+          500, 'Internal Error', 'Connection error');\r\n//} else \r\nif (isJSONEmpty(apim.getvariable('disambiguationId.body')))
+          {\r\n    apim.setvariable('errorName', ConnectionError);\r\n    apim.error('ConnectionError',
+          500, 'Internal Error', 'Connection error');\r\n} else {\r\n    var accessToken
+          = apim.getvariable('disambiguationId.body').access_token;\r\n    var disambiguationId
+          = apim.getvariable('disambiguationId.body').disambiguation_id;\r\n    apim.setvariable('message.headers.disambiguation-id',
+          disambiguationId);\r\n    apim.setvariable('message.headers.authorization',
+          \"Bearer \" + accessToken);\r\n    var phoneDetailsURL = messages.phoneservice.msisdndetails.uri;;\r\n
+          \   //phoneDetailsURL = phoneDetailsURL.replace('CURRENT', apim.getvariable('message.headers.msisdn'));\r\n
+          \   apim.setvariable('phoneDetailsURL', phoneDetailsURL);\r\n}\r\n\r\nfunction
+          isJSONEmpty(jsonObject) {\r\n    var member;\r\n    var result = true;\r\n
+          \   for (member in jsonObject) {\r\n        if (jsonObject[member] != null)
+          {\r\n            result = false;\r\n        }\r\n    }\r\n    return result;\r\n}"
+    - invoke:
+        target-url: $(phoneDetailsURL)
+        title: Invoke:PhoneService
+        verb: GET
+        stop-on-error:
+        - ConnectionError
+    - json-to-xml:
+        title: json-to-xml
+        root-element-name: xml
+        always-output-root-element: true
+        unnamed-element-name: element
+        version: 1.0.0
+    - gatewayscript:
+        version: 1.0.0
+        title: GS:ValidateParameters
+        source: |-
+          /* ****************************************************************************************************************** */
+          /* ****************************************************************************************************************** */
+          /* FileName                           Version    Created By                  Modified By               Date           */
+          /* ValidateParameters.js              1.0        Dinesh Tomar                                          25-Apr-2018    */
+          /*                                                                                                                    */
+          /* ****************************************************************************************************************** */
+          /* Purpose: This GW Script file will validate request parameters                                                      */
+          /*                                                                                                                    */
+          /* Required params:                                                                                                   */
+          /* ****************************************************************************************************************** */
+          //load properties configuration from context variable
+          var messages = apim.getvariable('business-property.body');
+          //get all input parameters
+          var clientId = apim.getvariable('client.app.id');
+          var msisdn = apim.getvariable('request.parameters.msisdn');
+          //check all headers validation
+          if (msisdn == null || msisdn == undefined || isNaN(parseInt(msisdn))){
+              apim.setvariable('errorName', 'InvalidMsisdn');
+              apim.error('InvalidMsisdn', 500, 'Internal Error', 'Missing or invalid msisdn');
+          }
+          else if (messages == null || isJSONEmpty(messages)){
+              apim.setvariable('errorName', 'ConnectionError');
+              apim.error('ConnectionError', 500, 'Internal Error', 'Connection error');
+          }
+          else {
+              apim.setvariable('message.headers.x-ibm-client-id', clientId);
+              apim.setvariable('message.headers.msisdn', msisdn);
+              apim.setvariable('soaViewAllowanceEndpoint', messages.soa.getViewAllowance_2_0.uri);
+          }
+
+          function isJSONEmpty(jsonObject) {
+              var member;
+              var result = true;
+              for (member in jsonObject) {
+                  if (jsonObject[member] != null) {
+                      result = false;
+                  }
+              }
+              return result;
+          }
+    - xslt:
+        title: XSLT:CreateSOARequest
+        input: false
+        version: 1.0.0
+        source: "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"\r\n
+          \   xmlns:dp=\"http://www.datapower.com/extensions\" xmlns:func=\"http://exslt.org/functions\"\r\n
+          \   xmlns:apim=\"http://www.ibm.com/apimanagement\" extension-element-prefixes=\"dp
+          func apim\">\r\n    <xsl:import href=\"local:///isp/policy/apim.custom.xsl\"/>\r\n
+          \   <xsl:output method=\"xml\" omit-xml-declaration=\"yes\" indent=\"yes\"/>\r\n
+          \   <xsl:strip-space elements=\"*\"/>\r\n    <xsl:template match=\"/\">\r\n
+          \       <xsl:call-template name=\"apim:setVariable\">\r\n            <xsl:with-param
+          name=\"varName\" select=\"'message.headers.content-type'\"/>\r\n            <xsl:with-param
+          name=\"value\" select=\"'application/xml'\"/>\r\n        </xsl:call-template>\r\n
+          \       <xsl:variable name=\"input\" select=\"apim:payloadRead()\"/>\r\n
+          \       <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\r\n
+          \           <soap:Header xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\r\n
+          \               <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">\r\n
+          \                   <wsse:UsernameToken>\r\n                        <wsse:Username>apic_123</wsse:Username>\r\n
+          \                       <wsse:Password>t3st1ng</wsse:Password>\r\n                    </wsse:UsernameToken>\r\n
+          \               </wsse:Security>\r\n            </soap:Header>\r\n            <soapenv:Body>\r\n
+          \               <ns2:getNonDataAllowance_2 xmlns:ns2=\"http://soa.o2.co.uk/viewallowancedata_2\"
+          xmlns:ns3=\"http://soa.o2.co.uk/coredata_1\" xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\r\n
+          \                   <ns2:account>\r\n                        <ns3:accountDetail>\r\n
+          \                           <ns3:billingAccountType>MOBILE</ns3:billingAccountType>\r\n
+          \                           <ns3:accountNumber><xsl:value-of select=\"$input/xml/accountId\"/></ns3:accountNumber>\r\n
+          \                           <ns3:msisdn><xsl:value-of select=\"apim:getContext('request.parameters.msisdn')\"/></ns3:msisdn>\r\n
+          \                       </ns3:accountDetail>\r\n                    </ns2:account>\r\n
+          \               </ns2:getNonDataAllowance_2>\r\n            </soapenv:Body>\r\n
+          \       </soapenv:Envelope>\r\n    </xsl:template>\r\n</xsl:stylesheet>\r\n"
+    - invoke:
+        title: GetNonDataAllowance_2Response:Invoke
+        timeout: 60
+        verb: POST
+        cache-response: protocol
+        cache-ttl: 900
+        version: 1.0.0
+        target-url: $(soaViewAllowanceEndpoint)
+        tls-profile: apim-tls-client-profile:1.0.0
+    - xslt:
+        title: ConvertSoapToXML
+        input: true
+        version: 1.0.0
+        source: |
+          <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp">
+              <xsl:output method="xml" omit-xml-declaration="yes" indent="yes"/>
+              <xsl:strip-space elements="*"/>
+              <xsl:template match="@* | node()">
+                  <xsl:copy>
+                      <xsl:apply-templates select="@* | node()"/>
+                  </xsl:copy>
+              </xsl:template>
+              <xsl:template match="*">
+                  <xsl:element name="{local-name()}">
+                      <xsl:apply-templates select="child::node()"/>
+                  </xsl:element>
+              </xsl:template>
+          </xsl:stylesheet>
+    - xml-to-json:
+        title: xml-to-json
+        version: 1.0.0
+    - gatewayscript:
+        title: GS:MessageAllowanceResponse
+        version: 1.0.0
+        source: "/* ***********************************************************************************************************************
+          */\r\n/* ***********************************************************************************************************************
+          */\r\n/* FileName                                Version         Created
+          By                  Modified By                Date     */\r\n/* GetAllowanceMessage.js
+          \                  1.0          Shalini Mallick                                      17-May-2018
+          \ */\r\n/*                                                                                                                         */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n/* Purpose: This GW Script file will create response for Message allowance
+          \                                                */\r\n/*                                                                                                                         */\r\n/*
+          \                                                                                                                        */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n\r\n//set content type\r\napim.setvariable('message.headers.content-type',
+          'application/json');\r\n// loading variables\r\nvar messages = apim.getvariable('business-property.body');\r\nvar
+          AllowanceUnit = 'MESSAGE';\r\n//fetching values from properties file and
+          adding them to final response\r\nvar userInfoMessage = messages.msg.textallowance.unrestricted;\r\nvar
+          footerMessage = messages.msg.account.footer;\r\nvar allowanceFooterMessage
+          = messages.msg.allowance.footer;\r\nvar thresholdPercent = messages.messagesallowance.threshold;\r\nvar
+          NonDataAllowancesResponse = {\r\n};\r\napim.readInputAsJSON(function (error,
+          soaResponseJSON) {\r\n    if (error) {\r\n        throw error;\r\n    }
+          else {\r\n        var Allowances =[];\r\n        var allAllowances = soaResponseJSON.Envelope.Body.getNonDataAllowance_2Response.msisdnLevelNonDataAllowances;\r\n
+          \       if (ifJsonHasKey(allAllowances, 'allowances')) {\r\n            var
+          msisdnLevelNonDataAllowances = soaResponseJSON.Envelope.Body.getNonDataAllowance_2Response.msisdnLevelNonDataAllowances.allowances;\r\n
+          \           if (!(isJSONEmpty(msisdnLevelNonDataAllowances.allowance)) &&
+          isNaN(parseInt(msisdnLevelNonDataAllowances.allowance.length))) {\r\n                var
+          allowance =[];\r\n                Allowances.allowance = allowance;\r\n
+          \               Allowances.allowance.push(msisdnLevelNonDataAllowances.allowance);\r\n
+          \           } else if (msisdnLevelNonDataAllowances.allowance.length > 0)
+          {\r\n                Allowances = msisdnLevelNonDataAllowances;\r\n            }\r\n
+          \           if (! isJSONEmpty(msisdnLevelNonDataAllowances) && ! isJSONEmpty(msisdnLevelNonDataAllowances.allowance))
+          {\r\n                //if allowanceUnit exist in soaResponseJSON\r\n                /*for
+          (var i = 0; i < allowances.allowance.length; i++) {\r\n                if
+          (ifJsonHasKey(allowances.allowance[i], 'allowanceUnit')) {\r\n                if
+          (allowances.allowance[i].allowanceUnit.$.length != 0) {\r\n                var
+          filteredAllowances = filterAllowances(allowances);\r\n                }\r\n
+          \               }\r\n                }*/\r\n                var filteredAllowances
+          = filterAllowances(Allowances);\r\n                //if orderIndex exist
+          in soaResponseJSON\r\n                for (var i = 0; i < Allowances.allowance.length;
+          i++) {\r\n                    if (ifJsonHasKey(Allowances.allowance[i],
+          'orderIndex')) {\r\n                        //Sorting Allowances with respect
+          to filteredAllowances\r\n                        var sortedAllowances =
+          filteredAllowances.sort(function (o1, o2) {\r\n                            if
+          (isNaN(parseFloat(o1.orderIndex.$))) {\r\n                                return
+          parseFloat(o2.orderIndex.$) - Number.MAX_VALUE;\r\n                            }
+          else if (isNaN(parseFloat(o2.orderIndex.$))) {\r\n                                return
+          Number.MAX_VALUE - parseFloat(o1.orderIndex.$);\r\n                            }
+          else {\r\n                                return parseFloat(o2.orderIndex.$)
+          - parseFloat(o1.orderIndex.$);\r\n                            }\r\n                        });\r\n
+          \                   }\r\n                }\r\n                var MessagesAllowance
+          = messagesAllowance(sortedAllowances);\r\n                //set all the
+          values to final response\r\n                NonDataAllowancesResponse.allowances
+          = MessagesAllowance;\r\n                NonDataAllowancesResponse.footer_message
+          = footerMessage;\r\n                NonDataAllowancesResponse.allowance_footer_message
+          = allowanceFooterMessage;\r\n                NonDataAllowancesResponse.threshold_percentage
+          = thresholdPercent;\r\n            }\r\n        } else {\r\n            NonDataAllowancesResponse.allowances
+          =[];\r\n            NonDataAllowancesResponse.footer_message = footerMessage;\r\n
+          \           NonDataAllowancesResponse.allowance_footer_message = allowanceFooterMessage;\r\n
+          \           NonDataAllowancesResponse.threshold_percentage = thresholdPercent;\r\n
+          \       }\r\n        apim.setvariable('message.body', NonDataAllowancesResponse);\r\n
+          \   }\r\n});\r\n//function to create messageAllowance\r\nfunction messagesAllowance(soaAllowance)
+          {\r\n    var UNRESTRICTED = \"UNRES\";\r\n    var MessageAllowance =[];\r\n
+          \   for (var i = 0; i < soaAllowance.length; i++) {\r\n        var MessageallowanceDetails
+          = {\r\n        };\r\n        if (ifJsonHasKey(soaAllowance[i], 'longDescription'))
+          {\r\n            if (soaAllowance[i].longDescription.$.length != 0) {\r\n
+          \               MessageallowanceDetails.description = soaAllowance[i].longDescription.$;\r\n
+          \           }\r\n        }\r\n        if (ifJsonHasKey(soaAllowance[i],
+          'isUnlimited')) {\r\n            if (soaAllowance[i].isUnlimited.$.length
+          != 0) {\r\n                MessageallowanceDetails.unlimited = soaAllowance[i].isUnlimited.$;\r\n
+          \           }\r\n        }\r\n        if (ifJsonHasKey(soaAllowance[i],
+          'isRestricted')) {\r\n            if (soaAllowance[i].isRestricted.$.length
+          != 0) {\r\n                MessageallowanceDetails.restricted = soaAllowance[i].isRestricted.$;\r\n
+          \           }\r\n        }\r\n        \r\n        //if restrictionCategory
+          exist in soaResponseJSON\r\n        if (ifJsonHasKey(soaAllowance[i], 'restrictionCategory'))
+          {\r\n            if (soaAllowance[i].restrictionCategory.$ == UNRESTRICTED)
+          {\r\n                MessageallowanceDetails.usage_info_message = userInfoMessage;\r\n
+          \           } else {\r\n                MessageallowanceDetails.usage_info_message
+          = null;\r\n            }\r\n        }\r\n        if (isJSONEmpty(soaAllowance[i].allowanceUsageSummary))
+          {\r\n            MessageallowanceDetails.starting_balance = 'unlimited';\r\n
+          \           MessageallowanceDetails.allowance_used = null;\r\n            MessageallowanceDetails.allowance_remaining
+          = null;\r\n        } else {\r\n            if (ifJsonHasKey(soaAllowance[i].allowanceUsageSummary,
+          'startingBalance')) {\r\n                if (soaAllowance[i].allowanceUsageSummary.startingBalance.$.length
+          == 0) {\r\n                    MessageallowanceDetails.starting_balance
+          = -1;\r\n                } else {\r\n                    MessageallowanceDetails.starting_balance
+          = soaAllowance[i].allowanceUsageSummary.startingBalance.$;\r\n                }\r\n
+          \           }\r\n            if (ifJsonHasKey(soaAllowance[i].allowanceUsageSummary,
+          'allowanceUsed')) {\r\n                if (soaAllowance[i].allowanceUsageSummary.allowanceUsed.$.length
+          == 0) {\r\n                    MessageallowanceDetails.allowance_used =
+          null;\r\n                } else {\r\n                    MessageallowanceDetails.allowance_used
+          = soaAllowance[i].allowanceUsageSummary.allowanceUsed.$;\r\n                }\r\n
+          \           }\r\n            if (ifJsonHasKey(soaAllowance[i].allowanceUsageSummary,
+          'allowanceRemaining')) {\r\n                if (soaAllowance[i].allowanceUsageSummary.allowanceRemaining.$.length
+          == 0) {\r\n                    MessageallowanceDetails.allowance_remaining
+          = null;\r\n                } else {\r\n                    MessageallowanceDetails.allowance_remaining
+          = soaAllowance[i].allowanceUsageSummary.allowanceRemaining.$;\r\n                }\r\n
+          \           }\r\n        }\r\n        \r\n        if (isJSONEmpty(soaAllowance[i].allowanceUsageSummary)
+          || soaAllowance[i].allowanceUsageSummary.allowanceUsed.$ <= 0 || soaAllowance[i].allowanceUsageSummary.startingBalance.$
+          <= 0) {\r\n            MessageallowanceDetails.percent_allowance_used =
+          0;\r\n        } else if (soaAllowance[i].allowanceUsageSummary.allowanceUsed.$
+          >= soaAllowance[i].allowanceUsageSummary.startingBalance.$) {\r\n            MessageallowanceDetails.percent_allowance_used
+          = 100;\r\n        } else {\r\n            MessageallowanceDetails.percent_allowance_used
+          = (soaAllowance[i].allowanceUsageSummary.allowanceUsed.$ / soaAllowance[i].allowanceUsageSummary.startingBalance.$)
+          * 100;;\r\n        }\r\n        \r\n        \r\n        if (ifJsonHasKey(soaAllowance[i],
+          'expiryDate')) {\r\n            if (soaAllowance[i].expiryDate.$.length
+          != 0) {\r\n                MessageallowanceDetails.expiry_date = formatDate(soaAllowance[i].expiryDate.$);\r\n
+          \           }\r\n        }\r\n        //function to convert date in dd/mm/year
+          format\r\n        function formatDate(date) {\r\n            var year =
+          date.substr(0, 4);\r\n            var month = date.substr(5, 2);\r\n            var
+          day = date.substr(8, 2);\r\n            return day + \".\" + month + \".\"
+          + year;\r\n        }\r\n        \r\n        if (ifJsonHasKey(soaAllowance[i],
+          'restrictionCategory')) {\r\n            if (soaAllowance[i].restrictionCategory.$.length
+          != 0) {\r\n                MessageallowanceDetails.restriction_category
+          = soaAllowance[i].restrictionCategory.$;\r\n            }\r\n        }\r\n
+          \       \r\n        \r\n        MessageAllowance.push(MessageallowanceDetails);\r\n
+          \   }\r\n    return MessageAllowance;\r\n}\r\n//filtering Allowances with
+          respect to AllowanceUnit\r\nfunction filterAllowances(Allowances) {\r\n
+          \   var filterAllowances =[];\r\n    for (var i = 0; i < Allowances.allowance.length;
+          i++) {\r\n        if (Allowances.allowance[i].allowanceUnit.$ == AllowanceUnit)
+          {\r\n            filterAllowances.push(Allowances.allowance[i]);\r\n        }\r\n
+          \   }\r\n    return filterAllowances;\r\n}\r\n//function to check if json
+          object is empty or not\r\nfunction isJSONEmpty(jsonObject) {\r\n    var
+          member;\r\n    var result = true;\r\n    for (member in jsonObject) {\r\n
+          \       if (jsonObject[member] != null) {\r\n            result = false;\r\n
+          \       }\r\n    }\r\n    return result;\r\n}\r\n//function to check if
+          a certain field is present in json object/ json array\r\nfunction ifJsonHasKey(jsonObject,
+          key) {\r\n    var member;\r\n    var result = false;\r\n    for (member
+          in jsonObject) {\r\n        if (member == key) {\r\n            result =
+          true;\r\n        }\r\n    }\r\n    return result;\r\n}"
+    catch:
+    - errors:
+      - InvalidMsisdn
+      - ConnectionError
+      - SOAPError
+      - OperationError
+      - InvalidAuthCode
+      - InvalidDeviceType
+      - InvalidClientId
+      - InvalidCorrelator
+      execute:
+      - gatewayscript:
+          title: GS:ErrorHandling
+          version: 1.0.0
+          source: |-
+            /* ****************************************************************************************************************** */
+            /* ****************************************************************************************************************** */
+            /* FileName                           Version    Created By                  Modified By               Date           */
+            /* Errorhandling.js                   1.0        Dinesh Tomar                                          07-May-2018    */
+            /*                                                                                                                    */
+            /* ****************************************************************************************************************** */
+            /* Purpose: This GW Script file will read error config for the catch block error name and will set the necessary      */
+            /*          params like status code, reason phrase and will return the error json                                     */
+            /* Required params: errorName                                                                                         */
+            /* ****************************************************************************************************************** */
+            var urlOpen = require('urlopen');
+            //form url for to fetch errorConfig JSON
+            var requestURL = apim.getvariable('request.uri');
+            var orgName = apim.getvariable('api.org.name');
+            var hostName = requestURL.substr(0, requestURL.indexOf(orgName));
+            var catalog = apim.getvariable('env.path');
+            var errorConfigURL = hostName+orgName+'/'+catalog+'/'+'config/errorconfig';
+            var clientId = apim.getvariable('client.app.id');
+            var errorConfigURLOptions = {
+                target: errorConfigURL,
+                sslClientProfile: 'api-sslcli-all',
+                headers: {'x-ibm-client-id': clientId, 'content-type': 'application/json' }
+            };
+            //fetch errorName and errorConfig JSON from context variables
+            urlOpen.open(errorConfigURLOptions, function (error, response) {
+                if (error) {
+                    throw error;
+                } else {
+                    response.readAsJSON(function (error, errorConfigJSON) {
+                        if (error) {
+                            throw error;
+                        } else {
+                            var errorName = apim.getvariable('errorName');
+                            if (errorName == null && apim.getvariable('message.status.code') == null) {
+                                errorName = 'default';
+                            } else if (errorName == null && apim.getvariable('message.status.reason') != null && apim.getvariable('message.status.reason').startsWith('APIC:') ) {
+                                errorName = 'default';
+                                apim.setvariable('message.status.code', apim.getvariable('message.status.code'));
+                                apim.setvariable('message.status.reason', apim.getvariable('message.status.reason'));
+                                apim.setvariable('message.body', apim.getvariable('message.body'));
+                            } else {
+                                //fetch specific block from error config JSON
+                                if (! isJSONEmpty(errorConfigJSON)) {
+                                    var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];
+                                    var statusCode = errorDetails.statusCode;
+                                    var reasonPhrase = errorDetails.reasonPhrase;
+                                    var errorMessage = errorDetails.errorMessage;
+                                    apim.setvariable('message.headers.content-type', 'application/json');
+                                    apim.setvariable('message.status.code', statusCode);
+                                    apim.setvariable('message.status.reason', reasonPhrase);
+                                    apim.setvariable('message.body', errorMessage);
+                                }
+                                //else block executes in case error config file is not loaded. it will set a default error message
+                                else {
+                                    apim.setvariable('message.headers.content-type', 'application/json');
+                                    apim.setvariable('message.status.code', 500);
+                                    apim.setvariable('message.status.reason', 'Internal Server Error');
+                                    apim.setvariable('message.body', {
+                                        "error": "Something went wrong"
+                                    });
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            //below function checks if json object is null or not
+            function isJSONEmpty(jsonObject) {
+                var member;
+                var result = true;
+                for (member in jsonObject) {
+                    if (jsonObject[member] != null) {
+                        result = false;
+                    }
+                }
+                return result;
+            }
+  gateway: datapower-gateway
+  type: rest
+tags: []
+definitions:
+  Allowance:
+    type: object
+    properties:
+      starting_balance:
+        type: integer
+        format: int32
+      allowance_used:
+        type: integer
+        format: int32
+      allowance_remaining:
+        type: integer
+        format: int32
+      percent_allowance_used:
+        type: number
+        format: double
+      expiry_date:
+        type: string
+        format: date-time
+      description:
+        type: string
+      restriction_category:
+        type: string
+      unlimited:
+        type: boolean
+      restricted:
+        type: boolean
+  NonDataAllowancesResponse:
+    type: object
+    properties:
+      footerMessage:
+        type: string
+      allowanceFooterMessage:
+        type: string
+      thresholdPercentage:
+        type: integer
+        format: int32
+      allowances:
+        type: array
+        items:
+          $ref: '#/definitions/Allowance'
+paths:
+  /{msisdn}/allowance/messages:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            $ref: '#/definitions/NonDataAllowancesResponse'
+      parameters:
+      - name: msisdn
+        format: int32
+        type: integer
+        in: path
+        required: true
+      - name: x-authcode
+        type: string
+        in: header
+        required: true
+      - name: x-device
+        type: string
+        in: header
+        required: true
+      - name: x-user-id
+        type: string
+        in: header
+        required: true
+      - name: x-correlator
+        type: string
+        in: header
+        required: true
+      - name: x-client-id
+        type: string
+        in: header
+      consumes: []
+      produces: []

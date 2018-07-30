@@ -1,0 +1,1660 @@
+swagger: "2.0"
+info:
+  title: o2apic-novum-configapi
+  x-ibm-name: o2apic-novum-configapi
+  version: 1.0.0
+host: $(catalog.host)
+schemes:
+- https
+basePath: /config
+produces:
+- application/xml
+- application/json
+consumes:
+- application/xml
+- application/json
+security:
+- clientIdHeader: []
+securityDefinitions:
+  clientIdHeader:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+x-ibm-configuration:
+  phase: realized
+  testable: true
+  enforced: true
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  cors:
+    enabled: true
+  application-authentication:
+    certificate: false
+  assembly:
+    execute:
+    - activity-log:
+        title: Log:Payload
+        content: payload
+        error-content: payload
+        version: 1.0.0
+    - operation-switch:
+        title: operation-switch
+        case:
+        - operations:
+          - verb: get
+            path: /validationconfig
+          execute:
+          - gatewayscript:
+              version: 1.0.0
+              title: GS:GetValidationConfig
+              source: "/* ****************************************************************************************************************
+                */\r\n/* ****************************************************************************************************************
+                */\r\n/* FileName                         Version    Created By                  Modified
+                By               Date           */\r\n/* GetValidationConfig.js           1.0
+                \       Dinesh Tomar                                          03-July-2018
+                \  */\r\n/*                                                                                                                  */\r\n/*
+                ****************************************************************************************************************
+                */\r\n/* Purpose: This GW Script file will return all APIs config
+                required for input parameters validation                */\r\n/*                                                                                                                  */\r\n/*
+                Required params:                                                                                                 */\r\n/*
+                ****************************************************************************************************************
+                */\r\nvar validationConfig = {\r\n    \"apisConfig\": {\r\n        \"o2apic-authservice\":
+                {\r\n            \"/getaccesstoken\": {\r\n                \"requiredPathParams\":
+                \"\",\r\n                \"requiredQueryParams\": \"\",\r\n                \"requiredHeaderParams\":
+                \"x-authcode\"\r\n            },\r\n            \"/getconsolidatedauth\":
+                {\r\n                \"requiredPathParams\": \"\",\r\n                \"requiredQueryParams\":
+                \"\",\r\n                \"requiredHeaderParams\": \"msisdn|x-authcode|x-device\"\r\n
+                \           },\r\n            \"/getdisambiguationid\": {\r\n                \"requiredPathParams\":
+                \"\",\r\n                \"requiredQueryParams\": \"\",\r\n                \"requiredHeaderParams\":
+                \"msisdn|x-authcode\"\r\n            }\r\n        },\r\n        \"authapi\":
+                {\r\n            \"/v1/device/auth\": {\r\n                \"requiredPathParams\":
+                \"\",\r\n                \"requiredQueryParams\": \"user_id|device_id\",\r\n
+                \               \"requiredHeaderParams\": \"authorization\"\r\n            },\r\n
+                \           \"/v1/token\": {\r\n                \"requiredPathParams\":
+                \"\",\r\n                \"requiredQueryParams\": \"\",\r\n                \"requiredHeaderParams\":
+                \"x-authcode|authorization\"\r\n            },\r\n            \"/v1/person/CURRENT/asset\":
+                {\r\n                \"requiredPathParams\": \"\",\r\n                \"requiredQueryParams\":
+                \"\",\r\n                \"requiredHeaderParams\": \"authorization\"\r\n
+                \           },\r\n            \"/v1/auth/select\": {\r\n                \"requiredPathParams\":
+                \"\",\r\n                \"requiredQueryParams\": \"\",\r\n                \"requiredHeaderParams\":
+                \"msisdn|authorization\"\r\n            },\r\n            \"/phone/consumer/CURRENT/paym/bill/billedcharges\":
+                {\r\n                \"requiredPathParams\": \"\",\r\n                \"requiredQueryParams\":
+                \"\",\r\n                \"requiredHeaderParams\": \"msisdn|x-authcode\"\r\n
+                \           },\r\n            \"/phone/consumer/CURRENT/paym/billedcharges/recommendation\":
+                {\r\n                \"requiredPathParams\": \"\",\r\n                \"requiredQueryParams\":
+                \"\",\r\n                \"requiredHeaderParams\": \"msisdn|x-authcode\"\r\n
+                \           },\r\n            \"/phone/consumer/CURRENT/paym/bill/recentcharges\":
+                {\r\n                \"requiredPathParams\": \"\",\r\n                \"requiredQueryParams\":
+                \"\",\r\n                \"requiredHeaderParams\": \"msisdn|x-authcode\"\r\n
+                \           },\r\n            \"/phone/consumer/CURRENT/paym/bill/previousbills\":
+                {\r\n                \"requiredPathParams\": \"\",\r\n                \"requiredQueryParams\":
+                \"\",\r\n                \"requiredHeaderParams\": \"msisdn|x-authcode\"\r\n
+                \           },\r\n            \"/phone/consumer/CURRENT/paym\": {\r\n
+                \               \"requiredPathParams\": \"\",\r\n                \"requiredQueryParams\":
+                \"\",\r\n                \"requiredHeaderParams\": \"msisdn|x-authcode\"\r\n
+                \           },\r\n            \"/phone/consumer/CURRENT/paym/cca/phoneplan\":
+                {\r\n                \"requiredPathParams\": \"\",\r\n                \"requiredQueryParams\":
+                \"\",\r\n                \"requiredHeaderParams\": \"msisdn|x-authcode\"\r\n
+                \           },\r\n            \"/phone/consumer/CURRENT/paym/upgradeoptionsandpromotions\":
+                {\r\n                \"requiredPathParams\": \"\",\r\n                \"requiredQueryParams\":
+                \"\",\r\n                \"requiredHeaderParams\": \"msisdn|x-authcode\"\r\n
+                \           },\r\n            \"/phone/v2/consumer/CURRENT/paym/bill/profile\":
+                {\r\n                \"requiredPathParams\": \"\",\r\n                \"requiredQueryParams\":
+                \"\",\r\n                \"requiredHeaderParams\": \"msisdn|x-authcode\"\r\n
+                \           },\r\n            \"/v1/auth/tac/issue\": {\r\n                \"requiredPathParams\":
+                \"\",\r\n                \"requiredQueryParams\": \"\",\r\n                \"requiredHeaderParams\":
+                \"msisdn|x-authcode|x-device\"\r\n            }\r\n        },\r\n
+                \       \"o2apic-novum-v2verify\": {\"/v2/verify\": {\r\n            \"requiredPathParams\":
+                \"\",\r\n            \"requiredQueryParams\": \"\",\r\n            \"requiredHeaderParams\":
+                \"x-authcode|x-appversion|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-postpayboltons\": {\"/{msisdn}/postpay/boltons\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-postpaytariff\": {\"/{msisdn}/postpay/tariff\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-postpaycurrentandpendingtariff\":
+                {\"/{msisdn}/postpay/currentandpendingtariff\": {\r\n            \"requiredPathParams\":
+                \"msisdn\",\r\n            \"requiredQueryParams\": \"\",\r\n            \"requiredHeaderParams\":
+                \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n        }},\r\n
+                \       \"o2apic-novum-upgradesandpromotions\": {\"/{msisdn}/postpay/upgradesandpromotions\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-postpaytariffdetails\": {\"/{msisdn}/postpay/tariffdetails\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"tariffname|productlabel\",\r\n            \"requiredHeaderParams\":
+                \"x-device|x-user-id|x-client-id|x-correlator\"\r\n        }},\r\n
+                \       \"o2apic-novum-postpayallowanceminutes\": {\"/{msisdn}/postpay/allowance/minutes\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-postpaypreviousbills\": {\"/{msisdn}/postpay/bill/previousbills\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-postpayallowancemessage\": {\"/{msisdn}/allowance/messages\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-postpaybillccaphoneplan\": {\"/{msisdn}/bill/cca/phoneplan\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-postpayallowancedata\": {\"/{msisdn}/allowance/data\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-postpaybillprofile\": {\"/{msisdn}/bill/profile\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-userprofile\": {\"/userprofile/v1/users/{UID}\":
+                {\r\n            \"requiredPathParams\": \"UID\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-postpaybilledcharges\": {\"/{msisdn}/postpay/bill/billedcharges\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }},\r\n        \"o2apic-novum-postpayrecentcharges\": {\"/{msisdn}/postpay/bill/recentcharges\":
+                {\r\n            \"requiredPathParams\": \"msisdn\",\r\n            \"requiredQueryParams\":
+                \"\",\r\n            \"requiredHeaderParams\": \"x-authcode|x-device|x-user-id|x-client-id|x-correlator\"\r\n
+                \       }}\r\n    },\r\n    \"paramsConfig\": {\r\n        \"msisdn\":
+                {\r\n            \"dataType\": \"number\",\r\n            \"minLength\":
+                \"12\",\r\n            \"maxLength\": \"12\",\r\n            \"validationErrorName\":
+                \"InvalidMsisdn\",\r\n            \"validationErrorCode\": \"400\",\r\n
+                \           \"validationErrorMessage\": \"Missing or invalid msisdn\"\r\n
+                \       },\r\n        \"UID\": {\r\n            \"dataType\": \"number\",\r\n
+                \           \"validationErrorName\": \"InvalidUID\",\r\n            \"validationErrorCode\":
+                \"400\",\r\n            \"validationErrorMessage\": \"Missing or invalid
+                UID\"\r\n        },\r\n        \"tariffname\": {\r\n            \"dataType\":
+                \"string\",\r\n            \"validationErrorName\": \"InvalidTariff\",\r\n
+                \           \"validationErrorCode\": \"400\",\r\n            \"validationErrorMessage\":
+                \"Missing or invalid tariff\"\r\n        },\r\n        \"productlabel\":
+                {\r\n            \"dataType\": \"string\",\r\n            \"validationErrorName\":
+                \"InvalidProductLabel\",\r\n            \"validationErrorCode\": \"400\",\r\n
+                \           \"validationErrorMessage\": \"Missing or invalid product
+                label\"\r\n        },\r\n        \"x-authcode\": {\r\n            \"dataType\":
+                \"string\",\r\n            \"minLength\": \"1\",\r\n            \"maxLength\":
+                \"1000\",\r\n            \"validationErrorName\": \"InvalidAuthCode\",\r\n
+                \           \"validationErrorCode\": \"400\",\r\n            \"validationErrorMessage\":
+                \"Missing or invalid authcode\"\r\n        },\r\n        \"x-appversion\":
+                {\r\n            \"dataType\": \"version\",\r\n            \"validationErrorName\":
+                \"InvalidAppVersion\",\r\n            \"validationErrorCode\": \"400\",\r\n
+                \           \"validationErrorMessage\": \"Missing or invalid appversion\"\r\n
+                \       },\r\n        \"x-device\": {\r\n            \"dataType\":
+                \"string\",\r\n            \"allowedValues\": \"iphone|android|windows|tablet\",\r\n
+                \           \"validationErrorName\": \"InvalidDeviceType\",\r\n            \"validationErrorCode\":
+                \"400\",\r\n            \"validationErrorMessage\": \"Missing or invalid
+                device type\"\r\n        },\r\n        \"device_id\": {\r\n            \"dataType\":
+                \"string\",\r\n            \"allowedValues\": \"iphone|android|windows|tablet\",\r\n
+                \           \"validationErrorName\": \"InvalidDeviceType\",\r\n            \"validationErrorCode\":
+                \"400\",\r\n            \"validationErrorMessage\": \"Missing or invalid
+                device type\"\r\n        },\r\n        \"x-user-id\": {\r\n            \"dataType\":
+                \"string\",\r\n            \"validationErrorName\": \"InvalidUserId\",\r\n
+                \           \"validationErrorCode\": \"400\",\r\n            \"validationErrorMessage\":
+                \"Missing or invalid user id\"\r\n        },\r\n        \"user_id\":
+                {\r\n            \"dataType\": \"string\",\r\n            \"validationErrorName\":
+                \"InvalidUserId\",\r\n            \"validationErrorCode\": \"400\",\r\n
+                \           \"validationErrorMessage\": \"Missing or invalid user
+                id\"\r\n        },\r\n        \"x-client-id\": {\r\n            \"dataType\":
+                \"string\",\r\n            \"validationErrorName\": \"InvalidClientId\",\r\n
+                \           \"validationErrorCode\": \"400\",\r\n            \"validationErrorMessage\":
+                \"Missing or invalid client id\"\r\n        },\r\n        \"x-correlator\":
+                {\r\n            \"dataType\": \"string\",\r\n            \"validationErrorName\":
+                \"InvalidCorrelator\",\r\n            \"validationErrorCode\": \"400\",\r\n
+                \           \"validationErrorMessage\": \"Missing or invalid correlator\"\r\n
+                \       },\r\n        \"authorization\": {\r\n            \"dataType\":
+                \"string\",\r\n            \"validationErrorName\": \"InvalidAuthorization\",\r\n
+                \           \"validationErrorCode\": \"400\",\r\n            \"validationErrorMessage\":
+                \"Missing or invalid authorization\"\r\n        }\r\n    }\r\n};\r\n\r\napim.setvariable('message.body',
+                validationConfig);"
+              description: 'This GW Script file will return all APIs config required
+                for input parameters validation            '
+        - operations:
+          - verb: get
+            path: /properties
+          execute:
+          - gatewayscript:
+              title: GS:GetProperties
+              version: 1.0.0
+              description: Returns all properties to be used in different APIs
+              source: "/* ****************************************************************************************************************
+                */\n/* ****************************************************************************************************************
+                */\n/* FileName                         Version    Created By                  Modified
+                By               Date           */\n/* GetProperties.js                 1.0
+                \       Dinesh Tomar                                          14-June-2018
+                \  */\n/*                                                                                                                  */\n/*
+                ****************************************************************************************************************
+                */\n/* Purpose: This GW Script file will return all properties to
+                be used in different APIs                             */\n/*                                                                                                                  */\n/*
+                Required params:                                                                                                 */\n/*
+                ****************************************************************************************************************
+                */\nvar properties = {\n    \"upgradelegacy\": {\n        \"not_yet_eligible\":
+                {\n            \"short\": \"Want a shiny new phone? Upgrade now for
+                #$cost\"\n        },\n        \"eligible\": {\n            \"short\":
+                \"Upgrade on us today\"\n        },\n        \"none\": {\n            \"in_treatment\":
+                {\n                \"long\": \"You\\u2019ve got an unpaid bill. You\\u2019ll
+                be able to sort it out in [My O2]({{links.payment}}). Then pop back
+                here to upgrade.\",\n                \"short\": \"You\\u2019ve got
+                an unpaid bill. You\\u2019ll be able to sort it out in My O2. Then
+                pop back here to upgrade.\"\n            },\n            \"subheader\":
+                \"Upgrade on us today\",\n            \"button\": \"Take this offer
+                and upgrade\",\n            \"alert\": \"Upgrade on us today\"\n        }\n
+                \   },\n    \"upgrade\": {\n        \"not_yet_eligible\": {\n            \"short\":
+                \"Want a shiny new phone? Upgrade now for #$cost\"\n        },\n        \"eligible\":
+                {\n            \"short\": \"Upgrade on us today.\"\n        },\n        \"none\":
+                {\n            \"free_in_future\": {\n                \"long\": \"You'll
+                be able to upgrade on {{upgrade.freeUpgradeDate}}.\",\n                \"short\":
+                \"You'll be able to upgrade on {{upgrade.freeUpgradeDate}}.\"\n            },\n
+                \           \"default\": {\n                \"long\": \"Oops, something's
+                not working. Pop back later and we should be able to find your upgrade
+                date.\",\n                \"short\": \"Oops, something's not working.
+                Pop back later and we should be able to find your upgrade date.\"\n
+                \           },\n            \"entitlement_service_unavailable\": {\n
+                \               \"long\": \"Oops, something's not working. Pop back
+                later and try again.\",\n                \"short\": \"Oops, something's
+                not working. Pop back later and try again.\"\n            },\n            \"in_treatment\":
+                {\n                \"long\": \"You\\u2019ve got an unpaid bill. You\\u2019ll
+                be able to sort it out in [My O2]({{links.payment}}). Then pop back
+                here to upgrade.\",\n                \"short\": \"You\\u2019ve got
+                an unpaid bill. You\\u2019ll be able to sort it out in My O2. Then
+                pop back here to upgrade.\"\n            },\n            \"mbb\":
+                {\n                \"long\": \"Want to chat about your upgrade options?
+                Call us on 202 from your O2 mobile, or 0344 809 0202.\",\n                \"short\":
+                \"Want to chat about your upgrade options? Call us on 202 from your
+                O2 mobile, or 0344 809 0202.\"\n            },\n            \"non_supporting_tariff\":
+                {\n                \"long\": \"Want to chat about your upgrade options?
+                Call us on 202 from your O2 mobile, or 0344 809 0202.\",\n                \"short\":
+                \"Want to chat about your upgrade options? Call us on 202 from your
+                O2 mobile, or 0344 809 0202.\"\n            },\n            \"order_in_progress\":
+                {\n                \"long\": \"We're sorting out your order for you.
+                Once we're done, we'll update your tariff details and tell you your
+                next upgrade date.\",\n                \"short\": \"We're sorting
+                out your order for you. Once we're done, we'll update your tariff
+                details and tell you your next upgrade date.\"\n            },\n            \"service_barred\":
+                {\n                \"long\": \"You can't upgrade right now. Give us
+                a call on 0344 809 0202 to talk about it.\",\n                \"short\":
+                \"You can't upgrade right now. Give us a call on 0344 809 0202 to
+                talk about it.\"\n            },\n            \"sim_swapped\": {\n
+                \               \"long\": \"For security reasons, you can't upgrade
+                for 24 hours after swapping your sim. Pop back then and try again.\",\n
+                \               \"short\": \"For security reasons, you can't upgrade
+                for 24 hours after swapping your sim. Pop back then and try again.\"\n
+                \           },\n            \"header\": {\n                \"one\":
+                \"Upgrade\",\n                \"two\": \"\"\n            },\n            \"cca\":
+                {\n                \"subheader\": \"Get a shiny new phone\"\n            },\n
+                \           \"subheader\": \"Get a shiny new phone\"\n        },\n
+                \       \"paid\": {\n            \"header\": {\n                \"one\":
+                \"$upgradeCost\",\n                \"two\": \"\"\n            },\n
+                \           \"cca\": {\n                \"subheader\": \"To pay off
+                Device Plan and upgrade today\",\n                \"button\": \"Pay
+                off Device Plan and upgrade\"\n            },\n            \"subheader\":
+                \"To upgrade today\",\n            \"button\": \"Upgrade now\",\n
+                \           \"alert\": \"#$duration# #$timeUnit# left until you can
+                upgrade\"\n        },\n        \"free\": {\n            \"header\":
+                {\n                \"one\": \"You can upgrade now\",\n                \"two\":
+                \"\"\n            },\n            \"cca\": {\n                \"subheader\":
+                \"Get a shiny new phone today\",\n                \"button\": \"Upgrade
+                now\"\n            },\n            \"subheader\": \"Get a shiny new
+                phone today\",\n            \"button\": \"Upgrade now\",\n            \"alert\":
+                \"#$duration# #$timeUnit# left until you can upgrade\"\n        },\n
+                \       \"o2\": {\n            \"free\": {\n                \"cca\":
+                {\n                    \"long\": \"Want a shiny new phone? Upgrade
+                now.\",\n                    \"short\": \"Want a shiny new phone?
+                Upgrade now.\"\n                },\n                \"cca_staff\":
+                {\n                    \"long\": \"Want a shiny new phone? Upgrade
+                now.|Call us free from your mobile on 202.\",\n                    \"short\":
+                \"Want a shiny new phone? Upgrade now.\"\n                },\n                \"device_leasing\":
+                {\n                    \"long\": \"Want a shiny new phone? Upgrade
+                now.|Call us free from your mobile on 202.\",\n                    \"short\":
+                \"Want a shiny new phone? Upgrade now.\"\n                },\n                \"simo\":
+                {\n                    \"long\": \"Want a shiny new phone? Upgrade
+                now.\",\n                    \"short\": \"Want a shiny new phone?
+                Upgrade now.\"\n                },\n                \"simo_staff\":
+                {\n                    \"long\": \"Want a shiny new phone? Upgrade
+                now.|Call us free from your mobile on 202.\",\n                    \"short\":
+                \"Want a shiny new phone? Upgrade now.\"\n                }\n            },\n
+                \           \"paid\": {\n                \"cca\": {\n                    \"long\":
+                \"Want a shiny new phone? Upgrade now for #$cost#.\",\n                    \"short\":
+                \"Want a shiny new phone? Upgrade now for #$cost#.\",\n                    \"s2r\":
+                {\n                        \"long\": \"Upgrade now and we'll pay off
+                what's left of your current contract even though it's is not up until
+                {{upgrade.freeUpgradeDate}}. This special upgrade offer ends on 12th
+                April.\",\n                        \"short\": \"Special offer only
+                available until 12th April. Upgrade and we'll pay off what's left
+                of your current contract.\"\n                    }\n                },\n
+                \               \"cca_staff\": {\n                    \"long\": \"Want
+                a shiny new phone? Upgrade now for #$cost#.|Call us free from your
+                mobile on 202.\",\n                    \"short\": \"Want a shiny new
+                phone? Upgrade now for #$cost#.\",\n                    \"s2r\": {\n
+                \                       \"long\": \"Upgrade now and we'll pay off
+                what's left of your current contract even though it's is not up until
+                {{upgrade.freeUpgradeDate}}. This special upgrade offer ends on 12th
+                April.|Call us free from your mobile on 202.\",\n                        \"short\":
+                \"Special offer only available until 12th April. Upgrade and we'll
+                pay off what's left of your current contract.\"\n                    }\n
+                \               },\n                \"device_leasing\": {\n                    \"long\":
+                \"Want a shiny new phone? Upgrade now for #$cost# which includes a
+                25% discount.|Call us free from your mobile on 202.\",\n                    \"short\":
+                \"Want a shiny new phone? Upgrade now for #$cost# which includes a
+                25% discount.\"\n                },\n                \"simo\": {\n
+                \                   \"long\": \"Want a shiny new phone? Upgrade now
+                for #$cost#, which includes a 25% discount.\",\n                    \"short\":
+                \"Want a shiny new phone? Upgrade now for #$cost# which includes a
+                25% discount.\",\n                    \"s2r\": {\n                        \"long\":
+                \"Upgrade now and we'll pay off what's left of your current contract
+                even though it's is not up until {{upgrade.freeUpgradeDate}}. This
+                special upgrade offer ends on 12th April.\",\n                        \"short\":
+                \"Special offer only available until 12th April. Upgrade and we'll
+                pay off what's left of your current contract.\"\n                    }\n
+                \               },\n                \"simo_staff\": {\n                    \"long\":
+                \"Want a shiny new phone? Upgrade now for #$cost# which includes a
+                25% discount.|Call us free from your mobile on 202.\",\n                    \"short\":
+                \"Want a shiny new phone? Upgrade now for #$cost# which includes a
+                25% discount.\",\n                    \"s2r\": {\n                        \"long\":
+                \"Upgrade now and we'll pay off what's left of your current contract
+                even though it's is not up until {{upgrade.freeUpgradeDate}}. This
+                special upgrade offer ends on 12th April.|Call us free from your mobile
+                on 202.\",\n                        \"short\": \"Special offer only
+                available until 12th April. Upgrade and we'll pay off what's left
+                of your current contract.\"\n                    }\n                }\n
+                \           }\n        },\n        \"non_o2\": {\n            \"free\":
+                {\n                \"short\": \"See your upgrade options.\",\n                \"long\":
+                \"Want a shiny new phone? Upgrade now.\"\n            },\n            \"paid\":
+                {\n                \"short\": \"See your upgrade options.\",\n                \"long\":
+                \"Want a shiny new phone? Upgrade now for #$cost# which includes a
+                25% discount.\",\n                \"s2r\": {\n                    \"long\":
+                \"Upgrade now and we'll pay off what's left of your current contract
+                even though it's is not up until {{upgrade.freeUpgradeDate}}. This
+                special upgrade offer ends on 12th April.\"\n                },\n
+                \               \"none\": {\n                    \"short\": \"See
+                your upgrade options.\"\n                }\n            }\n        }\n
+                \   },\n    \"promotion\": {\n        \"tradein\": {\n            \"not_yet_eligible\":
+                {\n                \"long\": \"In {{timeUntilUpgradeOrPromotion.duration}}
+                {{timeUntilUpgradeOrPromotion.timeUnit}}, we'll offer to pay off the
+                rest of your contract. So you can trade in your phone for a brand
+                new one.\"\n            },\n            \"eligible\": {\n                \"long\":
+                \"We'll pay off the rest of your contract. So you can trade in your
+                phone and choose a brand new one.\"\n            }\n        },\n        \"buyout\":
+                {\n            \"not_yet_eligible\": {\n                \"long\":
+                \"In {{timeUntilUpgradeOrPromotion.duration}} {{timeUntilUpgradeOrPromotion.timeUnit}},
+                we'll offer to pay off the rest of your contract. So you can get a
+                brand new phone - and keep your current one, too.\"\n            },\n
+                \           \"eligible\": {\n                \"long\": \"We'll pay
+                off the rest of your contract. So you can get a brand new phone -
+                and keep your current one, too.\"\n            }\n        },\n        \"not_yet_eligible\":
+                {\n            \"header\": {\n                \"one\": \"{{timeUntilUpgradeOrBuyout.duration}}\",\n
+                \               \"two\": \"{{timeUntilUpgradeOrPromotion.timeUnit}}\"\n
+                \           },\n            \"subheader\": \"Until you can upgrade
+                on us\",\n            \"alert\": \"Want to upgrade, on us?\",\n            \"instore\":
+                \"When it\\u2019s time to take this offer, simply pop into your nearest
+                O2 store and trade in your old device.\"\n        }\n    },\n    \"phoneplan\":
+                {\n        \"unpaid\": {\n            \"message\": \"You have paid
+                {{paidToDate}} of {{totalCredit}} of your Device Plan.\"\n        },\n
+                \       \"paid\": {\n            \"message\": \"You have paid off
+                your Device Plan.\"\n        }\n    },\n    \"label\": {\n        \"storelocator\":
+                \"Find your nearest store\"\n    },\n    \"storelocator\": {\n        \"url\":
+                \"http://www.o2.co.uk/storelocator\"\n    },\n    \"learnmore\": {\n
+                \       \"url\": \"https://www.o2.co.uk/shop/international/using-phone-abroad/\"\n
+                \   },\n    \"myo2\": { \"broadcast\": {\n            \"title\": \"Upgrade
+                available\",\n            \"message\": \"Latest version of the My
+                O2 app is now available. Text MYO2APP to 2020, to download for free.\",\n
+                \           \"linkLabel\": \"Go to App Store\",\n            \"linkUrl\":
+                \"http://o2.co.uk/\",\n            \"id\": 20170627\n        }\n    },\n
+                \   \"assetservice\": {\n        \"assets\": {\n            \"uri\":
+                \"http://lbtest0myo2apptierapigateway.myo2r53.co.uk:8424/person1/v1/person/CURRENT/asset?asset_types=PAYM,PAYG,PAYMMBB,O2WIFI,O2DRIVE,WALLET\"\n
+                \       },\n        \"asset\": {\n            \"type\": {\n                \"uri\":
+                \"https://api0.ref.o2.co.uk/person/v1/person/CURRENT/asset/%s\"\n
+                \           },\n            \"push\": {\n                \"generate\":
+                {\n                    \"uri\": \"https://api0.ref.o2.co.uk/person/v1/person/CURRENT/generator/asset/PUSHNOTIFICATION\"\n
+                \               }\n            }\n        }\n    },\n    \"authserver\":
+                {\n        \"client_id\": \"shop.1\",\n        \"client_secret\":
+                \"shopSecret\",\n        \"grant_type\": \"authorization_code\",\n
+                \       \"oauth\": {\n            \"grant_type\": \"authorization_code\"\n
+                \       },\n        \"readTimeoutMillis\": \"30000\",\n        \"scope\":[\n
+                \       \"openid\",\n        \"profile\",\n        \"phone\",\n        \"email\"],\n
+                \       \"generateAuthCode\": {\n            \"uri\": \"https://api0.ref.o2.co.uk/auth/implicitauth\"\n
+                \       },\n        \"generateAccessToken\": {\n            \"apicURI\":
+                \"/authservice/getaccesstoken\",\n            \"uri\": \"http://lbtest0myo2apptierapigateway.myo2r53.co.uk:8424/authserver/v1/token\"\n
+                \       },\n        \"getUserInfo\": {\n            \"uri\": \"https://api0.ref.o2.co.uk/auth/userinfo\",\n
+                \           \"queryParam\": \"access_token\"\n        },\n        \"generateDisambiguationId\":
+                {\n            \"apicURI\": \"/authservice/getdisambiguationid\",\n
+                \           \"uri\": \"http://lbtest0myo2apptierapigateway.myo2r53.co.uk:8424/authserver/v1/auth/select\"\n
+                \       },\n        \"generateTransferAuthCode\": {\n            \"apicURI\":
+                \"/authservice/getconsolidatedauth\",\n            \"uri\": \"https://api0.ref.o2.co.uk/auth/v1/auth/tac/issue\"\n
+                \       }\n    },\n    \"sso\": {\n        \"endpoint\": { \"paybill\":
+                {\n                \"sendto\": \"https://billing.ref.o2.co.uk/bill?noheader=true&routeTo=pay/bill&disambiguation_id=%s&cm_mmc=myo2app-_-#deviceType#-_-#clientId#-_-bills-_-makeapayment\",\n
+                \               \"failure\": \"https://mymobile.ref.o2.co.uk/error/page/500?noheader=true&cm_mmc=myo2app-_-#deviceType#-_-#clientId#-_-bills-_-makeapayment\"\n
+                \           }\n        },\n        \"credhandler_redemption_url\":
+                \"https://identity.ref.o2.co.uk/redeem/tac?transfer_auth_code=#AUTH_CODE#&sendTo=#SEND_TO#&failureUrl=#FAILURE_URL#\"\n
+                \   },\n    \"phoneservice\": {\n        \"billedcharges\": {\n            \"uri\":
+                \"https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/bill/billedcharges\",\n
+                \           \"recommendation\": {\n                \"uri\": \"https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/billedcharges/recommendation\"\n
+                \           }\n        },\n        \"recentcharges\": {\n            \"uri\":
+                \"https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/bill/recentcharges\"\n
+                \       },\n        \"previousbills\": {\n            \"uri\": \"https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/bill/previousbills\"\n
+                \       },\n        \"msisdndetails\": {\n            \"uri\": \"http://lbtest0myo2apptierapigateway.myo2r53.co.uk:8424/phoneqa/consumer/CURRENT/paym\"\n
+                \       },\n        \"phoneplan\": {\n            \"uri\": \"https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/cca/phoneplan\"\n
+                \       },\n        \"upgradesandpromotions\": {\n            \"uri\":
+                \"https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/upgradeoptionsandpromotions\"\n
+                \       },\n        \"billprofile\": {\n            \"uri\": \"https://api0.ref.o2.co.uk/phone/v2/consumer/CURRENT/paym/bill/profile\"\n
+                \       }\n    },\n    \"soa\": {\n        \"getCurrentAndPendingBoltons\":
+                {\n            \"uri\": \"https://sdpapi.ref.o2.co.uk/services/ManagePostpayBoltons_2_0\",\n
+                \           \"uriXXX\": \"\"\n        },\n        \"getContract\":
+                {\n            \"uri\": \"https://sdpapi.ref.o2.co.uk/services/ManagePostpayTariff_2_0\",\n
+                \           \"uriXXX\": \"\"\n        },\n        \"getContractRevisions\":
+                {\n            \"uri\": \"https://sdpapi.ref.o2.co.uk/services/ManagePostpayTariff_2_0\",\n
+                \           \"uriXXX\": \"\"\n        },\n        \"getTariffProduct\":
+                {\n            \"uri\": \"https://sdpapi.ref.o2.co.uk/ManagePostpayDetails/proxyservices/PostpayDetailsPS\",\n
+                \           \"uriXXX\": \"\"\n        },\n        \"getViewAllowance_2_0\":
+                {\n            \"uri\": \"https://sdpapi.ref.o2.co.uk/services/ViewAllowance_2_0\",\n
+                \           \"uriXXX\": \"\"\n        }\n    },\n    \"tariff\": {\n
+                \       \"devicePlan\": {\n            \"msg\": \"This is the cost
+                of your Airtime Plan only. There is a separate monthly payment of
+                £%s for your Device Plan.\"\n        },\n        \"details\": {\n
+                \           \"link\": {\n                \"uri\": {\n                    \"pattern\":
+                \"/#msisdn#/postpay/tariffdetails?tariffname=#tariffname#&productlabel=#productlabel#\"\n
+                \               }\n            }\n        }\n    },\n    \"pendingTariff\":
+                {\n        \"devicePlan\": {\n            \"msg\": \"You'll continue
+                to pay £%s a month for your Device Plan.\"\n        }\n    },\n    \"offer\":
+                { \"landingpage\": {\n            \"login\": {\n                \"frequency\":
+                3\n            },\n            \"timeduration\": {\n                \"frequency\":
+                30\n            }\n        }\n    },\n    \"productStatus\": {\n        \"0\":
+                \"Active\",\n        \"1\": \"Pending for Addition\",\n        \"2\":
+                \"Pending for removal\",\n        \"3\": \"Pending for Modification\"\n
+                \   },\n    \"broadcast\": { \"message\": {\n            \"android\":
+                {\n                \"versions\": \"3.1.0,4.0,4.1,5.0,5.1.0,5.2.0,6.0.0,6.0.1,7.0.0,7.1.0,8.7.1-debug\"\n
+                \           },\n            \"iphone\": {\n                \"versions\":
+                \"3.1.0,4.0,4.1,5.0,5.1.0,5.2.0,6.0.0,7.0.0,7.1.0\"\n            },\n
+                \           \"windows\": {\n                \"versions\": \"3.1.0,4.0,4.1,5.0,5.1.0,5.2.0,6.0.0,7.0.0,7.1.0\"\n
+                \           }\n        }\n    },\n    \"msg\": {\n        \"bolton\":
+                {\n            \"fee\": {\n                \"zero\": \"free\",\n                \"monthly\":
+                \"per month\",\n                \"oneoff\": \"one-off\"\n            },\n
+                \           \"postpay\": {\n                \"header\": \"These Bolt
+                Ons are your value-added extras, enabling you to save money on the
+                standard rates for calls, messages, and a whole lot more.\"\n            },\n
+                \           \"prepay\": {\n                \"header\": {\n                    \"default\":
+                \"You have %d Bolt Ons.\",\n                    \"zero\": \"You don't
+                have any Bolt Ons.\",\n                    \"one\": \"You have one
+                Bolt On.\"\n                },\n                \"pendingrecharge\":
+                \"Top up to use this Bolt On\",\n                \"pendingdeletion\":
+                \"To be removed%s\",\n                \"pendingaddition\": \"Due to
+                start%s\"\n            }\n        },\n        \"tariffdetails\": {\n
+                \           \"footer\": \"Charges are per minute unless noted and
+                they include VAT.\"\n        },\n        \"recentcharges\": {\n            \"footer\":
+                \"UK data will be updated within 30 minutes. All UK calls and messages
+                can take up to 12 hours, international calls and data may take longer.
+                VAT not included.\"\n        },\n        \"allowance\": {\n            \"footer\":
+                \"UK data use will be updated within 30 minutes. Data used in our
+                Europe Zone may take up to 24 hours. Minutes and texts in the UK and
+                our Europe Zone usually update within 24 hours but international calls
+                may take longer.\"\n        },\n        \"dataallowance\": {\n            \"footer\":
+                \"All UK data will be updated within 30 minutes.\",\n            \"default\":
+                {\n                \"info\": \"No usage allowance details found\"\n
+                \           },\n            \"CONS_DATA_CAPPED\": {\n                \"info\":
+                \"UK data use will be updated within 30 minutes. Data used in our
+                Europe Zone may take up to 24 hours. Minutes and texts in the UK and
+                our Europe Zone usually update within 24 hours but international calls
+                may take longer.\",\n                \"warning\": \"You've nearly
+                used up all your data for this month and it won't re-set until your
+                next bill date. If you need more data before then, you can add a data
+                Bolt On now by selecting the option below or you can save your data
+                by using wifi.\",\n                \"over\": \"You've used all your
+                data for this month and it won't re-set until your next bill date.
+                You can add a data Bolt On now by selecting the option below or you
+                can use wifi.\"\n            },\n            \"CONS_WEB_DAILY_50\":
+                {\n                \"info\": \"UK data use will be updated within
+                30 minutes. Data used in our Europe Zone may take up to 24 hours.
+                Minutes and texts in the UK and our Europe Zone usually update within
+                24 hours but international calls may take longer.\",\n                \"summary\":
+                \"We'll charge you for any data you use, but never more than £1.00
+                a day.\",\n                \"warning\": \"You've almost used all your
+                data allowance. Once it's all used up, doing things that use data
+                (like browsing the web) will be slower. And we'll charge you for any
+                extra data you use. But never more than £1.00 a day.\",\n                \"over\":
+                \"We'll charge you for any data you use. But never more than £1.00
+                a day. You've used all your data allowance for today. That means doing
+                things that use data (like browsing the web) will be slower until
+                midnight.\"\n            },\n            \"CONS_WEB_DAILY_100\": {\n
+                \               \"info\": \"UK data use will be updated within 30
+                minutes. Data used in our Europe Zone may take up to 24 hours. Minutes
+                and texts in the UK and our Europe Zone usually update within 24 hours
+                but international calls may take longer.\",\n                \"summary\":
+                \"We'll charge you for any data you use, but never more than £1.02
+                a day.\",\n                \"warning\": \"You've almost used all your
+                data allowance. Once it's all used up, doing things that use data
+                (like browsing the web) will be slower. And we'll charge you for any
+                extra data you use. But never more than £1.02 a day.\",\n                \"over\":
+                \"We'll charge you for any data you use. But never more than £1.02
+                a day. You've used all your data allowance for today. That means doing
+                things that use data (like browsing the web) will be slower until
+                midnight.\"\n            },\n            \"CONS_DATA_UNLIMITED\":
+                {\n                \"info\": \"UK data use will be updated within
+                30 minutes. Data used in our Europe Zone may take up to 24 hours.
+                Minutes and texts in the UK and our Europe Zone usually update within
+                24 hours but international calls may take longer.\"\n            },\n
+                \           \"CONS_DATA_UNLIMITED_WITH_FAIR_USE\": {\n                \"info\":
+                \"UK data use will be updated within 30 minutes. Data used in our
+                Europe Zone may take up to 24 hours. Minutes and texts in the UK and
+                our Europe Zone usually update within 24 hours but international calls
+                may take longer.\"\n            },\n            \"CONS_DATA_OVERAGE_WITH_BUNDLE\":
+                {\n                \"info\": \"UK data use will be updated within
+                30 minutes. Data used in our Europe Zone may take up to 24 hours.
+                Minutes and texts in the UK and our Europe Zone usually update within
+                24 hours but international calls may take longer.\"\n            },\n
+                \           \"CONS_DATA_UNLIMITED_AND_TETHERING\": {\n                \"info\":
+                \"UK data use will be updated within 30 minutes. Data used in our
+                Europe Zone may take up to 24 hours. Minutes and texts in the UK and
+                our Europe Zone usually update within 24 hours but international calls
+                may take longer.\"\n            },\n            \"alwayson\": {\n
+                \               \"warning\": \"Youâ\\u0080\\u0099ve nearly used up
+                your data allowance this month. Once itâ\\u0080\\u0099s used up, youâ\\u0080\\u0099ll
+                still be able to use data but the speed will be slower than usual.
+                Itâ\\u0080\\u0099ll go back to full speed automatically with your
+                next monthâ\\u0080\\u0099s allowance. If you need full speed in the
+                meantime, you can buy a data Bolt On.\",\n                \"footer\":
+                \"Youâ\\u0080\\u0099ve used up your data allowance this month. You
+                can still use data but the speed will be slower than usual. Itâ\\u0080\\u0099ll
+                go back to full speed automatically with your next monthâ\\u0080\\u0099s
+                allowance. If you need full speed in the meantime, you can buy a data
+                Bolt On.\"\n            },\n            \"breakdown\": {\n                \"core\":
+                \"%s Data allowance\",\n                \"recurringtopup\": \"%s Extra
+                Data\",\n                \"rollovertopup\": \"%s Data Bolt On\",\n
+                \               \"rolledovertopup\": \"%s Data Bolt On(s)\"\n            }\n
+                \       },\n        \"textallowance\": {\n            \"unrestricted\":
+                \"* You can also use this to send texts when abroad and picture messages.
+                If you send 1, we'll take 4 texts from your allowance.\"\n        },\n
+                \       \"account\": {\n            \"footer\": \"All UK messages
+                will be updated within 12 hours.\"\n        },\n        \"minutesallowance\":
+                {\n            \"usage\": {\n                \"info\": {\n                    \"message\":
+                \"\"\n                }\n            }\n        },\n        \"voice\":
+                {\n            \"analysis\": {\n                \"no\": {\n                    \"chargeable\":
+                {\n                        \"calls\": \"You have no chargeable calls!\"\n
+                \                   }\n                }\n            },\n            \"account\":
+                {\n                \"footer\": \"All UK calls will be updated within
+                12 hours.\"\n            }\n        },\n        \"pending\": {\n            \"recharge\":
+                \"You need to top up to get your next monthly allowance.\"\n        },\n
+                \       \"prepay\": {\n            \"tariff\": {\n                \"info\":
+                \"Charges for minutes, texts and data outside your tariff and Bolt
+                On allowances.\"\n            }\n        }\n    },\n    \"iphone\":
+                {\n        \"recentCharges\": {\n            \"showUsageDetails\":
+                \"true\"\n        },\n        \"billedCharges\": {\n            \"showUsageDetails\":
+                \"true\"\n        }\n    },\n    \"android\": {\n        \"recentCharges\":
+                {\n            \"showUsageDetails\": \"true\"\n        },\n        \"billedCharges\":
+                {\n            \"showUsageDetails\": \"true\"\n        }\n    },\n
+                \   \"feature\": {\n        \"dataallowance\": {\n            \"breakdown\":
+                \"true\"\n        }\n    },\n    \"defaultLPFCharge\": \"3.5\",\n
+                \   \"recommendation\": {\n        \"header\": \"You could save money
+                by adding a Bolt On or changing your tariff. Read more.\",\n        \"TARIFF\":
+                {\n            \"type\": \"TARIFF\",\n            \"action\": \"CHANGE_TARIFF\",\n
+                \           \"linkText\": \"Change tariff\",\n            \"message\":
+                \"Going over your allowance? Save money by upgrading your tariff.\"\n
+                \       },\n        \"O2_TRAVEL\": {\n            \"type\": \"O2_TRAVEL\",\n
+                \           \"action\": \"ADD_BOLTONS\",\n            \"linkText\":
+                \"Add Bolt On\",\n            \"message\": \"Spending time abroad?
+                Save money by adding a travel Bolt On.\"\n        },\n        \"PICTURE_MESSAGES\":
+                {\n            \"type\": \"PICTURE_MESSAGES\",\n            \"action\":
+                \"ADD_BOLTONS\",\n            \"linkText\": \"Add Bolt On\",\n            \"message\":
+                \"Sending lots of picture messages? Save money by adding an MMS Bolt
+                On.\"\n        },\n        \"INTERNATIONAL_FAVOURITES\": {\n            \"type\":
+                \"INTERNATIONAL_FAVOURITES\",\n            \"action\": \"ADD_BOLTONS\",\n
+                \           \"linkText\": \"Add Bolt On\",\n            \"message\":
+                \"Calling friends and family abroad? Save money by adding an international
+                Bolt On.\"\n        },\n        \"MULTIPLE_BOLTONS\": {\n            \"type\":
+                \"MULTIPLE_BOLTONS\",\n            \"action\": \"ADD_BOLTONS\",\n
+                \           \"linkText\": \"Add Bolt On\",\n            \"message\":
+                \"Sending lots of picture messages? Going abroad? Or got friends and
+                family in another country? We can help you save money, with our range
+                of Bolt Ons.\"\n        }\n    },\n    \"thirdPartyUpgradeAcquisitionPartners\":
+                \"CPW\",\n    \"promoBannerNotificationDuration\": 1,\n    \"upgradeBannerNotificationDuration\":
+                6,\n    \"redirectTradeinCustomersToStore\": \"false\",\n    \"coreDataBoltOnFamilies\":
+                \"COREBLACKBERRY|CORESMART|COREIPHONE|COREMBB|BLACKBERRY|SMARTPHONE|IPHONE|BLACKBERRY
+                TETHERING|SMARTPHONE TETHERING|IPHONE TETHERING|COREIMSSMART|COREIMSIPHONE\",\n
+                \   \"nonRemovableBoltons\": \"family subscription|family discount|bar|billing
+                otion|insurance|supplementary service|data roaming\",\n    \"oneOffBolton\":
+                \"ONEOFFTOPUP\",\n    \"tugoBoltonId\": \"9755\",\n    \"o2TravelBoltonId\":
+                \"9751|9752|9753\",\n    \"boltonsToBeExcluded\": \"9225|9226|9251|9252|9253|8382\",\n
+                \   \"dataallowance\": {\n        \"threshold\": \"80\"\n    },\n
+                \   \"minutesallowance\": {\n        \"threshold\": \"80\"\n    },\n
+                \   \"messagesallowance\": {\n        \"threshold\": \"80\"\n    }\n};\n\napim.setvariable('message.body',
+                properties);            "
+        - operations:
+          - verb: get
+            path: /properties2
+          execute:
+          - gatewayscript:
+              title: GS:GetProperties2
+              version: 1.0.0
+              description: Returns all properties to be used in different APIs
+              source: |-
+                /* **************************************************************************************************************** */
+                /* **************************************************************************************************************** */
+                /* FileName                         Version    Created By                  Modified By               Date           */
+                /* GetProperties.js                 1.0        Dinesh Tomar                                          14-June-2018   */
+                /*                                                                                                                  */
+                /* **************************************************************************************************************** */
+                /* Purpose: This GW Script file will return all properties to be used in different APIs                             */
+                /*                                                                                                                  */
+                /* Required params:                                                                                                 */
+                /* **************************************************************************************************************** */
+                var properties = {
+                    "upgradelegacy": {
+                        "not_yet_eligible": {
+                            "short": "Want a shiny new phone? Upgrade now for #$cost"
+                        },
+                        "eligible": {
+                            "short": "Upgrade on us today"
+                        },
+                        "none": {
+                            "in_treatment": {
+                                "long": "You\u2019ve got an unpaid bill. You\u2019ll be able to sort it out in [My O2]({{links.payment}}). Then pop back here to upgrade.",
+                                "short": "You\u2019ve got an unpaid bill. You\u2019ll be able to sort it out in My O2. Then pop back here to upgrade."
+                            },
+                            "subheader": "Upgrade on us today",
+                            "button": "Take this offer and upgrade",
+                            "alert": "Upgrade on us today"
+                        }
+                    },
+                    "upgrade": {
+                        "not_yet_eligible": {
+                            "short": "Want a shiny new phone? Upgrade now for #$cost"
+                        },
+                        "eligible": {
+                            "short": "Upgrade on us today."
+                        },
+                        "none": {
+                            "free_in_future": {
+                                "long": "You'll be able to upgrade on {{upgrade.freeUpgradeDate}}.",
+                                "short": "You'll be able to upgrade on {{upgrade.freeUpgradeDate}}."
+                            },
+                            "default": {
+                                "long": "Oops, something's not working. Pop back later and we should be able to find your upgrade date.",
+                                "short": "Oops, something's not working. Pop back later and we should be able to find your upgrade date."
+                            },
+                            "entitlement_service_unavailable": {
+                                "long": "Oops, something's not working. Pop back later and try again.",
+                                "short": "Oops, something's not working. Pop back later and try again."
+                            },
+                            "in_treatment": {
+                                "long": "You\u2019ve got an unpaid bill. You\u2019ll be able to sort it out in [My O2]({{links.payment}}). Then pop back here to upgrade.",
+                                "short": "You\u2019ve got an unpaid bill. You\u2019ll be able to sort it out in My O2. Then pop back here to upgrade."
+                            },
+                            "mbb": {
+                                "long": "Want to chat about your upgrade options? Call us on 202 from your O2 mobile, or 0344 809 0202.",
+                                "short": "Want to chat about your upgrade options? Call us on 202 from your O2 mobile, or 0344 809 0202."
+                            },
+                            "non_supporting_tariff": {
+                                "long": "Want to chat about your upgrade options? Call us on 202 from your O2 mobile, or 0344 809 0202.",
+                                "short": "Want to chat about your upgrade options? Call us on 202 from your O2 mobile, or 0344 809 0202."
+                            },
+                            "order_in_progress": {
+                                "long": "We're sorting out your order for you. Once we're done, we'll update your tariff details and tell you your next upgrade date.",
+                                "short": "We're sorting out your order for you. Once we're done, we'll update your tariff details and tell you your next upgrade date."
+                            },
+                            "service_barred": {
+                                "long": "You can't upgrade right now. Give us a call on 0344 809 0202 to talk about it.",
+                                "short": "You can't upgrade right now. Give us a call on 0344 809 0202 to talk about it."
+                            },
+                            "sim_swapped": {
+                                "long": "For security reasons, you can't upgrade for 24 hours after swapping your sim. Pop back then and try again.",
+                                "short": "For security reasons, you can't upgrade for 24 hours after swapping your sim. Pop back then and try again."
+                            },
+                            "header": {
+                                "one": "Upgrade",
+                                "two": ""
+                            },
+                            "cca": {
+                                "subheader": "Get a shiny new phone"
+                            },
+                            "subheader": "Get a shiny new phone"
+                        },
+                        "paid": {
+                            "header": {
+                                "one": "$upgradeCost",
+                                "two": ""
+                            },
+                            "cca": {
+                                "subheader": "To pay off Device Plan and upgrade today",
+                                "button": "Pay off Device Plan and upgrade"
+                            },
+                            "subheader": "To upgrade today",
+                            "button": "Upgrade now",
+                            "alert": "#$duration# #$timeUnit# left until you can upgrade"
+                        },
+                        "free": {
+                            "header": {
+                                "one": "You can upgrade now",
+                                "two": ""
+                            },
+                            "cca": {
+                                "subheader": "Get a shiny new phone today",
+                                "button": "Upgrade now"
+                            },
+                            "subheader": "Get a shiny new phone today",
+                            "button": "Upgrade now",
+                            "alert": "#$duration# #$timeUnit# left until you can upgrade"
+                        },
+                        "o2": {
+                            "free": {
+                                "cca": {
+                                    "long": "Want a shiny new phone? Upgrade now.",
+                                    "short": "Want a shiny new phone? Upgrade now."
+                                },
+                                "cca_staff": {
+                                    "long": "Want a shiny new phone? Upgrade now.|Call us free from your mobile on 202.",
+                                    "short": "Want a shiny new phone? Upgrade now."
+                                },
+                                "device_leasing": {
+                                    "long": "Want a shiny new phone? Upgrade now.|Call us free from your mobile on 202.",
+                                    "short": "Want a shiny new phone? Upgrade now."
+                                },
+                                "simo": {
+                                    "long": "Want a shiny new phone? Upgrade now.",
+                                    "short": "Want a shiny new phone? Upgrade now."
+                                },
+                                "simo_staff": {
+                                    "long": "Want a shiny new phone? Upgrade now.|Call us free from your mobile on 202.",
+                                    "short": "Want a shiny new phone? Upgrade now."
+                                }
+                            },
+                            "paid": {
+                                "cca": {
+                                    "long": "Want a shiny new phone? Upgrade now for #$cost#.",
+                                    "short": "Want a shiny new phone? Upgrade now for #$cost#.",
+                                    "s2r": {
+                                        "long": "Upgrade now and we'll pay off what's left of your current contract even though it's is not up until {{upgrade.freeUpgradeDate}}. This special upgrade offer ends on 12th April.",
+                                        "short": "Special offer only available until 12th April. Upgrade and we'll pay off what's left of your current contract."
+                                    }
+                                },
+                                "cca_staff": {
+                                    "long": "Want a shiny new phone? Upgrade now for #$cost#.|Call us free from your mobile on 202.",
+                                    "short": "Want a shiny new phone? Upgrade now for #$cost#.",
+                                    "s2r": {
+                                        "long": "Upgrade now and we'll pay off what's left of your current contract even though it's is not up until {{upgrade.freeUpgradeDate}}. This special upgrade offer ends on 12th April.|Call us free from your mobile on 202.",
+                                        "short": "Special offer only available until 12th April. Upgrade and we'll pay off what's left of your current contract."
+                                    }
+                                },
+                                "device_leasing": {
+                                    "long": "Want a shiny new phone? Upgrade now for #$cost# which includes a 25% discount.|Call us free from your mobile on 202.",
+                                    "short": "Want a shiny new phone? Upgrade now for #$cost# which includes a 25% discount."
+                                },
+                                "simo": {
+                                    "long": "Want a shiny new phone? Upgrade now for #$cost#, which includes a 25% discount.",
+                                    "short": "Want a shiny new phone? Upgrade now for #$cost# which includes a 25% discount.",
+                                    "s2r": {
+                                        "long": "Upgrade now and we'll pay off what's left of your current contract even though it's is not up until {{upgrade.freeUpgradeDate}}. This special upgrade offer ends on 12th April.",
+                                        "short": "Special offer only available until 12th April. Upgrade and we'll pay off what's left of your current contract."
+                                    }
+                                },
+                                "simo_staff": {
+                                    "long": "Want a shiny new phone? Upgrade now for #$cost# which includes a 25% discount.|Call us free from your mobile on 202.",
+                                    "short": "Want a shiny new phone? Upgrade now for #$cost# which includes a 25% discount.",
+                                    "s2r": {
+                                        "long": "Upgrade now and we'll pay off what's left of your current contract even though it's is not up until {{upgrade.freeUpgradeDate}}. This special upgrade offer ends on 12th April.|Call us free from your mobile on 202.",
+                                        "short": "Special offer only available until 12th April. Upgrade and we'll pay off what's left of your current contract."
+                                    }
+                                }
+                            }
+                        },
+                        "non_o2": {
+                            "free": {
+                                "short": "See your upgrade options.",
+                                "long": "Want a shiny new phone? Upgrade now."
+                            },
+                            "paid": {
+                                "short": "See your upgrade options.",
+                                "long": "Want a shiny new phone? Upgrade now for #$cost# which includes a 25% discount.",
+                                "s2r": {
+                                    "long": "Upgrade now and we'll pay off what's left of your current contract even though it's is not up until {{upgrade.freeUpgradeDate}}. This special upgrade offer ends on 12th April."
+                                },
+                                "none": {
+                                    "short": "See your upgrade options."
+                                }
+                            }
+                        }
+                    },
+                    "promotion": {
+                        "tradein": {
+                            "not_yet_eligible": {
+                                "long": "In {{timeUntilUpgradeOrPromotion.duration}} {{timeUntilUpgradeOrPromotion.timeUnit}}, we'll offer to pay off the rest of your contract. So you can trade in your phone for a brand new one."
+                            },
+                            "eligible": {
+                                "long": "We'll pay off the rest of your contract. So you can trade in your phone and choose a brand new one."
+                            }
+                        },
+                        "buyout": {
+                            "not_yet_eligible": {
+                                "long": "In {{timeUntilUpgradeOrPromotion.duration}} {{timeUntilUpgradeOrPromotion.timeUnit}}, we'll offer to pay off the rest of your contract. So you can get a brand new phone - and keep your current one, too."
+                            },
+                            "eligible": {
+                                "long": "We'll pay off the rest of your contract. So you can get a brand new phone - and keep your current one, too."
+                            }
+                        },
+                        "not_yet_eligible": {
+                            "header": {
+                                "one": "{{timeUntilUpgradeOrBuyout.duration}}",
+                                "two": "{{timeUntilUpgradeOrPromotion.timeUnit}}"
+                            },
+                            "subheader": "Until you can upgrade on us",
+                            "alert": "Want to upgrade, on us?",
+                            "instore": "When it\u2019s time to take this offer, simply pop into your nearest O2 store and trade in your old device."
+                        }
+                    },
+                    "phoneplan": {
+                        "unpaid": {
+                            "message": "You have paid {{paidToDate}} of {{totalCredit}} of your Device Plan."
+                        },
+                        "paid": {
+                            "message": "You have paid off your Device Plan."
+                        }
+                    },
+                    "label": {
+                        "storelocator": "Find your nearest store"
+                    },
+                    "storelocator": {
+                        "url": "http://www.o2.co.uk/storelocator"
+                    },
+                    "learnmore": {
+                        "url": "https://www.o2.co.uk/shop/international/using-phone-abroad/"
+                    },
+                    "myo2": { "broadcast": {
+                            "title": "Upgrade available",
+                            "message": "Latest version of the My O2 app is now available. Text MYO2APP to 2020, to download for free.",
+                            "linkLabel": "Go to App Store",
+                            "linkUrl": "http://o2.co.uk/",
+                            "id": 20170627
+                        }
+                    },
+                    "assetservice": {
+                        "assets": {
+                            "uri": "http://lbtest0myo2apptierapigateway.myo2r53.co.uk:8424/person1/v1/person/CURRENT/asset?asset_types=PAYM,PAYG,PAYMMBB,O2WIFI,O2DRIVE,WALLET"
+                        },
+                        "asset": {
+                            "type": {
+                                "uri": "https://api0.ref.o2.co.uk/person/v1/person/CURRENT/asset/%s"
+                            },
+                            "push": {
+                                "generate": {
+                                    "uri": "https://api0.ref.o2.co.uk/person/v1/person/CURRENT/generator/asset/PUSHNOTIFICATION"
+                                }
+                            }
+                        }
+                    },
+                    "authserver": {
+                        "client_id": "shop.1",
+                        "client_secret": "shopSecret",
+                        "grant_type": "authorization_code",
+                        "oauth": {
+                            "grant_type": "authorization_code"
+                        },
+                        "readTimeoutMillis": "30000",
+                        "scope":[
+                        "openid",
+                        "profile",
+                        "phone",
+                        "email"],
+                        "generateAuthCode": {
+                            "uri": "https://api0.ref.o2.co.uk/auth/implicitauth"
+                        },
+                        "generateAccessToken": {
+                            "apicURI": "/authservice/getaccesstoken",
+                            "uri": "http://lbtest0myo2apptierapigateway.myo2r53.co.uk:8424/authserver/v1/token"
+                        },
+                        "getUserInfo": {
+                            "uri": "https://api0.ref.o2.co.uk/auth/userinfo",
+                            "queryParam": "access_token"
+                        },
+                        "generateDisambiguationId": {
+                            "apicURI": "/authservice/getdisambiguationid",
+                            "uri": "http://lbtest0myo2apptierapigateway.myo2r53.co.uk:8424/authserver/v1/auth/select"
+                        },
+                        "generateTransferAuthCode": {
+                            "apicURI": "/authservice/getconsolidatedauth",
+                            "uri": "https://api0.ref.o2.co.uk/auth/v1/auth/tac/issue"
+                        }
+                    },
+                    "sso": {
+                        "endpoint": { "paybill": {
+                                "sendto": "https://billing.ref.o2.co.uk/bill?noheader=true&routeTo=pay/bill&disambiguation_id=%s&cm_mmc=myo2app-_-#deviceType#-_-#clientId#-_-bills-_-makeapayment",
+                                "failure": "https://mymobile.ref.o2.co.uk/error/page/500?noheader=true&cm_mmc=myo2app-_-#deviceType#-_-#clientId#-_-bills-_-makeapayment"
+                            }
+                        },
+                        "credhandler_redemption_url": "https://identity.ref.o2.co.uk/redeem/tac?transfer_auth_code=#AUTH_CODE#&sendTo=#SEND_TO#&failureUrl=#FAILURE_URL#"
+                    },
+                    "phoneservice": {
+                        "billedcharges": {
+                            "uri": "https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/bill/billedcharges",
+                            "recommendation": {
+                                "uri": "https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/billedcharges/recommendation"
+                            }
+                        },
+                        "recentcharges": {
+                            "uri": "https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/bill/recentcharges"
+                        },
+                        "previousbills": {
+                            "uri": "https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/bill/previousbills"
+                        },
+                        "msisdndetails": {
+                            "uri": "http://lbtest0myo2apptierapigateway.myo2r53.co.uk:8424/phoneqa/consumer/CURRENT/paym"
+                        },
+                        "phoneplan": {
+                            "uri": "https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/cca/phoneplan"
+                        },
+                        "upgradesandpromotions": {
+                            "uri": "https://api0.ref.o2.co.uk/phone/consumer/CURRENT/paym/upgradeoptionsandpromotions"
+                        },
+                        "billprofile": {
+                            "uri": "https://api0.ref.o2.co.uk/phone/v2/consumer/CURRENT/paym/bill/profile"
+                        }
+                    },
+                    "soa": {
+                        "getCurrentAndPendingBoltons": {
+                            "uri": "https://sdpapi.ref.o2.co.uk/services/ManagePostpayBoltons_2_0",
+                            "uriXXX": ""
+                        },
+                        "getContract": {
+                            "uri": "https://sdpapi.ref.o2.co.uk/services/ManagePostpayTariff_2_0",
+                            "uriXXX": ""
+                        },
+                        "getContractRevisions": {
+                            "uri": "https://sdpapi.ref.o2.co.uk/services/ManagePostpayTariff_2_0",
+                            "uriXXX": ""
+                        },
+                        "getTariffProduct": {
+                            "uri": "https://sdpapi.ref.o2.co.uk/ManagePostpayDetails/proxyservices/PostpayDetailsPS",
+                            "uriXXX": ""
+                        },
+                        "getViewAllowance_2_0": {
+                            "uri": "https://sdpapi.ref.o2.co.uk/services/ViewAllowance_2_0",
+                            "uriXXX": ""
+                        }
+                    },
+                    "tariff": {
+                        "devicePlan": {
+                            "msg": "This is the cost of your Airtime Plan only. There is a separate monthly payment of £%s for your Device Plan."
+                        },
+                        "details": {
+                            "link": {
+                                "uri": {
+                                    "pattern": "/#msisdn#/postpay/tariffdetails?tariffname=#tariffname#&productlabel=#productlabel#"
+                                }
+                            }
+                        }
+                    },
+                    "pendingTariff": {
+                        "devicePlan": {
+                            "msg": "You'll continue to pay £%s a month for your Device Plan."
+                        }
+                    },
+                    "offer": { "landingpage": {
+                            "login": {
+                                "frequency": 3
+                            },
+                            "timeduration": {
+                                "frequency": 30
+                            }
+                        }
+                    },
+                    "productStatus": {
+                        "0": "Active",
+                        "1": "Pending for Addition",
+                        "2": "Pending for removal",
+                        "3": "Pending for Modification"
+                    },
+                    "broadcast": { "message": {
+                            "android": {
+                                "versions": "3.1.0,4.0,4.1,5.0,5.1.0,5.2.0,6.0.0,6.0.1,7.0.0,7.1.0,8.7.1-debug"
+                            },
+                            "iphone": {
+                                "versions": "3.1.0,4.0,4.1,5.0,5.1.0,5.2.0,6.0.0,7.0.0,7.1.0"
+                            },
+                            "windows": {
+                                "versions": "3.1.0,4.0,4.1,5.0,5.1.0,5.2.0,6.0.0,7.0.0,7.1.0"
+                            }
+                        }
+                    },
+                    "msg": {
+                        "bolton": {
+                            "fee": {
+                                "zero": "free",
+                                "monthly": "per month",
+                                "oneoff": "one-off"
+                            },
+                            "postpay": {
+                                "header": "These Bolt Ons are your value-added extras, enabling you to save money on the standard rates for calls, messages, and a whole lot more."
+                            },
+                            "prepay": {
+                                "header": {
+                                    "default": "You have %d Bolt Ons.",
+                                    "zero": "You don't have any Bolt Ons.",
+                                    "one": "You have one Bolt On."
+                                },
+                                "pendingrecharge": "Top up to use this Bolt On",
+                                "pendingdeletion": "To be removed%s",
+                                "pendingaddition": "Due to start%s"
+                            }
+                        },
+                        "tariffdetails": {
+                            "footer": "Charges are per minute unless noted and they include VAT."
+                        },
+                        "recentcharges": {
+                            "footer": "UK data will be updated within 30 minutes. All UK calls and messages can take up to 12 hours, international calls and data may take longer. VAT not included."
+                        },
+                        "allowance": {
+                            "footer": "UK data use will be updated within 30 minutes. Data used in our Europe Zone may take up to 24 hours. Minutes and texts in the UK and our Europe Zone usually update within 24 hours but international calls may take longer."
+                        },
+                        "dataallowance": {
+                            "footer": "All UK data will be updated within 30 minutes.",
+                            "default": {
+                                "info": "No usage allowance details found"
+                            },
+                            "CONS_DATA_CAPPED": {
+                                "info": "UK data use will be updated within 30 minutes. Data used in our Europe Zone may take up to 24 hours. Minutes and texts in the UK and our Europe Zone usually update within 24 hours but international calls may take longer.",
+                                "warning": "You've nearly used up all your data for this month and it won't re-set until your next bill date. If you need more data before then, you can add a data Bolt On now by selecting the option below or you can save your data by using wifi.",
+                                "over": "You've used all your data for this month and it won't re-set until your next bill date. You can add a data Bolt On now by selecting the option below or you can use wifi."
+                            },
+                            "CONS_WEB_DAILY_50": {
+                                "info": "UK data use will be updated within 30 minutes. Data used in our Europe Zone may take up to 24 hours. Minutes and texts in the UK and our Europe Zone usually update within 24 hours but international calls may take longer.",
+                                "summary": "We'll charge you for any data you use, but never more than £1.00 a day.",
+                                "warning": "You've almost used all your data allowance. Once it's all used up, doing things that use data (like browsing the web) will be slower. And we'll charge you for any extra data you use. But never more than £1.00 a day.",
+                                "over": "We'll charge you for any data you use. But never more than £1.00 a day. You've used all your data allowance for today. That means doing things that use data (like browsing the web) will be slower until midnight."
+                            },
+                            "CONS_WEB_DAILY_100": {
+                                "info": "UK data use will be updated within 30 minutes. Data used in our Europe Zone may take up to 24 hours. Minutes and texts in the UK and our Europe Zone usually update within 24 hours but international calls may take longer.",
+                                "summary": "We'll charge you for any data you use, but never more than £1.02 a day.",
+                                "warning": "You've almost used all your data allowance. Once it's all used up, doing things that use data (like browsing the web) will be slower. And we'll charge you for any extra data you use. But never more than £1.02 a day.",
+                                "over": "We'll charge you for any data you use. But never more than £1.02 a day. You've used all your data allowance for today. That means doing things that use data (like browsing the web) will be slower until midnight."
+                            },
+                            "CONS_DATA_UNLIMITED": {
+                                "info": "UK data use will be updated within 30 minutes. Data used in our Europe Zone may take up to 24 hours. Minutes and texts in the UK and our Europe Zone usually update within 24 hours but international calls may take longer."
+                            },
+                            "CONS_DATA_UNLIMITED_WITH_FAIR_USE": {
+                                "info": "UK data use will be updated within 30 minutes. Data used in our Europe Zone may take up to 24 hours. Minutes and texts in the UK and our Europe Zone usually update within 24 hours but international calls may take longer."
+                            },
+                            "CONS_DATA_OVERAGE_WITH_BUNDLE": {
+                                "info": "UK data use will be updated within 30 minutes. Data used in our Europe Zone may take up to 24 hours. Minutes and texts in the UK and our Europe Zone usually update within 24 hours but international calls may take longer."
+                            },
+                            "CONS_DATA_UNLIMITED_AND_TETHERING": {
+                                "info": "UK data use will be updated within 30 minutes. Data used in our Europe Zone may take up to 24 hours. Minutes and texts in the UK and our Europe Zone usually update within 24 hours but international calls may take longer."
+                            },
+                            "alwayson": {
+                                "warning": "Youâ\u0080\u0099ve nearly used up your data allowance this month. Once itâ\u0080\u0099s used up, youâ\u0080\u0099ll still be able to use data but the speed will be slower than usual. Itâ\u0080\u0099ll go back to full speed automatically with your next monthâ\u0080\u0099s allowance. If you need full speed in the meantime, you can buy a data Bolt On.",
+                                "footer": "Youâ\u0080\u0099ve used up your data allowance this month. You can still use data but the speed will be slower than usual. Itâ\u0080\u0099ll go back to full speed automatically with your next monthâ\u0080\u0099s allowance. If you need full speed in the meantime, you can buy a data Bolt On."
+                            },
+                            "breakdown": {
+                                "core": "%s Data allowance",
+                                "recurringtopup": "%s Extra Data",
+                                "rollovertopup": "%s Data Bolt On",
+                                "rolledovertopup": "%s Data Bolt On(s)"
+                            }
+                        },
+                        "textallowance": {
+                            "unrestricted": "* You can also use this to send texts when abroad and picture messages. If you send 1, we'll take 4 texts from your allowance."
+                        },
+                        "account": {
+                            "footer": "All UK messages will be updated within 12 hours."
+                        },
+                        "minutesallowance": {
+                            "usage": {
+                                "info": {
+                                    "message": ""
+                                }
+                            }
+                        },
+                        "voice": {
+                            "analysis": {
+                                "no": {
+                                    "chargeable": {
+                                        "calls": "You have no chargeable calls!"
+                                    }
+                                }
+                            },
+                            "account": {
+                                "footer": "All UK calls will be updated within 12 hours."
+                            }
+                        },
+                        "pending": {
+                            "recharge": "You need to top up to get your next monthly allowance."
+                        },
+                        "prepay": {
+                            "tariff": {
+                                "info": "Charges for minutes, texts and data outside your tariff and Bolt On allowances."
+                            }
+                        }
+                    },
+                    "iphone": {
+                        "recentCharges": {
+                            "showUsageDetails": "true"
+                        },
+                        "billedCharges": {
+                            "showUsageDetails": "true"
+                        }
+                    },
+                    "android": {
+                        "recentCharges": {
+                            "showUsageDetails": "true"
+                        },
+                        "billedCharges": {
+                            "showUsageDetails": "true"
+                        }
+                    },
+                    "feature": {
+                        "dataallowance": {
+                            "breakdown": "true"
+                        }
+                    },
+                    "defaultLPFCharge": "3.5",
+                    "recommendation": {
+                        "header": "You could save money by adding a Bolt On or changing your tariff. Read more.",
+                        "TARIFF": {
+                            "type": "TARIFF",
+                            "action": "CHANGE_TARIFF",
+                            "linkText": "Change tariff",
+                            "message": "Going over your allowance? Save money by upgrading your tariff."
+                        },
+                        "O2_TRAVEL": {
+                            "type": "O2_TRAVEL",
+                            "action": "ADD_BOLTONS",
+                            "linkText": "Add Bolt On",
+                            "message": "Spending time abroad? Save money by adding a travel Bolt On."
+                        },
+                        "PICTURE_MESSAGES": {
+                            "type": "PICTURE_MESSAGES",
+                            "action": "ADD_BOLTONS",
+                            "linkText": "Add Bolt On",
+                            "message": "Sending lots of picture messages? Save money by adding an MMS Bolt On."
+                        },
+                        "INTERNATIONAL_FAVOURITES": {
+                            "type": "INTERNATIONAL_FAVOURITES",
+                            "action": "ADD_BOLTONS",
+                            "linkText": "Add Bolt On",
+                            "message": "Calling friends and family abroad? Save money by adding an international Bolt On."
+                        },
+                        "MULTIPLE_BOLTONS": {
+                            "type": "MULTIPLE_BOLTONS",
+                            "action": "ADD_BOLTONS",
+                            "linkText": "Add Bolt On",
+                            "message": "Sending lots of picture messages? Going abroad? Or got friends and family in another country? We can help you save money, with our range of Bolt Ons."
+                        }
+                    },
+                    "thirdPartyUpgradeAcquisitionPartners": "CPW",
+                    "promoBannerNotificationDuration": 1,
+                    "upgradeBannerNotificationDuration": 6,
+                    "redirectTradeinCustomersToStore": "false",
+                    "coreDataBoltOnFamilies": "COREBLACKBERRY|CORESMART|COREIPHONE|COREMBB|BLACKBERRY|SMARTPHONE|IPHONE|BLACKBERRY TETHERING|SMARTPHONE TETHERING|IPHONE TETHERING|COREIMSSMART|COREIMSIPHONE",
+                    "nonRemovableBoltons": "family subscription|family discount|bar|billing otion|insurance|supplementary service|data roaming",
+                    "oneOffBolton": "ONEOFFTOPUP",
+                    "tugoBoltonId": "9755",
+                    "o2TravelBoltonId": "9751|9752|9753",
+                    "boltonsToBeExcluded": "9225|9226|9251|9252|9253|8382",
+                    "dataallowance": {
+                        "threshold": "80"
+                    },
+                    "minutesallowance": {
+                        "threshold": "80"
+                    },
+                    "messagesallowance": {
+                        "threshold": "80"
+                    }
+                };
+
+                apim.setvariable('message.body', properties);
+        - operations:
+          - verb: get
+            path: /errorconfig
+          execute:
+          - gatewayscript:
+              title: GS:GetErrorConfig
+              version: 1.0.0
+              description: Returns all error configs to be used in error handling
+              source: "/* ***********************************************************************************************************************
+                */\r\n/* ***********************************************************************************************************************
+                */\r\n/* FileName                                Version    Created
+                By                  Modified By               Date           */\r\n/*
+                GetErrorConfig.js                       1.0        Dinesh Tomar                                          14-June-2018
+                \  */\r\n/*                                                                                                                         */\r\n/*
+                ***********************************************************************************************************************
+                */\r\n/* Purpose: This GW Script file will return all error configs
+                to be used in error handling                                 */\r\n/*
+                \                                                                                                                        */\r\n/*
+                Required params:                                                                                                        */\r\n/*
+                ***********************************************************************************************************************
+                */\r\nvar errorConfig = { \"errorConfig\": {\r\n        \"about\":
+                {\r\n            \"fileName\": \"\",\r\n            \"versions\":
+                { \"v0.1\": {\r\n                    \"modifiedBy\": \"Cognizant Team\",\r\n
+                \                   \"date\": \"07-May-2018\",\r\n                    \"changeDesciption\":
+                \"First draft\"\r\n                }\r\n            }\r\n        },\r\n
+                \       \"errorTypes\": {\r\n            \"InvalidMsisdn\": {\r\n
+                \               \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Missing
+                or invalid msisdn\"\r\n                }\r\n            },\r\n            \"InvalidUID\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Missing
+                or invalid UID\"\r\n                }\r\n            },\r\n            \"InvalidAuthCode\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Missing
+                or invalid auth code\"\r\n                }\r\n            },\r\n
+                \           \"InvalidDeviceType\": {\r\n                \"statusCode\":
+                \"400\",\r\n                \"reasonPhrase\": \"APIC: Invalid request\",\r\n
+                \               \"errorMessage\": {\r\n                    \"httpCode\":
+                \"400\",\r\n                    \"httpMessage\": \"Invalid request\",\r\n
+                \                   \"moreInformation\": \"Missing or invalid device
+                type\"\r\n                }\r\n            },\r\n            \"InvalidAppVersion\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Missing
+                or invalid app version\"\r\n                }\r\n            },\r\n
+                \           \"InvalidTariff\": {\r\n                \"statusCode\":
+                \"400\",\r\n                \"reasonPhrase\": \"APIC: Invalid request\",\r\n
+                \               \"errorMessage\": {\r\n                    \"httpCode\":
+                \"400\",\r\n                    \"httpMessage\": \"Invalid request\",\r\n
+                \                   \"moreInformation\": \"Missing or invalid tariff\"\r\n
+                \               }\r\n            },\r\n            \"InvalidProductLabel\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Missing
+                or invalid product label\"\r\n                }\r\n            },\r\n
+                \           \"InvalidUserId\": {\r\n                \"statusCode\":
+                \"400\",\r\n                \"reasonPhrase\": \"APIC: Invalid request\",\r\n
+                \               \"errorMessage\": {\r\n                    \"httpCode\":
+                \"400\",\r\n                    \"httpMessage\": \"Invalid request\",\r\n
+                \                   \"moreInformation\": \"Missing or invalid user
+                id\"\r\n                }\r\n            },\r\n            \"InvalidCorrelator\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Missing
+                or invalid correlator\"\r\n                }\r\n            },\r\n
+                \           \"InvalidClientId\": {\r\n                \"statusCode\":
+                \"400\",\r\n                \"reasonPhrase\": \"APIC: Invalid request\",\r\n
+                \               \"errorMessage\": {\r\n                    \"httpCode\":
+                \"400\",\r\n                    \"httpMessage\": \"Invalid request\",\r\n
+                \                   \"moreInformation\": \"Missing or invalid client
+                id\"\r\n                }\r\n            },\r\n            \"InvalidClientSecret\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Missing
+                or invalid client secret\"\r\n                }\r\n            },\r\n
+                \           \"InvalidIPAddress\": {\r\n                \"statusCode\":
+                \"400\",\r\n                \"reasonPhrase\": \"APIC: Invalid request\",\r\n
+                \               \"errorMessage\": {\r\n                    \"httpCode\":
+                \"400\",\r\n                    \"httpMessage\": \"Invalid request\",\r\n
+                \                   \"moreInformation\": \"IP address not provisioned\"\r\n
+                \               }\r\n            },\r\n            \"InvalidAuthorization\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Missing
+                or invalid authorization header value\"\r\n                }\r\n            },\r\n
+                \           \"InvalidContentType\": {\r\n                \"statusCode\":
+                \"400\",\r\n                \"reasonPhrase\": \"APIC: Invalid request\",\r\n
+                \               \"errorMessage\": {\r\n                    \"httpCode\":
+                \"400\",\r\n                    \"httpMessage\": \"Invalid request\",\r\n
+                \                   \"moreInformation\": \"Missing or invalid content
+                type\"\r\n                }\r\n            },\r\n            \"AuthorizationError\":
+                {\r\n                \"statusCode\": \"401\",\r\n                \"reasonPhrase\":
+                \"APIC: Unauthorized\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"401\",\r\n                    \"httpMessage\":
+                \"Unauthorized\",\r\n                    \"moreInformation\": \"Authorization
+                error\"\r\n                }\r\n            },\r\n            \"ConnectionError\":
+                {\r\n                \"statusCode\": \"500\",\r\n                \"reasonPhrase\":
+                \"APIC: Internal Server Error\",\r\n                \"errorMessage\":
+                {\r\n                    \"httpCode\": \"500\",\r\n                    \"httpMessage\":
+                \"Internal Server Error\",\r\n                    \"moreInformation\":
+                \"Connection error\"\r\n                }\r\n            },\r\n            \"OperationError\":
+                {\r\n                \"statusCode\": \"404\",\r\n                \"reasonPhrase\":
+                \"APIC: Not Found\",\r\n                \"errorMessage\": {\r\n                    \"httpCode\":
+                \"404\",\r\n                    \"httpMessage\": \"Not Found\",\r\n
+                \                   \"moreInformation\": \"Requested resource not
+                found\"\r\n                }\r\n            },\r\n            \"SOAPError\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Invalid
+                request\"\r\n                }\r\n            },\r\n            \"SchemaValidationError\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Schema
+                validation error\"\r\n                }\r\n            },\r\n            \"InvalidServiceType\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Missing
+                or invalid service type\"\r\n                }\r\n            },\r\n
+                \           \"InvalidServiceOrOperation\": {\r\n                \"statusCode\":
+                \"400\",\r\n                \"reasonPhrase\": \"APIC: Invalid request\",\r\n
+                \               \"errorMessage\": {\r\n                    \"httpCode\":
+                \"400\",\r\n                    \"httpMessage\": \"Invalid request\",\r\n
+                \                   \"moreInformation\": \"Service or operation name
+                is either missing or invalid\"\r\n                }\r\n            },\r\n
+                \           \"InvalidService\": {\r\n                \"statusCode\":
+                \"400\",\r\n                \"reasonPhrase\": \"APIC: Invalid request\",\r\n
+                \               \"errorMessage\": {\r\n                    \"httpCode\":
+                \"400\",\r\n                    \"httpMessage\": \"Invalid request\",\r\n
+                \                   \"moreInformation\": \"Invalid service name\"\r\n
+                \               }\r\n            },\r\n            \"InvalidOperation\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Invalid
+                operation name\"\r\n                }\r\n            },\r\n            \"MissingPathParam\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Path
+                parameter missing\"\r\n                }\r\n            },\r\n            \"MissingQueryParam\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Query
+                parameter missing\"\r\n                }\r\n            },\r\n            \"MissingHeadersParam\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"HTTP
+                header missing\"\r\n                }\r\n            },\r\n            \"MissingBodyParam\":
+                {\r\n                \"statusCode\": \"400\",\r\n                \"reasonPhrase\":
+                \"APIC: Invalid request\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"400\",\r\n                    \"httpMessage\":
+                \"Invalid request\",\r\n                    \"moreInformation\": \"Body
+                parameter missing\"\r\n                }\r\n            },\r\n            \"default\":
+                {\r\n                \"statusCode\": \"500\",\r\n                \"reasonPhrase\":
+                \"APIC: Internal Error\",\r\n                \"errorMessage\": {\r\n
+                \                   \"httpCode\": \"500\",\r\n                    \"httpMessage\":
+                \"Internal Error\",\r\n                    \"moreInformation\": \"Something
+                went wrong\"\r\n                }\r\n            }\r\n        }\r\n
+                \   }\r\n};\r\n\r\napim.setvariable('message.body', errorConfig);"
+        - operations:
+          - verb: get
+            path: /restconfig
+          execute:
+          - gatewayscript:
+              title: GS:GetRESTConfig
+              version: 1.0.0
+              description: Returns all REST configurations to be used in caching layer
+                APIs
+              source: |-
+                /* *********************************************************************************************************************** */
+                /* *********************************************************************************************************************** */
+                /* FileName                                Version    Created By                  Modified By               Date           */
+                /* GetRESTConfig.js                        1.0        Dinesh Tomar                                          14-June-2018   */
+                /*                                                                                                                         */
+                /* *********************************************************************************************************************** */
+                /* Purpose: This GW Script file will return all REST configurations to be used in caching layer APIs                       */
+                /*                                                                                                                         */
+                /* Required params:                                                                                                        */
+                /* *********************************************************************************************************************** */
+                var restConfig = {
+                    "restConfig": {
+                        "services":[ { "echoservice": {
+                                "endpoint": "https://api.eu.apiconnect.ibmcloud.com/dineshtomardt93gmailcom-dev/sb/echoservice",
+                                "operations":[ { "echoParams": {
+                                        "method": "GET",
+                                        "uri": "/<msisdn>/echoParams/<x-customerid>",
+                                        "requiredPathParams": "msisdn|x-customerid",
+                                        "requiredQueryParams": "x-number1|x-number2",
+                                        "requiredHeaders": "x-authcode|authorization"
+                                    }
+                                }, {
+                                    "greetUser": {
+                                        "method": "GET",
+                                        "uri": "/greetUser/{x-firstname}",
+                                        "requiredPathParams": "x-firstname",
+                                        "requiredQueryParams": "",
+                                        "requiredHeaders": ""
+                                    }
+                                }]
+                            }
+                        }, { "userservice": {
+                                "endpoint": "https://api.eu.apiconnect.ibmcloud.com/dineshtomardt93gmailcom-dev/sb/userservice",
+                                "operations":[ {
+                                    "generateUserDetails": {
+                                        "method": "POST",
+                                        "uri": "/generateUserDetails",
+                                        "requiredPathParams": "",
+                                        "requiredQueryParams": "",
+                                        "requiredHeaders": "",
+                                        "body": {
+                                            "first_name": "x-firstname",
+                                            "last_name": "x-lastname",
+                                            "date_of_birth": "x-dateofbirth",
+                                            "address_line1": "x-addressline1",
+                                            "address_line2": "x-addressline2",
+                                            "address_line3": "x-addressline3",
+                                            "city": "x-city",
+                                            "state": "x-state",
+                                            "country": "x-country",
+                                            "pin_code": "x-pincode"
+                                        }
+                                    }
+                                }, {
+                                    "operation": {
+                                    }
+                                }]
+                            }
+                        }]
+                    }
+                };
+
+                apim.setvariable('message.body', restConfig);
+        - operations:
+          - verb: get
+            path: /soapconfig
+          execute:
+          - xslt:
+              title: XSLT:GetSOAPConfig
+              input: false
+              version: 1.0.0
+              source: "<!-- *****************************************************************************************************************
+                -->\n<!-- *****************************************************************************************************************
+                -->\n<!-- FileName                               Version    Created
+                By             Modified By               Date           -->\n<!--
+                GetSOAPConfig.xsl                      1.0        Dinesh Tomar                                     14-June-2018
+                \  -->\n<!--                                                                                                                   -->\n<!--
+                *****************************************************************************************************************
+                -->\n<!-- Purpose: This XSLT code will return all SOAP configurations
+                to be used in caching layer APIs                      -->\n<!--                                                                                                                   -->\n<!--
+                Required params: request specific                                                                                 -->\n<!--
+                *****************************************************************************************************************
+                -->\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"
+                xmlns:dp=\"http://www.datapower.com/extensions\" xmlns:func=\"http://exslt.org/functions\"
+                xmlns:apim=\"http://www.ibm.com/apimanagement\" extension-element-prefixes=\"dp
+                func apim\">\n    <xsl:import href=\"local:///isp/policy/apim.custom.xsl\"
+                />\n    <xsl:output method=\"xml\" omit-xml-declaration=\"yes\" indent=\"yes\"/>\n
+                \   <xsl:strip-space elements=\"*\"/>\n    <xsl:template match=\"/\">\n\t\t<xsl:variable
+                name=\"soapConfig\">\n\t\t\t<soapConfig>\n\t\t\t\t<service name=\"calculatorservice\">\n\t\t\t\t\t<backendURL>https://api.eu.apiconnect.ibmcloud.com/dineshtomardt93gmailcom-dev/sb/calculatorservice</backendURL>\n\t\t\t\t\t<tlsClientProfile></tlsClientProfile>\n\t\t\t\t\t<operation
+                name=\"addNumbers\">\n\t\t\t\t\t\t<requiredParams>x-number1|x-number2</requiredParams>\n\t\t\t\t\t\t<soapMessage>\n\t\t\t\t\t\t\t<soapenv:Envelope
+                xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:cal=\"http://www.examples.com/wsdl/Calculator.wsdl\">\n\t\t\t\t\t\t\t\t<soapenv:Header/>\n\t\t\t\t\t\t\t\t<soapenv:Body>\n\t\t\t\t\t\t\t\t\t<cal:addNumbers>\n\t\t\t\t\t\t\t\t\t\t<number1>0.00</number1>\n\t\t\t\t\t\t\t\t\t\t<number2>0.00</number2>\n\t\t\t\t\t\t\t\t\t</cal:addNumbers>\n\t\t\t\t\t\t\t\t</soapenv:Body>\n\t\t\t\t\t\t\t</soapenv:Envelope>\n\t\t\t\t\t\t</soapMessage>\n\t\t\t\t\t</operation>\n\t\t\t\t\t<operation
+                name=\"subtractNumbers\">\n\t\t\t\t\t\t<requiredParams>x-number1|x-number2</requiredParams>\n\t\t\t\t\t\t<soapMessage>\n\t\t\t\t\t\t\t<soapenv:Envelope
+                xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:cal=\"http://www.examples.com/wsdl/Calculator.wsdl\">\n\t\t\t\t\t\t\t\t<soapenv:Header/>\n\t\t\t\t\t\t\t\t<soapenv:Body>\n\t\t\t\t\t\t\t\t\t<cal:subtractNumbers>\n\t\t\t\t\t\t\t\t\t\t<number1>0.00</number1>\n\t\t\t\t\t\t\t\t\t\t<number2>0.00</number2>\n\t\t\t\t\t\t\t\t\t</cal:subtractNumbers>\n\t\t\t\t\t\t\t\t</soapenv:Body>\n\t\t\t\t\t\t\t</soapenv:Envelope>\n\t\t\t\t\t\t</soapMessage>
+                \           \n\t\t\t\t\t</operation>\n\t\t\t\t\t<operation name=\"multiplyNumbers\">\n\t\t\t\t\t\t<requiredParams>x-number1|x-number2</requiredParams>\n\t\t\t\t\t\t<soapMessage>\n\t\t\t\t\t\t\t<soapenv:Envelope
+                xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:cal=\"http://www.examples.com/wsdl/Calculator.wsdl\">\n\t\t\t\t\t\t\t\t<soapenv:Header/>\n\t\t\t\t\t\t\t\t<soapenv:Body>\n\t\t\t\t\t\t\t\t\t<cal:multiplyNumbers>\n\t\t\t\t\t\t\t\t\t\t<number1>0.00</number1>\n\t\t\t\t\t\t\t\t\t\t<number2>0.00</number2>\n\t\t\t\t\t\t\t\t\t</cal:multiplyNumbers>\n\t\t\t\t\t\t\t\t</soapenv:Body>\n\t\t\t\t\t\t\t</soapenv:Envelope>\n\t\t\t\t\t\t</soapMessage>
+                \           \n\t\t\t\t\t</operation>\n\t\t\t\t\t<operation name=\"divideNumbers\">\n\t\t\t\t\t\t<requiredParams>x-number1|x-number2</requiredParams>\n\t\t\t\t\t\t<soapMessage>\n\t\t\t\t\t\t\t<soapenv:Envelope
+                xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:cal=\"http://www.examples.com/wsdl/Calculator.wsdl\">\n\t\t\t\t\t\t\t\t<soapenv:Header/>\n\t\t\t\t\t\t\t\t<soapenv:Body>\n\t\t\t\t\t\t\t\t\t<cal:divideNumbers>\n\t\t\t\t\t\t\t\t\t\t<number1>0.00</number1>\n\t\t\t\t\t\t\t\t\t\t<number2>0.00</number2>\n\t\t\t\t\t\t\t\t\t</cal:divideNumbers>\n\t\t\t\t\t\t\t\t</soapenv:Body>\n\t\t\t\t\t\t\t</soapenv:Envelope>\n\t\t\t\t\t\t</soapMessage>
+                \           \n\t\t\t\t\t</operation>\n\t\t\t\t</service>\n\t\t\t\t<service
+                name=\"bankloanservice\">\n\t\t\t\t\t<backendURL>https://api.eu.apiconnect.ibmcloud.com/dineshtomardt93gmailcom-dev/sb/bankloanservice</backendURL>\n\t\t\t\t\t<tlsClientProfile></tlsClientProfile>\n\t\t\t\t\t<operation
+                name=\"getLoanInfo\">\n\t\t\t\t\t\t<requiredParams>x-customerId</requiredParams>\n\t\t\t\t\t\t<soapMessage>\n\t\t\t\t\t\t\t<soapenv:Envelope
+                xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ban=\"http://www.examples.com/wsdl/BankLoan.wsdl\">\n\t\t\t\t\t\t\t\t<soapenv:Header/>\n\t\t\t\t\t\t\t\t<soapenv:Body>\n\t\t\t\t\t\t\t\t\t<ban:getLoanInfo>\n\t\t\t\t\t\t\t\t\t\t<customerId>customerId</customerId>\n\t\t\t\t\t\t\t\t\t</ban:getLoanInfo>\n\t\t\t\t\t\t\t\t</soapenv:Body>\n\t\t\t\t\t\t\t</soapenv:Envelope>\n\t\t\t\t\t\t</soapMessage>
+                \           \n\t\t\t\t\t</operation>\n\t\t\t\t\t<operation name=\"calculateInterestRate\">\n\t\t\t\t\t\t<requiredParams>x-bankCode|x-loanAmount</requiredParams>\n\t\t\t\t\t\t<soapMessage>\n\t\t\t\t\t\t\t<soapenv:Envelope
+                xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ban=\"http://www.examples.com/wsdl/BankLoan.wsdl\">\n\t\t\t\t\t\t\t\t<soapenv:Header/>\n\t\t\t\t\t\t\t\t<soapenv:Body>\n\t\t\t\t\t\t\t\t\t<ban:calculateInterestRate>\n\t\t\t\t\t\t\t\t\t\t<bankCode>bankCode</bankCode>\n\t\t\t\t\t\t\t\t\t\t<loanAmount>0.00</loanAmount>\n\t\t\t\t\t\t\t\t\t</ban:calculateInterestRate>\n\t\t\t\t\t\t\t\t</soapenv:Body>\n\t\t\t\t\t\t\t</soapenv:Envelope>\n\t\t\t\t\t\t</soapMessage>
+                \           \n\t\t\t\t\t</operation>\n\t\t\t\t\t<operation name=\"calculateEMI\">\n\t\t\t\t\t\t<requiredParams>x-loanAmount|x-interestRate|x-durationMonths</requiredParams>\n\t\t\t\t\t\t<soapMessage>\n\t\t\t\t\t\t\t<soapenv:Envelope
+                xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ban=\"http://www.examples.com/wsdl/BankLoan.wsdl\">\n\t\t\t\t\t\t\t\t<soapenv:Header/>\n\t\t\t\t\t\t\t\t<soapenv:Body>\n\t\t\t\t\t\t\t\t\t<ban:calculateEMI>\n\t\t\t\t\t\t\t\t\t\t<loanAmount>0.00</loanAmount>\n\t\t\t\t\t\t\t\t\t\t<interestRate>0.00</interestRate>\n\t\t\t\t\t\t\t\t\t\t<durationMonths>0</durationMonths>\n\t\t\t\t\t\t\t\t\t</ban:calculateEMI>\n\t\t\t\t\t\t\t\t</soapenv:Body>\n\t\t\t\t\t\t\t</soapenv:Envelope>
+                \               \n\t\t\t\t\t\t</soapMessage>\n\t\t\t\t\t</operation>\n\t\t\t\t</service>\n\t\t\t</soapConfig>\n\t\t</xsl:variable>\n
+                \       <xsl:call-template name=\"apim:setVariable\">\n            <xsl:with-param
+                name=\"varName\" select=\"'message.headers.content-type'\" />\n            <xsl:with-param
+                name=\"value\" select=\"'application/xml'\" />\n        </xsl:call-template>\n
+                \   \t<xsl:copy-of select=\"$soapConfig\"/>\n    </xsl:template>\n</xsl:stylesheet>\n"
+              description: Returns all SOAP configurations to be used in caching layer
+                APIs
+        - operations:
+          - verb: get
+            path: /aaaconfig
+          execute:
+          - xslt:
+              title: XSLT:GetAAAConfig
+              input: false
+              version: 1.0.0
+              source: "<!-- ************************************************************************************************************
+                -->\n<!-- ************************************************************************************************************
+                -->\n<!-- FileName                          Version    Created By
+                \            Modified By               Date           -->\n<!-- GetAAAConfig.xsl
+                \                 1.0        Dinesh Tomar                                     13-July-2018
+                \  -->\n<!--                                                                                                              -->\n<!--
+                ************************************************************************************************************
+                -->\n<!-- Purpose: This XSLT code will return AAA configuration to
+                be used for authC and authZ                         -->\n<!--                                                                                                              -->\n<!--
+                Required params: request specific                                                                            -->\n<!--
+                ************************************************************************************************************
+                -->\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\n
+                \   <xsl:output method=\"xml\" omit-xml-declaration=\"yes\" indent=\"yes\"/>\n
+                \   <xsl:strip-space elements=\"*\"/>\n    <xsl:template match=\"/\">\n
+                \       <xsl:variable name=\"aaaConfig\">\n            <AAAInfo>\n
+                \               <!--Start of authentication entries-->\n                \n
+                \               <!--Start of o2apic support consumer authentication
+                entries-->\n                <Authenticate>\n                    <IPNetwork>0.0.0.0/0</IPNetwork>\n
+                \                   <Username>897d8079f7977d1019efd7e73539c86f</Username>\n
+                \                   <Password>74b203ede282a806b4782d4dac36cbf3</Password>\n
+                \                   <UserID>13000000000000505416</UserID>\n                    <OutputCredential>novum</OutputCredential>\n
+                \               </Authenticate>\n                <!--End of o2apic
+                support consumer authentication entries-->\n                \n                <!--Start
+                of novum consumer authentication entries-->\n                <Authenticate>\n
+                \                   <IPNetwork>0.0.0.0/0</IPNetwork>\n                    <Username>novum</Username>\n
+                \                   <Password>4eaKOihq3NXqYFfrKbGwjrUQGoOkXuzFCgiYeOtHjf08sgee3qUAzJEy2iOGc8Jf</Password>\n
+                \                   <OutputCredential>novum</OutputCredential>\n                </Authenticate>\n
+                \               <Authenticate>\n                    <IPNetwork>0.0.0.0/0</IPNetwork>\n
+                \                   <Username>apiconnect.1</Username>\n                    <Password>FoXaPo$eB=3=</Password>\n
+                \                   <OutputCredential>novum</OutputCredential>\n                </Authenticate>\n
+                \               <!--End of novum consumer authentication entries-->\n
+                \               \n                <!--End  of authentication entries-->\n
+                \               \n                <!--Start of authorization entries-->\n
+                \               <Authorize>\n                    <InputCredential>testsupport</InputCredential>\n
+                \                   <InputResource>/v1/device/auth|/v1/auth/password_o2</InputResource>\n
+                \                   <Access>allow</Access>\n                </Authorize>
+                \          \n                <Authorize>\n                    <InputCredential>novum</InputCredential>\n
+                \                   <InputResource>/v1/device/auth|/v1/token|/v1/person/CURRENT/asset</InputResource>\n
+                \                   <Access>allow</Access>\n                </Authorize>\n
+                \               \n                <!--Start of authorization entries-->\n
+                \           </AAAInfo>\n        </xsl:variable>\n        <xsl:copy-of
+                select=\"$aaaConfig\"/>\n    </xsl:template>\n</xsl:stylesheet>\n"
+              description: This XSLT code will return AAA configuration to be used
+                for authC and authZ
+        - operations:
+          - verb: get
+            path: /authconfig
+          execute:
+          - gatewayscript:
+              version: 1.0.0
+              title: GS:GetAuthConfig
+              source: "/* ****************************************************************************************************************
+                */\r\n/* ****************************************************************************************************************
+                */\r\n/* FileName                         Version    Created By                  Modified
+                By               Date           */\r\n/* GetProperties.js                 1.0
+                \       Dinesh Tomar                                          14-June-2018
+                \  */\r\n/*                                                                                                                  */\r\n/*
+                ****************************************************************************************************************
+                */\r\n/* Purpose: This GW Script file will return all properties to
+                be used in different APIs                             */\r\n/*                                                                                                                  */\r\n/*
+                Required params:                                                                                                 */\r\n/*
+                ****************************************************************************************************************
+                */\r\nvar authConfig = {\r\n    \r\n    \"assetservice\": {\r\n        \"assets\":
+                {\r\n            \"uri\": \"https://auth.ref.o2.co.uk/person/v1/person/CURRENT/asset?asset_types=PAYM,PAYG,PAYMMBB,O2WIFI,O2DRIVE,WALLET\"\r\n
+                \       },\r\n        \"asset\": {\r\n            \"type\": {\r\n
+                \               \"uri\": \"https://api0.ref.o2.co.uk/person/v1/person/CURRENT/asset/%s\"\r\n
+                \           },\r\n            \"push\": {\r\n                \"generate\":
+                {\r\n                    \"uri\": \"https://api0.ref.o2.co.uk/person/v1/person/CURRENT/generator/asset/PUSHNOTIFICATION\"\r\n
+                \               }\r\n            }\r\n        }\r\n    },\r\n    \"authserver\":
+                {\r\n        \"client_id\": \"apiconnect.1\",\r\n        \"client_secret\":
+                \"FoXaPo$eB=3=\",\r\n        \"grant_type\": \"authorization_code\",\r\n
+                \       \"oauth\": {\r\n            \"grant_type\": \"auth_cookie\"\r\n
+                \       },\r\n        \"readTimeoutMillis\": \"30000\",\r\n        \"scope\":[\r\n
+                \       \"openid\",\r\n        \"profile\",\r\n        \"phone\",\r\n
+                \       \"email\"],\r\n        \"generateAuthCode\": {\r\n            \"uri\":
+                \"https://auth.ref.o2.co.uk/auth/implicitauth\"\r\n        },\r\n
+                \       \"generateAccessToken\": {\r\n            \"apicURI\": \"/authservice/getaccesstoken\",\r\n
+                \           \"uri\": \"https://auth.ref.o2.co.uk/auth/v1/token\"\r\n
+                \       },\r\n        \"getUserInfo\": {\r\n            \"uri\": \"https://api0.ref.o2.co.uk/auth/userinfo\",\r\n
+                \           \"queryParam\": \"access_token\"\r\n        },\r\n        \"generateDisambiguationId\":
+                {\r\n            \"apicURI\": \"/authservice/getdisambiguationid\",\r\n
+                \           \"uri\": \"https://auth.ref.o2.co.uk/auth/v1/auth/select\"\r\n
+                \       },\r\n        \"generateTransferAuthCode\": {\r\n            \"apicURI\":
+                \"/authservice/getconsolidatedauth\",\r\n            \"uri\": \"https://auth.ref.o2.co.uk/auth/v1/auth/tac/issue\"\r\n
+                \       }\r\n    },\r\n    \"sso\": {\r\n        \"endpoint\": { \"paybill\":
+                {\r\n                \"sendto\": \"https://billing.ref.o2.co.uk/bill?noheader=true&routeTo=pay/bill&disambiguation_id=%s&cm_mmc=myo2app-_-#deviceType#-_-#clientId#-_-bills-_-makeapayment\",\r\n
+                \               \"failure\": \"https://mymobile.ref.o2.co.uk/error/page/500?noheader=true&cm_mmc=myo2app-_-#deviceType#-_-#clientId#-_-bills-_-makeapayment\"\r\n
+                \           }\r\n        },\r\n        \"credhandler_redemption_url\":
+                \"https://identity.ref.o2.co.uk/redeem/tac?transfer_auth_code=#AUTH_CODE#&sendTo=#SEND_TO#&failureUrl=#FAILURE_URL#\"\r\n
+                \   },\r\n    \"phoneservice\": {\r\n        \"billedcharges\": {\r\n
+                \           \"uri\": \"https://zeus-lb.ref.o2.co.uk:5443/phone/consumer/CURRENT/paym/bill/billedcharges\",\r\n
+                \           \"recommendation\": {\r\n                \"uri\": \"https://zeus-lb.ref.o2.co.uk:5443/phone/consumer/CURRENT/paym/billedcharges/recommendation\"\r\n
+                \           }\r\n        },\r\n        \"recentcharges\": {\r\n            \"uri\":
+                \"https://zeus-lb.ref.o2.co.uk:5443/phone/consumer/CURRENT/paym/bill/recentcharges\"\r\n
+                \       },\r\n        \"previousbills\": {\r\n            \"uri\":
+                \"https://zeus-lb.ref.o2.co.uk:5443/phone/consumer/CURRENT/paym/bill/previousbills\"\r\n
+                \       },\r\n        \"msisdndetails\": {\r\n            \"uri\":
+                \"https://zeus-lb.ref.o2.co.uk:5443/phone/consumer/CURRENT/paym\"\r\n
+                \       },\r\n        \"phoneplan\": {\r\n            \"uri\": \"https://zeus-lb.ref.o2.co.uk:5443/phone/consumer/CURRENT/paym/cca/phoneplan\"\r\n
+                \       },\r\n        \"upgradesandpromotions\": {\r\n            \"uri\":
+                \"https://zeus-lb.ref.o2.co.uk:5443/phone/consumer/CURRENT/paym/upgradeoptionsandpromotions\"\r\n
+                \       },\r\n        \"billprofile\": {\r\n            \"uri\": \"https://zeus-lb.ref.o2.co.uk:5443/phone/v2/consumer/CURRENT/paym/bill/profile\"\r\n
+                \       }\r\n    }\r\n};\r\n\r\napim.setvariable('message.body', authConfig);"
+              description: This GW script will return all the properties required
+                by to call auth server.
+        otherwise: []
+        version: 1.0.0
+    catch: []
+  gateway: datapower-gateway
+  type: rest
+tags: []
+definitions: {}
+paths:
+  /authconfig:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            type: string
+      consumes: []
+      produces: []
+      parameters: []
+  /validationconfig:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+  /properties:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+  /properties2:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+  /errorconfig:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+  /restconfig:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+  /soapconfig:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+  /aaaconfig:
+    get:
+      responses:
+        "200":
+          description: 200 OK

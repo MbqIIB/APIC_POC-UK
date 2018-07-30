@@ -1,0 +1,1113 @@
+swagger: "2.0"
+info:
+  title: o2apic-novum-upgradesandpromotions
+  x-ibm-name: o2apic-novum-upgradesandpromotions
+  version: 1.0.0
+host: $(catalog.host)
+schemes:
+- https
+basePath: /apic
+produces:
+- application/json
+consumes:
+- application/json
+security:
+- clientIdHeader: []
+securityDefinitions:
+  clientIdHeader:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+x-ibm-configuration:
+  phase: realized
+  testable: true
+  enforced: true
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  cors:
+    enabled: true
+  application-authentication:
+    certificate: false
+  assembly:
+    execute:
+    - activity-log:
+        title: Log:Payload
+        content: payload
+        error-content: payload
+        version: 1.0.0
+    - gatewayscript:
+        title: GS:FetchValidationConfig
+        version: 1.0.0
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* FetchValidationConfig.js      1.0        Dinesh Tomar                                          04-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will create URL to fetch validation config for all apis                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          var clientId = apim.getvariable('client.app.id');
+          apim.setvariable('message.headers.x-ibm-client-id', clientId);
+          apim.setvariable('message.headers.content-type', 'application/json');
+          //form url for to fetch errorConfig JSON
+          var requestURL = apim.getvariable('request.uri');
+          var orgName = apim.getvariable('api.org.name');
+          var hostName = requestURL.substr(0, requestURL.indexOf(orgName));
+          var catalog = apim.getvariable('env.path');
+          apim.setvariable('apicURLPrefix', hostName+orgName+'/'+catalog);
+          var validationConfigURL = apim.getvariable('apicURLPrefix')+'/'+'config/validationconfig';
+          apim.setvariable('validationConfigURL', validationConfigURL);
+        description: This GW Script will create URL to fetch validation config for
+          all apis
+    - invoke:
+        title: Invoke:ValidationConfig
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        version: 1.0.0
+        description: Load all messages  and properties in context
+        target-url: $(validationConfigURL)
+        output: validationConfig
+        stop-on-error:
+        - ConnectionError
+    - gatewayscript:
+        version: 1.0.0
+        title: GS:ValidateParams
+        source: "/* **********************************************************************************************************
+          */\n/* **********************************************************************************************************
+          */\n/* FileName                   Version    Created By                  Modified
+          By               Date           */\n/* ValidateParams.js          1.0        Dinesh
+          Tomar                                          03-July-2018   */\n/*                                                                                                            */\n/*
+          **********************************************************************************************************
+          */\n/* Purpose: This GW Script file will return all API configurations to
+          be used for validating input params     */\n/*                                                                                                            */\n/*
+          Required params:                                                                                           */\n/*
+          ************************************************************************************************************/\nvar
+          validationConfig = apim.getvariable('validationConfig.body');\nif (validationConfig
+          == null || isJSONEmpty(validationConfig)){\n    apim.setvariable('errorName',
+          'ConnectionError');\n    apim.error('ConnectionError', 500, 'Internal Error',
+          'Connection error');\n}\nelse {\n    var apiName = apim.getvariable('api.name');\n
+          \   var operationName = apim.getvariable('api.operation.path');\n    var
+          apiConfig = validationConfig.apisConfig[apiName][operationName];\n    var
+          paramsConfig = validationConfig.paramsConfig;\n    var requiredPathParams
+          = apiConfig.requiredPathParams;\n    var requiredQueryParams = apiConfig.requiredQueryParams;\n
+          \   var requiredHeaderParams = apiConfig.requiredHeaderParams;\n    validateRequiredParams('headers',
+          requiredHeaderParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredQueryParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredPathParams, paramsConfig);\n}\n\nfunction validateRequiredParams(paramType,
+          requiredParams, paramsConfig){\n    if (requiredParams !== \"\"){\n        var
+          reqParams = requiredParams.split('|');\n        for (var i = 0; i < reqParams.length;
+          i++){\n            var paramConfig = paramsConfig[reqParams[i]];\n            var
+          inputParam = apim.getvariable('request.'+paramType+'.'+reqParams[i]);\n
+          \           var nullValidation = ((inputParam != undefined) || (inputParam
+          != null));\n            if (nullValidation){\n                var dataTypeValidation
+          = true;\n                dataTypeValidation = validateDataType(inputParam,
+          paramConfig);\n                var lengthValidation = true;\n                var
+          allowedValuesValidation = true;\n                if (paramConfig.manLength
+          || paramConfig.maxLength){\n                    lengthValidation = validateLength(inputParam,
+          paramConfig);\n                }\n                if (paramConfig.allowedValues){\n
+          \                   allowedValuesValidation = validateAllowedValues(inputParam,
+          paramConfig);\n                }\n                if (!(dataTypeValidation)
+          || !(lengthValidation) || !(allowedValuesValidation)){\n                    apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                    apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \                   return;\n                }\n                else {\n
+          \                   apim.setvariable('message.headers.'+reqParams[i], inputParam);\n
+          \                   var clientId = apim.getvariable('client.app.id');\n
+          \                   apim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\n                    apim.setvariable('message.headers.content-type',
+          'application/json');\n                    //form url for to fetch properties
+          config JSON\n                    var configPropertiesURL = apim.getvariable('apicURLPrefix')+'/'+'config/properties';\n
+          \                   apim.setvariable('configPropertiesURL', configPropertiesURL);\n
+          \               }\n            }\n            else {\n                apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \               return;\n            }\n            \n        }\n    }\n}\n\nfunction
+          validateDataType(inputParam, paramConfig){\n    if (paramConfig.dataType
+          == 'number'){\n        return !(isNaN(parseInt(inputParam)));\n    }\n    else
+          if (paramConfig.dataType == 'email'){ \n        if (inputParam.includes('.')
+          && inputParam.includes('@') && (! inputParam.includes(' ')))\n            return
+          true;\n        else\n            return false;\n    }\n    else if (paramConfig.dataType
+          == 'string'){\n        if (inputParam != null && inputParam.length != 0)\n
+          \           return true;\n        else\n            return false;\n    }\n
+          \   else if (paramConfig.dataType == 'version'){\n        if (inputParam
+          == null || inputParam.length == 0)\n            return false;\n        else
+          if (inputParam.includes('.')) {\n            var splittedArray = inputParam.split('.');\n
+          \           var result = true;\n            for (var i = 0; i < splittedArray.length;
+          i++){\n                if (isNaN(parseInt(splittedArray[i]))){\n                    result
+          = false;\n                    return result;\n                }\n            }\n
+          \           return result;\n        }\n        else{\n            return
+          !(isNaN(parseInt(inputParam)));\n        }\n    }\n    else\n        return
+          true;\n}\n\nfunction validateLength(inputParam, paramConfig){\n    var minLength
+          = paramConfig.minLength;\n    var maxLength = paramConfig.maxLength;\n    if
+          ((inputParam.length >= minLength) && (inputParam.length <= maxLength))\n
+          \       return true;\n    else\n        return false;\n}\n\nfunction validateAllowedValues(inputParam,
+          paramConfig){\n    var allowedValues = paramConfig.allowedValues;\n    var
+          allowedValuesArray = allowedValues.split('|');\n    var result = false;\n
+          \   for (var i = 0; i < allowedValuesArray.length; i++){\n        if (allowedValuesArray[i]
+          == inputParam){\n            result = true;\n            return result;\n
+          \       }\n    }\n    return result;\n}\n\nfunction isJSONEmpty(jsonObject)
+          {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+          {\n        if (jsonObject[member] != null) {\n            result = false;\n
+          \       }\n    }\n    return result;\n}"
+        description: This GW Script file will return all API configurations to be
+          used for validating input params
+    - invoke:
+        title: Invoke:PropertiesHandler
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        version: 1.0.0
+        target-url: $(configPropertiesURL)
+        output: messages-property
+        description: Load all messages  and properties in context
+        username: prafullk
+        password: Temp12$$
+    - gatewayscript:
+        title: GS:CreateTACRequest
+        version: 1.0.0
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* CreateTACRequest.js           1.0        Dinesh Tomar                                          20-Apr-2018    */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script file will create request for transfer auth code                                       */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ************************************************************************************************************* */
+          //load properties configuration from context variable
+          var messages = apim.getvariable('messages-property.body');
+          //get all input parameters
+
+          if (messages == null || isJSONEmpty(messages)){
+              apim.setvariable('errorName', 'ConnectionError');
+              apim.error('ConnectionError', 500, 'Internal Error', 'Connection error');
+          }
+          else {
+              apim.setvariable('message.headers.content-type', 'application/json');
+              var generateTransferAuthCodeURL = apim.getvariable('apicURLPrefix')+messages.authserver.generateTransferAuthCode.apicURI;
+              apim.setvariable('generateTransferAuthCodeURL', generateTransferAuthCodeURL);
+          }
+
+          function isJSONEmpty(jsonObject) {
+              var member;
+              var result = true;
+              for (member in jsonObject) {
+                  if (jsonObject[member] != null) {
+                      result = false;
+                  }
+              }
+              return result;
+          }
+        description: This GW Script file will create request for transfer auth code
+    - invoke:
+        title: Invoke:GetTransferAuthCode
+        timeout: 60
+        verb: GET
+        cache-response: protocol
+        cache-ttl: 900
+        version: 1.0.0
+        target-url: $(generateTransferAuthCodeURL)
+        output: consolidatedAuthResponse
+        username: prafullk
+        password: Temp12$$
+    - gatewayscript:
+        title: GS:PreparePhoneServiceCalls
+        version: 1.0.0
+        source: |-
+          /* ************************************************************************************************************ */
+          /* ************************************************************************************************************ */
+          /* FileName                     Version    Created By                  Modified By               Date           */
+          /* PreparePhoneServiceCalls.js  1.0        Dinesh Tomar                                          20-Apr-2018    */
+          /*                                                                                                              */
+          /* ************************************************************************************************************ */
+          /* Purpose: This GW Script file will validate request parameters                                                */
+          /*                                                                                                              */
+          /* Required params:                                                                                             */
+          /* ************************************************************************************************************ */
+          //load properties configuration from context variable
+          var messages = apim.getvariable('messages-property.body');
+          var authResponse = apim.getvariable('consolidatedAuthResponse.body');
+          if (authResponse == null || isJSONEmpty(authResponse)){
+              apim.setvariable('errorName', 'ConnectionError');
+              apim.error('ConnectionError', 500, 'Internal Error', 'Connection error');
+          }
+          else {
+              var accessToken = authResponse.access_token;
+              var disambiguationId = authResponse.disambiguation_id;
+              var accessToken = authResponse.access_token;
+              var authorizationHeader = "Bearer " + accessToken;
+              apim.setvariable('message.headers.authorization', authorizationHeader);
+              apim.setvariable('message.headers.disambiguation-id', disambiguationId);
+              apim.setvariable('phoneDetailsURL', messages.phoneservice.msisdndetails.uri);
+              apim.setvariable('upgradesAndPromotionsURL', messages.phoneservice.upgradesandpromotions.uri);
+          }
+
+          function isJSONEmpty(jsonObject) {
+              var member;
+              var result = true;
+              for (member in jsonObject) {
+                  if (jsonObject[member] != null) {
+                      result = false;
+                  }
+              }
+              return result;
+          }
+        description: This GW Script file will prepare headers for phone service calls
+    - invoke:
+        title: Invoke:GetPhoneDetails
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        version: 1.0.0
+        target-url: $(phoneDetailsURL)
+        output: phoneDetails
+    - invoke:
+        title: Invoke:GetUpgradesAndPromotions
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        version: 1.0.0
+        target-url: $(upgradesAndPromotionsURL)
+        output: phoneServiceUpgradesPromotions
+    - gatewayscript:
+        title: GS:MergePhoneServiceResponses
+        version: 1.0.0
+        source: |-
+          /* *********************************************************************************************************** */
+          /* *********************************************************************************************************** */
+          /* FileName                        Version    Created By              Modified By               Date           */
+          /* MergePhoneServiceResponses.js   1.0        Dinesh Tomar                                      20-Apr-2018    */
+          /*                                                                                                             */
+          /* *********************************************************************************************************** */
+          /* Purpose: This GW Script file will validate request parameters                                               */
+          /*                                                                                                             */
+          /* Required params:                                                                                            */
+          /* *********************************************************************************************************** */
+          if (isJSONEmpty(apim.getvariable('consolidatedAuthResponse.body'))){
+              apim.setvariable('errorName', 'ConnectionError');
+              apim.error('ConnectionError', 500, 'Internal Error', 'Connection error');
+          }
+          else if (isJSONEmpty(apim.getvariable('phoneDetails.body'))){
+              apim.setvariable('errorName', 'ConnectionError');
+              apim.error('ConnectionError', 500, 'Internal Error', 'Connection error');
+          }
+          else if (isJSONEmpty(apim.getvariable('phoneServiceUpgradesPromotions.body'))){
+              apim.setvariable('errorName', 'ConnectionError');
+              apim.error('ConnectionError', 500, 'Internal Error', 'Connection error');
+          }
+          else {
+              var phoneDetails = apim.getvariable('phoneDetails.body');
+              var phoneServiceUpgradesPromotions = apim.getvariable('phoneServiceUpgradesPromotions.body');
+              phoneServiceUpgradesPromotions.isCCA = phoneDetails.isCCA;
+              apim.setvariable('message.body',phoneServiceUpgradesPromotions);
+          }
+
+          function isJSONEmpty(jsonObject) {
+              var member;
+              var result = true;
+              for (member in jsonObject) {
+                  if (jsonObject[member] != null) {
+                      result = false;
+                  }
+              }
+              return result;
+          }
+        description: This GW Script file will validate request parameters
+    - gatewayscript:
+        title: GS:GetUpgradeEligibility
+        version: 1.0.0
+        source: "/* ******************************************************************************************************
+          */\n/* ******************************************************************************************************
+          */\n/* FileName                    Version    Created By                  Modified
+          By          Date           */\n/* GetUpgradeEligibility.js    1.0        Dinesh
+          Tomar                                     20-Apr-2018    */\n/*                                                                                                        */\n/*
+          ******************************************************************************************************
+          */\n/* Purpose: This GW Script to get upgrade eligibility from phone services
+          responses                       */\n/*                                                                                                        */\n/*
+          Required params:                                                                                       */\n/*
+          ******************************************************************************************************
+          */\nvar phoneServiceUpgradesPromotions = apim.getvariable('phoneServiceUpgradesPromotions.body');\nvar
+          upgradeEligibility = {\n};\nvar upgradeEligibility = getUpgradeEligibility(upgradeEligibility,
+          phoneServiceUpgradesPromotions);\napim.setvariable('upgradeEligibility',
+          upgradeEligibility);\nfunction getUpgradeEligibility(upgradeEligibility,
+          phoneServiceUpgradesPromotions) {\n    if (! isJSONEmpty(phoneServiceUpgradesPromotions))
+          {\n        upgradeEligibility.tariffClassification = phoneServiceUpgradesPromotions.tariffClassification;\n
+          \       upgradeEligibility.tariffFamily = phoneServiceUpgradesPromotions.tariffFamily;\n
+          \       upgradeEligibility.isEligibleToday = phoneServiceUpgradesPromotions.isEligibleToday;\n
+          \       upgradeEligibility.isCCA = phoneServiceUpgradesPromotions.isCCA;\n
+          \       upgradeEligibility.lastUpgradeOrAcquisitionPartner = phoneServiceUpgradesPromotions.lastUpgradeOrAcquisitionPartner;\n
+          \       upgradeEligibility.eligibilityFailureReasons = phoneServiceUpgradesPromotions.eligibilityFailureReasons;\n
+          \       upgradeEligibility = setEligibilityFailureReasons(upgradeEligibility);\n
+          \       if (phoneServiceUpgradesPromotions.isEligibleToday) {\n            upgradeEligibility
+          = getFreeUpgradeToday(upgradeEligibility, phoneServiceUpgradesPromotions);\n
+          \           if (upgradeEligibility.freeUpgradeToday) {\n                upgradeEligibility.freeUpgradeOption
+          = getUpgradeOption(phoneServiceUpgradesPromotions, 'FREE');\n            }
+          else {\n                upgradeEligibility.freeUpgradeOption = getUpgradeOption(phoneServiceUpgradesPromotions,
+          'FREE');\n                upgradeEligibility.paidUpgradeOption = getUpgradeOption(phoneServiceUpgradesPromotions,
+          'PAID');\n                if (!(isJSONEmpty(phoneServiceUpgradesPromotions.upgradeOptions.CCA))
+          && !(isJSONEmpty(phoneServiceUpgradesPromotions.upgradeOptions.CCA.PAID)))
+          {\n                    var paidUpgrade = phoneServiceUpgradesPromotions.upgradeOptions.CCA.PAID;\n
+          \                   if ((!isJSONEmpty(paidUpgrade)) && (paidUpgrade.upgradeCost
+          != undefined) && (paidUpgrade.upgradeCost == '0.00') && (isJSONEmpty(paidUpgrade.rejectionReasons)
+          || paidUpgrade.rejectionReasons.length == 0)) {\n                        upgradeEligibility.isS2R
+          = true;\n                    }\n                }\n            }\n        }
+          else {\n            upgradeEligibility.freeUpgradeOption = getUpgradeOption(phoneServiceUpgradesPromotions,
+          'FREE');\n        }\n        \n        if (! isJSONEmpty(phoneServiceUpgradesPromotions.buyoutOption))
+          {\n            upgradeEligibility.buyoutOption = phoneServiceUpgradesPromotions.buyoutOption;\n
+          \       }\n        \n        if (! isJSONEmpty(phoneServiceUpgradesPromotions.promotions))
+          {\n            upgradeEligibility.promotions = phoneServiceUpgradesPromotions.promotions;\n
+          \       }\n        return upgradeEligibility;\n    }\n}\n\nfunction setEligibilityFailureReasons(upgradeEligibility){\n
+          \   var eligibilityFailureReasons = upgradeEligibility.eligibilityFailureReasons;\n
+          \   if (eligibilityFailureReasons != undefined && eligibilityFailureReasons.length
+          > 0){\n        for (var i = 0; i < eligibilityFailureReasons.length; i++){\n
+          \           if (eligibilityFailureReasons[i].reasonCode == 'IN_TREATMENT_ERROR_CODE'){\n
+          \               upgradeEligibility.inTreatment = true;\n            }\n
+          \           else if (eligibilityFailureReasons[i].reasonCode == 'SIM_SWAPPED_ERROR_CODE'){\n
+          \               upgradeEligibility.simSwapped = true;\n            }\n            else
+          if (eligibilityFailureReasons[i].reasonCode == 'ORDER_IN_PROGRESS_ERROR_CODE'){\n
+          \               upgradeEligibility.orderInProgress = true;\n            }\n
+          \           else if (eligibilityFailureReasons[i].reasonCode == 'SERVICE_BARRED_ERROR_CODE'){\n
+          \               upgradeEligibility.serviceBarred = true;\n            }\n
+          \           else if (eligibilityFailureReasons[i].reasonCode == 'TARIFF_DOES_NOT_SUPPORTS_UPGRADE_ERROR_CODE'){\n
+          \               upgradeEligibility.tariffSupportsUpgrade = true;\n            }\n
+          \           else if (eligibilityFailureReasons[i].reasonCode == 'UPGRADE_ENTITLEMENT_SERVICE_NOT_AVAILABLE_ERROR'){\n
+          \               upgradeEligibility.upgradeEntitlementServiceNotAvailable
+          = true;\n            }\n        }        \n    }\n    return upgradeEligibility;\n}\n\nfunction
+          getFreeUpgradeToday(upgradeEligibility, phoneServiceUpgradesPromotions)
+          {\n    var upgradeToType =[ \"CCA\", \"SIMO\", \"HANDSET\"];\n    var i
+          = 0;\n    for (i; i < upgradeToType.length; i++) {\n        if (! isJSONEmpty(phoneServiceUpgradesPromotions.upgradeOptions[upgradeToType[i]])
+          && ! isJSONEmpty(phoneServiceUpgradesPromotions.upgradeOptions[upgradeToType[i]].FREE)
+          && phoneServiceUpgradesPromotions.upgradeOptions[upgradeToType[i]].FREE.eligibilityTime
+          == 'IMMEDIATE') {\n            upgradeEligibility.freeUpgradeToday = true;\n
+          \           return upgradeEligibility;\n        }\n    }\n    upgradeEligibility.freeUpgradeToday
+          = false;\n    return upgradeEligibility;\n}\n\nfunction getUpgradeOption(phoneServiceUpgradesPromotions,
+          upgradeType) {\n    var upgradeToType =[ \"CCA\", \"SIMO\", \"HANDSET\"];\n
+          \   var i = 0;\n    for (i; i < upgradeToType.length; i++) {\n        var
+          upgradeOptions = phoneServiceUpgradesPromotions.upgradeOptions[upgradeToType[i]];\n
+          \       if (! isJSONEmpty(upgradeOptions) && ! isJSONEmpty(upgradeOptions[upgradeType]))
+          {\n            var upgradeOption = upgradeOptions[upgradeType];\n            if
+          (isEligibleForFreeUpgrade(upgradeOption, upgradeType) || isEligibleForFreeUpgradeFuture(upgradeOption,
+          upgradeType) || isEligibleForPaidUpgrade(upgradeOption, upgradeType)) {\n
+          \               upgradeOption.upgradeToType = upgradeToType[i];\n                return
+          upgradeOption;\n            }\n        }\n    }\n    return null;\n}\n\nfunction
+          isEligibleForFreeUpgrade(upgradeOption, upgradeType) {\n    return (upgradeType
+          == 'FREE') && (isJSONEmpty(upgradeOption.rejectionReasons) && (upgradeOption.eligibilityTime
+          != undefined) && (upgradeOption.eligibilityTime != 'NONE'));\n}\n\nfunction
+          isEligibleForFreeUpgradeFuture(upgradeOption, upgradeType) {\n    return
+          (upgradeType == 'FREE') && (upgradeOption.eligibilityTime != undefined)
+          && (upgradeOption.eligibilityTime == 'FUTURE');\n}\n\nfunction isEligibleForPaidUpgrade(upgradeOption,
+          upgradeType) {\n    return (upgradeType == 'PAID') && (isJSONEmpty(upgradeOption.rejectionReasons)
+          || upgradeOption.rejectionReasons.length == 0);\n}\n\nfunction isJSONEmpty(jsonObject)
+          {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+          {\n        if (jsonObject[member] != null) {\n            result = false;\n
+          \       }\n    }\n    return result;\n}"
+        description: GW Script to get upgrade eligibility from phone services responses
+    - gatewayscript:
+        title: GS:GetUpgradeOptions
+        version: 1.0.0
+        source: |-
+          /* ****************************************************************************************************** */
+          /* ****************************************************************************************************** */
+          /* FileName                 Version    Created By                Modified By               Date           */
+          /* GetUpgradeOptions.js     1.0        Dinesh Tomar                                        20-Apr-2018    */
+          /*                                                                                                        */
+          /* ****************************************************************************************************** */
+          /* Purpose: This GW Script to get upgrade options from upgrade eligibility                                */
+          /*                                                                                                        */
+          /* Required params:                                                                                       */
+          /* ****************************************************************************************************** */
+          var today = new Date();
+          var IMMEDIATE = {
+              "duration": 0,
+              "timeUnit": 'DAY'
+          };
+          var upgradeOptions = {
+          };
+          var upgradeOptions = getUpgradesOptions(upgradeOptions, apim.getvariable('message.headers.x-authcode'), apim.getvariable('request.parameters.msisdn'));
+          apim.setvariable('upgradeOptions', upgradeOptions);
+
+          function getUpgradesOptions(upgradeOptions, authcode, msisdn) {
+              upgradeOptions.msisdn = msisdn;
+              upgradeOptions.authCode = authcode;
+              var upgradeEligibility = apim.getvariable('upgradeEligibility');
+              var upgrade = {
+              };
+              upgrade = getUpgrade(upgrade, upgradeEligibility);
+              upgradeOptions.upgrade = upgrade;
+              var boltOns =[];
+              var promotion = {};
+              var promotions = {};
+              if (! isJSONEmpty(upgradeEligibility.promotions)) {
+                  promotions = upgradeEligibility.promotions;
+              }
+              if (! isJSONEmpty(promotions)) {
+                  var promotionDetails = getPromotionDetailsWithBoltOns(upgrade, promotions);
+                  if (! isJSONEmpty(promotionDetails)) {
+                      var tradinPromotion = getPromotion(promotionDetails.tradeIn);
+                      var buyoutPromotion = getPromotion(promotionDetails.buyOut);
+                      var boltOnPromotions = promotionDetails.boltOns;
+                      if (! isJSONEmpty(tradinPromotion) && ! isJSONEmpty(buyoutPromotion)) {
+                          if (getJSDateFormat(tradinPromotion.startDate) < getJSDateFormat(buyoutPromotion.startDate)) {
+                              promotion = tradinPromotion;
+                              promotion.type = 'TRADEIN';
+                          } else {
+                              promotion = buyoutPromotion;
+                              promotion.type = 'BUYOUT';
+                          }
+                      } else if (! isJSONEmpty(tradinPromotion)) {
+                          promotion = tradinPromotion;
+                          promotion.type = 'TRADEIN';
+                      } else if (! isJSONEmpty(buyoutPromotion)) {
+                          promotion = buyoutPromotion;
+                          promotion.type = 'BUYOUT';
+                      }
+                      if (! isJSONEmpty(boltOnPromotions)) {
+                          for (var i = 0; i < boltOnPromotions.length; i++) {
+                              if (! isJSONEmpty(boltOnPromotions[i]) && (getJSDateFormat(boltOnPromotions[i].startDate) < today) && (getJSDateFormat(boltOnPromotions[i].endDate) > today)) {
+                                  var promo = {
+                                  };
+                                  promo.type = 'BOLTON';
+                                  promo.description = boltOnPromotions[i].promotionDescription;
+                                  promo.id = boltOnPromotions[i].promotionId;
+                                  boltOns.push(promo);
+                              }
+                          }
+                      }
+                  }
+                  upgradeOptions.promotion = promotion;
+                  upgradeOptions.boltonPromotions = boltOns;
+              }
+              if (upgrade.eligibilityStatus == 'FREE') {
+                  upgradeOptions.timeUntilUpgradeOrPromotion = IMMEDIATE;
+              } else if (! isJSONEmpty(promotion)) {
+                  if (promotion.eligibilityStatus == 'ELIGIBLE') {
+                      upgradeOptions.timeUntilUpgradeOrPromotion = IMMEDIATE;
+                  } else {
+                      upgradeOptions.timeUntilUpgradeOrPromotion = getTimeUntil(getJSDateFormat(promotion.startDate));
+                  }
+              } else {
+                  if (upgradeEligibility.isS2R) {
+                      upgradeOptions.timeUntilUpgradeOrPromotion = IMMEDIATE;
+                  } else {
+                      upgradeOptions.timeUntilUpgradeOrPromotion = getTimeUntil(getJSDateFormat(upgrade.freeUpgradeDate));
+                  }
+              }
+              upgradeOptions.lastUpgradeOrAcquisitionPartner = upgradeEligibility.lastUpgradeOrAcquisitionPartner;
+              return upgradeOptions;
+          }
+
+          function getUpgrade(upgrade, upgradeEligibility) {
+              var isStaffTariff = ((upgradeEligibility.tariffClassification != null && upgradeEligibility.tariffClassification.toLowerCase().includes('staff')) || (upgradeEligibility.tariffFamily != null && upgradeEligibility.tariffFamily.toLowerCase().includes('staff')));
+              if (upgradeEligibility.lastUpgradeOrAcquisitionPartner == 'CPW') {
+                  upgrade.partner = 'NON_O2';
+              } else {
+                  upgrade.partner = 'O2';
+              }
+              var isMBBUser = ((upgradeEligibility.tariffClassification != null && upgradeEligibility.tariffClassification.includes('MBB')) || (upgradeEligibility.tariffFamily != null && upgradeEligibility.tariffFamily.includes('MBB')));
+              if (isMBBUser) {
+                  upgrade.eligibilityStatus = 'NONE';
+                  upgrade.noUpgradeReason = 'MBB';
+              } else if (upgradeEligibility.isEligibleToday) {
+                  var isDeviceLeasingTariff = (upgradeEligibility.tariffClassification != null && upgradeEligibility.tariffClassification.toLowerCase().includes('leasing'));
+                  var isCCA = upgradeEligibility.isCCA;
+                  if (isDeviceLeasingTariff) {
+                      upgrade.tariff = "DEVICE_LEASING";
+                  } else if (isCCA) {
+                      if (isStaffTariff) {
+                          upgrade.tariff = "CCA_STAFF";
+                      } else {
+                          upgrade.tariff = "CCA";
+                      }
+                  } else {
+                      if (isStaffTariff) {
+                          upgrade.tariff = "SIMO_STAFF";
+                      } else {
+                          upgrade.tariff = "SIMO";
+                      }
+                  }
+                  if (upgradeEligibility.freeUpgradeToday) {
+                      upgrade.eligibilityStatus = 'FREE';
+                      if (!(isStaffTariff || isDeviceLeasingTariff)) {
+                          upgrade.showUpgradeLink = true;
+                      }
+                      upgrade.upgradeToType = upgradeEligibility.freeUpgradeOption.upgradeToType;
+                  } else if (! isJSONEmpty(upgradeEligibility.freeUpgradeOption) && ! isJSONEmpty(upgradeEligibility.paidUpgradeOption)) {
+                      upgrade.eligibilityStatus = 'PAID';
+                      upgrade.upgradeToType = upgradeEligibility.paidUpgradeOption.upgradeToType;
+                      upgrade.upgradeCost = upgradeEligibility.paidUpgradeOption.upgradeCost;
+                      if (upgradeEligibility.freeUpgradeOption.eligibilityDate != null) {
+                          upgrade.freeUpgradeDate = upgradeEligibility.freeUpgradeOption.eligibilityDate;
+                      }
+                      if (!(isStaffTariff || isDeviceLeasingTariff)) {
+                          upgrade.showUpgradeLink = true;
+                      }
+                      upgrade.S2R = upgradeEligibility.isS2R;
+                  } else {
+                      upgrade.eligibilityStatus = 'NONE';
+                      upgrade.noUpgradeReason = 'DEFAULT';
+                  }
+              } else {
+                  upgrade.eligibilityStatus = 'NONE';
+                  if (! isJSONEmpty(upgradeEligibility.freeUpgradeOption) && upgradeEligibility.freeUpgradeOption.eligibilityTime == 'FUTURE') {
+                      upgrade.noUpgradeReason = 'FREE_IN_FUTURE';
+                      if (upgradeEligibility.freeUpgradeOption.eligibilityDate != null) {
+                          upgrade.freeUpgradeDate = upgradeEligibility.freeUpgradeOption.eligibilityDate;
+                          upgrade.upgradeToType = upgradeEligibility.freeUpgradeOption.upgradeToType;
+                      }
+                  } else if (upgradeEligibility.inTreatment) {
+                      upgrade.noUpgradeReason = 'IN_TREATMENT';
+                  } else if (upgradeEligibility.simSwapped) {
+                      upgrade.noUpgradeReason = 'SIM_SWAPPED';
+                  } else if (upgradeEligibility.orderInProgress) {
+                      upgrade.noUpgradeReason = 'ORDER_IN_PROGRESS';
+                  } else if (upgradeEligibility.serviceBarred) {
+                      upgrade.noUpgradeReason = 'SERVICE_BARRED';
+                  } else if (upgradeEligibility.tariffSupportsUpgrade) {
+                      upgrade.noUpgradeReason = 'NON_SUPPORTING_TARIFF';
+                  } else if (upgradeEligibility.upgradeEntitlementServiceNotAvailable) {
+                      upgrade.noUpgradeReason = 'ENTITLEMENT_SERVICE_UNAVAILABLE';
+                  } else {
+                      upgrade.noUpgradeReason = 'DEFAULT';
+                  }
+              }
+              return upgrade;
+          }
+
+          function getPromotionDetailsWithBoltOns(upgrade, promotions) {
+              var promotionDetails;
+              if (upgrade.eligibilityStatus != 'NONE' || (upgrade.eligibilityStatus == 'NONE' && upgrade.noUpgradeReason == 'FREE_IN_FUTURE')) {
+                  if ((! isJSONEmpty(promotions.CCA)) && (! isJSONEmpty(getActiveBoltOns(promotions.CCA)))) {
+                      promotionDetails = promotions.CCA;
+                      promotionDetails.boltOns = getActiveBoltOns(promotions.CCA);
+                  } else if ((! isJSONEmpty(promotions.SIMO)) && (! isJSONEmpty(getActiveBoltOns(promotions.SIMO)))) {
+                      promotionDetails = promotions.SIMO;
+                      promotionDetails.boltOns = getActiveBoltOns(promotions.SIMO);
+                  } else if ((! isJSONEmpty(promotions.HANDSET)) && (! isJSONEmpty(getActiveBoltOns(promotions.HANDSET)))) {
+                      promotionDetails = promotions.HANDSET;
+                      promotionDetails.boltOns = getActiveBoltOns(promotions.HANDSET);
+                  }
+              }
+              return promotionDetails;
+          }
+
+          function getActiveBoltOns(promotionDetails) {
+              if (!(isJSONEmpty(promotionDetails))) {
+                  var boltOns = promotionDetails.boltOns;
+                  var activeBoltOns =[];
+                  var i;
+                  for (i = 0; i < boltOns.length; i++) {
+                      var startDate = getJSDateFormat(boltOns[i].startDate);
+                      var endDate = getJSDateFormat(boltOns[i].endDate);
+                      if ((boltOns[i] != null) && (startDate < today) && (endDate > today)) {
+                          activeBoltOns.push(boltOns[i]);
+                      }
+                  }
+                  return activeBoltOns;
+              }
+          }
+
+          function getPromotion(promotionInfo) {
+              var promotion = {};
+              if (isJSONEmpty(promotionInfo)) {
+                  promotion = null;
+              } else if (getJSDateFormat(promotionInfo.startDate) > today) {
+                  promotion.eligibilityStatus = 'NOT_YET_ELIGIBLE';
+                  promotion.startDate = promotionInfo.startDate;
+                  promotion.endDate = promotionInfo.endDate;
+                  promotion.promotionDescription = promotionInfo.promotionDescription;
+                  promotion.promotionId = promotionInfo.promotionId;
+              } else if ((getJSDateFormat(promotionInfo.startDate) < today) && (getJSDateFormat(promotionInfo.endDate) > today)) {
+                  promotion.eligibilityStatus = 'ELIGIBLE';
+                  promotion.startDate = promotionInfo.startDate;
+                  promotion.endDate = promotionInfo.endDate;
+                  promotion.promotionDescription = promotionInfo.promotionDescription;
+                  promotion.promotionId = promotionInfo.promotionId;
+                  promotion.showUpgradeLink = true;
+              } else {
+                  promotion = null;
+              }
+              return promotion;
+          }
+
+          function getJSDateFormat(inputDate) {
+              var date = inputDate.substr(0, 2);
+              var month = inputDate.substr(3, 2);
+              var year = inputDate.substr(6, 4);
+              return new Date(month + "-" + date + "-" + year);
+          }
+
+          function getTimeUntil(inputDate) {
+              var today = new Date();
+              var currentDate = today.getDate();
+              var currentMonth = today.getMonth() + 1;
+              var currentYear = today.getFullYear();
+              var timeUntilUpgradeOrBuyout = {
+              };
+              if (today == inputDate) {
+                  return 'IMMEDIATE';
+              } else {
+                  var daysDiff = Math.floor((today - inputDate) / 86400000);
+                  var monthsDiff = Math.floor(daysDiff / 30);
+                  var surplusDays = parseInt((daysDiff % 30));
+                  if (monthsDiff > 0 && daysDiff != 30) {
+                      if (surplusDays > 15) {
+                          monthsDiff++;
+                      }
+                      timeUntilUpgradeOrBuyout.duration = monthsDiff;
+                      timeUntilUpgradeOrBuyout.timeUnit = 'MONTH';
+                      return timeUntilUpgradeOrBuyout;
+                  }
+                  timeUntilUpgradeOrBuyout.duration = daysDiff;
+                  timeUntilUpgradeOrBuyout.timeUnit = 'DAY';
+                  return timeUntilUpgradeOrBuyout;
+              }
+          }
+
+          function isJSONEmpty(jsonObject) {
+              var member;
+              var result = true;
+              for (member in jsonObject) {
+                  if (jsonObject[member] != null) {
+                      result = false;
+                  }
+              }
+              return result;
+          }
+        description: GW Script to get upgrade options from upgrade eligibility
+    - gatewayscript:
+        title: GS:GetUpgradesAndPromotions
+        version: 1.0.0
+        source: "/* *****************************************************************************************************
+          */\n/* *****************************************************************************************************
+          */\n/* FileName                         Version    Created By             Modified
+          By         Date           */\n/* GetUpgradesAndPromotions.js      1.0        Dinesh
+          Tomar                               20-Apr-2018    */\n/*                                                                                                       */\n/*
+          *****************************************************************************************************
+          */\n/* Purpose: This GW Script to get upgrade and promotions from upgrade
+          options                            */\n/*                                                                                                       */\n/*
+          Required params:                                                                                      */\n/*
+          *****************************************************************************************************
+          */\nvar today = new Date();\nvar messages = apim.getvariable('messages-property.body');\nvar
+          ssoLink = apim.getvariable('consolidatedAuthResponse.body').ssoLink;\nvar
+          upgradeOptions = apim.getvariable('upgradeOptions');\nvar upgradeEligibility
+          = apim.getvariable('upgradeEligibility');\nvar upgradesAndPromotionsJSON
+          = {};\nupgradesAndPromotionsJSON = getUpgradesAndPromotionsResponse(upgradesAndPromotionsJSON,
+          upgradeOptions, messages);\napim.setvariable('message.body', upgradesAndPromotionsJSON);\n\nfunction
+          getUpgradesAndPromotionsResponse(upgradesAndPromotionsJSON, upgradeOptions,
+          messages) {\n    upgradesAndPromotionsJSON.shortMessage = buildShortMessageKey(upgradeOptions,
+          messages);\n    upgradesAndPromotionsJSON = getUpgradeResponse(upgradesAndPromotionsJSON,
+          upgradeOptions, messages);\n    var promotion = getPromotion(upgradeOptions,
+          messages);\n    upgradesAndPromotionsJSON.boltonPromotions = getBoltonPromotionsResponse(upgradeOptions.boltonPromotions);\n
+          \   \n    var thirdPartyUpgradeAcquisitionPartners = messages.thirdPartyUpgradeAcquisitionPartners;\n
+          \   var isUpgradeDisallowedWithLastUpgradeOrAcquisitionPartner = false;\n
+          \   if ((upgradeOptions.lastUpgradeOrAcquisitionPartner).length != 0 &&
+          thirdPartyUpgradeAcquisitionPartners.includes(upgradeOptions.lastUpgradeOrAcquisitionPartner)){\n
+          \       isUpgradeDisallowedWithLastUpgradeOrAcquisitionPartner = true;\n
+          \   }\n    var timeUntilUpgradeOrPromotion = upgradeOptions.timeUntilUpgradeOrPromotion;\n
+          \   var promoBannerNotificationDuration = messages.promoBannerNotificationDuration;\n
+          \   var upgradeBannerNotificationDuration = messages.upgradeBannerNotificationDuration;\n
+          \   var alert = {};\n    if (isUpgradeDisallowedWithLastUpgradeOrAcquisitionPartner){\n
+          \       \n    }\n    else if (upgradeOptions.upgrade.eligibilityStatus ==
+          'FREE'){\n        alert.text = evaluateStringWithJSONPath(messages.upgrade.free.alert,
+          upgradeOptions.timeUntilUpgradeOrPromotion, '#');\n        alert.id = \"upgrade_free\";\n
+          \       alert.type = \"UPGRADE\";\n    }\n    else if (!isJSONEmpty(promotion)){\n
+          \       upgradesAndPromotionsJSON.promotion = promotion;\n        if (promotion.eligibilityStatus
+          == 'ELIGIBLE'){\n            alert.text = messages.promotion.eligible.alert;\n
+          \           alert.id = \"promotion_\" + upgradeOptions.promotion.promotionId
+          + \"_eligible\";\n            alert.type = \"PROMOTION\";\n            alert.expiryDate
+          = promotion.endDate;\n        }\n        else {\n            // code needs
+          to chenage later for duration in months\n            if (!isJSONEmpty(timeUntilUpgradeOrPromotion)
+          && timeUntilUpgradeOrPromotion.duration <= promoBannerNotificationDuration)
+          {\n                alert.text = messages.promotion.not_yet_eligible.alert;\n
+          \               alert.id = \"promotion_\" + upgradeOptions.promotion.promotionId
+          + \"_not_yet_eligible\";\n                alert.type = \"PROMOTION\";\n
+          \               alert.expiryDate = promotion.endDate;\n            }\n        }\n
+          \   }\n    else if (upgradeOptions.upgrade.eligibilityStatus == 'PAID'){\n
+          \       // code needs to chenage later for duration in months\n        if
+          (!isJSONEmpty(timeUntilUpgradeOrPromotion) && timeUntilUpgradeOrPromotion.duration
+          <= upgradeBannerNotificationDuration) {\n            alert.type = \"UPGRADE\";\n
+          \           if (upgradeOptions.upgrade.S2R){\n                alert.text
+          = messages.upgrade.free.alert;\n                alert.id = \"upgrade_free\";\n
+          \           }\n            else {\n                alert.text = messages.upgrade.paid.alert;\n
+          \               alert.id = \"upgrade_paid\";\n                alert.expiryDate
+          = upgradeOptions.upgrade.freeUpgradeDate;\n            }\n        }\n    }\n
+          \   else if (upgradeOptions.upgrade.noUpgradeReason == 'FREE_IN_FUTURE'){\n
+          \       // code needs to chenage later for duration in months\n        if
+          (!isJSONEmpty(timeUntilUpgradeOrPromotion) && timeUntilUpgradeOrPromotion.duration
+          <= UpgradeBannerNotificationDuration){\n            alert.text = messages.upgrade.paid.alert;\n
+          \           alert.id = \"upgrade_free_in_future\";\n            alert.type
+          = \"UPGRADE\";\n            alert.expiryDate = upgradeOptions.upgrade.freeUpgradeDate;\n
+          \       }\n    }\n    upgradesAndPromotionsJSON.alert = alert;\n    upgradesAndPromotionsJSON.timeUntilUpgradeOrPromotion
+          = upgradeOptions.timeUntilUpgradeOrPromotion;\n    return upgradesAndPromotionsJSON;\n}\n\nfunction
+          buildShortMessageKey(upgradeOptions, messages){\n    var shortMessageKey;\n
+          \   var upgradeOption = upgradeOptions.upgrade;\n    var promotion = upgradeOptions.promotion;\n
+          \   var upgradeEligibility = upgradeOption.eligibilityStatus.toLowerCase();\n
+          \   if (upgradeOption.partner == 'NON_O2'){\n        shortMessageKey = messages.upgrade.non_o2[upgradeEligibility].short;\n
+          \   }\n    else{\n        if (upgradeOption.eligibilityStatus == 'NONE'){\n
+          \           shortMessageKey = messages.upgrade.none[upgradeOption.noUpgradeReason.toLowerCase()].short;\n
+          \       }\n        else if (!isJSONEmpty(promotion) && upgradeOption.eligibilityStatus
+          != 'FREE'){\n            shortMessageKey = messages.upgrade[promotion.eligibilityStatus.toLowerCase()].short;\n
+          \       }\n        else{\n            if (upgradeOption.isS2R){\n                shortMessageKey
+          = messages.upgrade.o2[upgradeEligibility][upgradeOption.tariff.toLowerCase()].s2r.short;\n
+          \           }\n            else{\n                shortMessageKey = messages.upgrade.o2[upgradeEligibility][upgradeOption.tariff.toLowerCase()].short;\n
+          \           }\n        }\n    }\n    return shortMessageKey;\n}\n\nfunction
+          getUpgradeResponse(upgradesAndPromotionsJSON, upgradeOptions, messages)
+          {\n    var upgradeOption = upgradeOptions.upgrade;\n    var eligibilityStatus
+          = upgradeOption.eligibilityStatus.toLowerCase();\n    var noUpgradeReason;\n
+          \   if (upgradeOption.noUpgradeReason != null){\n       noUpgradeReason
+          = upgradeOption.noUpgradeReason.toLowerCase();\n    }\n    var partner =
+          upgradeOption.partner.toLowerCase();\n    var tariff = upgradeOption.tariff.toLowerCase();\n
+          \   var upgrade = {\n    };\n    upgrade.eligibilityStatus = upgradeOption.eligibilityStatus;\n
+          \   upgrade.header = buildHeader(messages, upgradeOption, eligibilityStatus,
+          \"upgrade\");\n    if (upgradeOption.tariff == 'CCA') {\n        upgrade.subheader
+          = messages.upgrade[eligibilityStatus].cca.subheader;\n    } else {\n        upgrade.subheader
+          = messages.upgrade[eligibilityStatus].subheader;\n    }\n    var longMessageKey;\n
+          \   if (upgradeOption.eligibilityStatus == 'NONE') {\n        var links
+          = {};\n        links.payment = ssoLink;\n        upgradesAndPromotionsJSON.links
+          = links;\n        longMessageKey = messages.upgrade[eligibilityStatus][noUpgradeReason].long;\n
+          \   } else {\n        if (partner == 'o2') {\n            if (upgradeOption.isS2R){\n
+          \               longMessageKey = messages.upgrade.o2[eligibilityStatus][tariff].s2r.long;\n
+          \           }\n            else {\n                longMessageKey = messages.upgrade.o2[eligibilityStatus][tariff].long;\n
+          \           }            \n        } else {\n            if (upgradeOption.isS2R){\n
+          \               longMessageKey = messages.upgrade.non_o2[eligibilityStatus][tariff].s2r.long;\n
+          \           }\n            else {\n                longMessageKey = messages.upgrade.non_o2[eligibilityStatus][tariff].long;\n
+          \           } \n        }        \n    }\n    var longMessages;\n    if
+          (longMessageKey.length != 0) {\n        longMessages = longMessageKey.split(\"|\");\n
+          \   }\n    upgrade.longMessages = longMessages;\n    if (upgradeOption.showUpgradeLink){\n
+          \       upgrade.link = ssoLink;\n        if (upgradeOption.tariff == 'CCA'){\n
+          \           upgrade.button = messages.upgrade[eligibilityStatus].cca.button;\n
+          \       }\n        else {\n            upgrade.button = messages.upgrade[eligibilityStatus].button;\n
+          \       }\n    }\n    upgrade.cost = upgradeOption.upgradeCost;\n    upgrade.freeUpgradeDate
+          = upgradeOption.freeUpgradeDate;\n    upgradesAndPromotionsJSON.upgrade
+          = upgrade;\n    return upgradesAndPromotionsJSON;\n}\n\nfunction buildHeader(messages,
+          upgradeOption, eligibilityStatus, property) {\n    var header = {};\n    header['1']
+          = evaluateStringWithJSONPath(messages[property][eligibilityStatus].header.one,
+          upgradeOption, '#');\n    header['2'] = evaluateStringWithJSONPath(messages[property][eligibilityStatus].header.two,
+          upgradeOption, '#');\n    return header;\n}\n\nfunction getPromotion(upgradeOptions,
+          messages){\n    var upgradeOption = upgradeOptions.upgrade;\n    var upgradePromotion
+          = upgradeOptions.promotion;\n    if (!isJSONEmpty(upgradePromotion) && upgradeOption.eligibilityStatus
+          != 'FREE'){\n        promotionEligibility = upgradePromotion.eligibilityStatus.toLowerCase();\n
+          \       var promotionType = upgradePromotion.type.toLowerCase();\n        var
+          promotion = {};\n        promotion.eligibilityStatus = upgradePromotion.eligibilityStatus;\n
+          \       promotion.header = buildHeader(messages, eligibilityStatus, \"promotion\");\n
+          \       promotion.subheader = messages.promotion[promotionEligibility].subheader;\n
+          \       var longMessages = [];\n        longMessages.push((messages.promotion[promotionType][promotionEligibility].long).split(\"|\"));\n
+          \       var isRedirectTradeinCustomersToStore = messages.redirectTradeinCustomersToStore;\n
+          \       var sendCustomersToStore = (isRedirectTradeinCustomersToStore &&
+          upgradePromotion.type == 'TRADEIN');\n        if (sendCustomersToStore){\n
+          \           longMessages.push((messages.promotion[promotionEligibility].instore).split(\"|\"));\n
+          \           if (upgradePromotion.eligibilityStatus == 'ELIGIBLE'){\n                promotion.button
+          = messages.label.storelocator;\n            }\n        }\n        else {\n
+          \           promotion.button = messages.promotion[promotionEligibility].button;\n
+          \       }\n        if (upgradePromotion.showUpgradeLink){\n            if
+          (sendCustomersToStore){\n                promotion.link = messages.storelocator.url;\n
+          \           }\n            else {\n                promotion.link = ssoLink;\n
+          \           }\n        }\n        promotion.longMessages = longMessages;\n
+          \       promotion.startDate = upgradePromotion.startDate;\n        promotion.endDate
+          = upgradePromotion.endDate;\n        return promotion;\n    }\n    return
+          null;\n}\n\nfunction getBoltonPromotionsResponse(boltonPromotions){\n    var
+          promotions = [];\n    if (!isJSONEmpty(boltonPromotions)){\n        var
+          i;\n        var promo = {};\n        for (i = 0; i < boltonPromotions.length;
+          i++){\n            promo.description = boltonPromotions[i].description;\n
+          \           promotions.push(promo);\n        }\n    }\n    return promotions;\n}\n\nfunction
+          evaluateStringWithJSONPath(string, JSONSource, delimiter) {\n    var strArray
+          = string.split(delimiter);\n    var i;\n    var evaluatedString = \"\";\n
+          \   for (i = 0; i < strArray.length; i++) {\n        if (strArray[i].startsWith('$'))
+          {\n            evaluatedString += JSONSource[strArray[i].substr(1)];\n        }
+          else {\n            evaluatedString += strArray[i];\n        }\n    }\n
+          \   return evaluatedString;\n}\n\nfunction isJSONEmpty(jsonObject) {\n    var
+          member;\n    var result = true;\n    for (member in jsonObject) {\n        if
+          (jsonObject[member] != null) {\n            result = false;\n        }\n
+          \   }\n    return result;\n}"
+        description: GW Script to get upgrades and promotions from upgrade options
+    - validate:
+        title: Validate
+        version: 1.0.0
+        definition: '#/definitions/UpgradeResponse'
+    catch:
+    - errors:
+      - InvalidMsisdn
+      - InvalidAuthCode
+      - InvalidDeviceType
+      - ConnectionError
+      - OperationError
+      - SOAPError
+      - UnauthorizedError
+      execute:
+      - gatewayscript:
+          title: GS:ErrorHandling
+          version: 1.0.0
+          source: |-
+            /* ************************************************************************************************************** */
+            /* ************************************************************************************************************** */
+            /* FileName                       Version    Created By                  Modified By               Date           */
+            /* Errorhandling.js               1.0        Dinesh Tomar                                          07-May-2018    */
+            /*                                                                                                                */
+            /* ************************************************************************************************************** */
+            /* Purpose: This GW Script file will read error config for the catch block error name and will set the necessary  */
+            /*          params like status code, reason phrase and will return the error json                                 */
+            /* Required params: errorName                                                                                     */
+            /* ************************************************************************************************************** */
+            var urlOpen = require('urlopen');
+            //form url for to fetch errorConfig JSON
+            var requestURL = apim.getvariable('request.uri');
+            var orgName = apim.getvariable('api.org.name');
+            var hostName = requestURL.substr(0, requestURL.indexOf(orgName));
+            var catalog = apim.getvariable('env.path');
+            var errorConfigURL = hostName+orgName+'/'+catalog+'/'+'config/errorconfig';
+            var clientId = apim.getvariable('client.app.id');
+            var errorConfigURLOptions = {
+                target: errorConfigURL,
+                sslClientProfile: 'api-sslcli-all',
+                headers: {'x-ibm-client-id': clientId, 'content-type': 'application/json' }
+            };
+            //fetch errorName and errorConfig JSON from context variables
+            urlOpen.open(errorConfigURLOptions, function (error, response) {
+                if (error) {
+                    throw error;
+                } else {
+                    response.readAsJSON(function (error, errorConfigJSON) {
+                        if (error) {
+                            throw error;
+                        } else {
+                            var errorName = apim.getvariable('errorName');
+                            if (errorName == null && apim.getvariable('message.status.code') == null) {
+                                errorName = 'default';
+                            } else if (errorName == null && apim.getvariable('message.status.reason') != null && apim.getvariable('message.status.reason').startsWith('APIC:') ) {
+                                errorName = 'default';
+                                apim.setvariable('message.status.code', apim.getvariable('message.status.code'));
+                                apim.setvariable('message.status.reason', apim.getvariable('message.status.reason'));
+                                apim.setvariable('message.body', apim.getvariable('message.body'));
+                            } else {
+                                //fetch specific block from error config JSON
+                                if (! isJSONEmpty(errorConfigJSON)) {
+                                    var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];
+                                    var statusCode = errorDetails.statusCode;
+                                    var reasonPhrase = errorDetails.reasonPhrase;
+                                    var errorMessage = errorDetails.errorMessage;
+                                    apim.setvariable('message.headers.content-type', 'application/json');
+                                    apim.setvariable('message.status.code', statusCode);
+                                    apim.setvariable('message.status.reason', reasonPhrase);
+                                    apim.setvariable('message.body', errorMessage);
+                                }
+                                //else block executes in case error config file is not loaded. it will set a default error message
+                                else {
+                                    apim.setvariable('message.headers.content-type', 'application/json');
+                                    apim.setvariable('message.status.code', 500);
+                                    apim.setvariable('message.status.reason', 'Internal Server Error');
+                                    apim.setvariable('message.body', {
+                                        "error": "Something went wrong"
+                                    });
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            //below function checks if json object is null or not
+            function isJSONEmpty(jsonObject) {
+                var member;
+                var result = true;
+                for (member in jsonObject) {
+                    if (jsonObject[member] != null) {
+                        result = false;
+                    }
+                }
+                return result;
+            }
+  gateway: datapower-gateway
+  type: rest
+parameters:
+  msisdn:
+    name: msisdn
+    type: integer
+    in: path
+    required: true
+  x-authcode:
+    name: x-authcode
+    type: string
+    in: header
+  x-device:
+    name: x-device
+    type: string
+    in: header
+  x-user-id:
+    name: x-user-id
+    type: string
+    in: header
+  x-client-id:
+    name: x-client-id
+    type: string
+    in: header
+  x-correlator:
+    name: x-correlator
+    type: string
+    in: header
+tags: []
+definitions:
+  Alert:
+    type: object
+    properties:
+      text:
+        type: string
+      id:
+        type: string
+      type:
+        type: string
+        enum:
+        - UPGRADE
+        - PROMOTION
+        - EARLYUPGRADE
+      expiryDate:
+        type: string
+        format: date-time
+    additionalProperties: false
+  TimeUntilUpgradeOrPromotion:
+    properties:
+      duration:
+        type: integer
+        format: int32
+      timeUnit:
+        type: string
+    additionalProperties: false
+  TimeUntilUpgradeOrBuyout:
+    properties:
+      duration:
+        type: integer
+        format: int32
+      timeUnit:
+        type: string
+    additionalProperties: false
+  Header:
+    properties:
+      get1:
+        type: string
+      get2:
+        type: string
+  Buyout:
+    properties:
+      eligibilityStatus:
+        type: string
+        enum:
+        - ELIGIBLE
+        - NOT_YET_ELIGIBLE
+      header:
+        $ref: '#/definitions/Header'
+      subheader:
+        type: string
+      longMessages:
+        type: array
+        items:
+        - type: string
+      button:
+        type: string
+      link:
+        type: string
+      buyoutDate:
+        type: string
+    additionalProperties: false
+  Promotion:
+    properties:
+      eligibilityStatus:
+        type: string
+        enum:
+        - ELIGIBLE
+        - NOT_YET_ELIGIBLE
+      header:
+        $ref: '#/definitions/Header'
+      subheader:
+        type: string
+      longMessages:
+        type: array
+        items:
+        - type: string
+      button:
+        type: string
+      link:
+        type: string
+      startDate:
+        type: string
+      endDate:
+        type: string
+        format: date-time
+    additionalProperties: false
+  Upgrade:
+    properties:
+      eligibilityStatus:
+        type: string
+        enum:
+        - NONE
+        - FREE
+        - PAID
+      header:
+        $ref: '#/definitions/Header'
+      subheader:
+        type: string
+      longMessages:
+        type: array
+        items:
+        - type: string
+      button:
+        type: string
+      link:
+        type: string
+      cost:
+        type: string
+      freeUpgradeDate:
+        type: string
+    additionalProperties: false
+  PromotionResponse:
+    properties:
+      description:
+        type: string
+    additionalProperties: false
+  UpgradeResponse:
+    properties:
+      shortMessage:
+        type: string
+      buyout:
+        $ref: '#/definitions/Buyout'
+      promotion:
+        $ref: '#/definitions/Promotion'
+      boltonPromotions:
+        $ref: '#/definitions/PromotionResponse'
+      upgrade:
+        $ref: '#/definitions/Upgrade'
+      timeUntilUpgradeOrBuyout:
+        $ref: '#/definitions/TimeUntilUpgradeOrBuyout'
+      timeUntilUpgradeOrPromotion:
+        $ref: '#/definitions/TimeUntilUpgradeOrPromotion'
+      alert:
+        $ref: '#/definitions/Alert'
+      links:
+        type: object
+    additionalProperties: false
+paths:
+  /{msisdn}/postpay/upgradesandpromotions:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            $ref: '#/definitions/UpgradeResponse'
+    parameters:
+    - $ref: '#/parameters/msisdn'
+    - $ref: '#/parameters/x-authcode'
+    - $ref: '#/parameters/x-device'
+    - $ref: '#/parameters/x-user-id'
+    - $ref: '#/parameters/x-client-id'
+    - $ref: '#/parameters/x-correlator'
