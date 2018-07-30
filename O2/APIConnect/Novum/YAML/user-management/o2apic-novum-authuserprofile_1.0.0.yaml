@@ -1,0 +1,162 @@
+---
+swagger: "2.0"
+info:
+  x-ibm-name: "O2APIC-Novum-userProfile"
+  title: "O2APIC-Novum-userProfile"
+  version: "1.0.0"
+schemes:
+- "https"
+basePath: "/userprofile"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+securityDefinitions:
+  clientIdHeader:
+    type: "apiKey"
+    in: "header"
+    name: "X-IBM-Client-Id"
+security:
+- clientIdHeader: []
+x-ibm-configuration:
+  testable: true
+  enforced: true
+  cors:
+    enabled: true
+  assembly:
+    execute:
+    - activity-log:
+        title: "logPayload"
+        content: "payload"
+        error-content: "payload"
+        version: "1.0.0"
+    - gatewayscript:
+        title: "GS:ValidateParameters"
+        version: "1.0.0"
+        source: "/* ***********************************************************************************************************************\
+          \ */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n/* FileName                                Version    Created By\
+          \                  Modified By               Date           */\r\n/* GS:ValidateParameters.js\
+          \                      1.0        Chiranjibi Panigrahi                 \
+          \            12-May-2018   */\r\n/*                                    \
+          \                                                                      \
+          \               */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n/* Purpose: This GW Script file will validate the path parameters.\
+          \                                                         */\r\n/*     \
+          \                                                                      \
+          \                                              */\r\n/* Required params:\
+          \                                                                      \
+          \                                  */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n\r\n//fetch the path parameters\r\nvar UID = apim.getvariable('request.parameters.UID');\r\
+          \n\r\n//validate the path parameter\r\nif (UID == null || UID == undefined\
+          \ || isNaN(parseInt(UID))) {    \r\n    apim.setvariable('errorName', 'InvalidUserID');\r\
+          \n    apim.error('InvalidUserID', 500, 'Internal Error', 'Missing or invalid\
+          \ UserID');\r\n}"
+    - invoke:
+        target-url: "https://auth.ref.o2.co.uk:443/auth/userprofile/v1/users/$(request.parameters.UID)"
+        verb: "GET"
+        secure-gateway: false
+        title: "invokeIdentityService"
+    catch:
+    - errors:
+      - "ConnectionError"
+      - "SOAPError"
+      - "OperationError"
+      - "InvalidUserID"
+      execute:
+      - gatewayscript:
+          title: "GS:Errorhandling"
+          version: "1.0.0"
+          source: "/* ***********************************************************************************************************************\
+            \ */\r\n/* ***********************************************************************************************************************\
+            \ */\r\n/* FileName                                Version    Created\
+            \ By                  Modified By               Date           */\r\n\
+            /* Errorhandling.js                        1.0        Dinesh Tomar   \
+            \                                       07-May-2018    */\r\n/*      \
+            \                                                                    \
+            \                                               */\r\n/* ***********************************************************************************************************************\
+            \ */\r\n/* Purpose: This GW Script file will read error config for the\
+            \ catch block error name and will set the necessary params    */\r\n/*\
+            \          like status code, reason phrase and will return the error json\
+            \                                                 */\r\n/* Required params:\
+            \ errorName                                                          \
+            \                                    */\r\n/* ***********************************************************************************************************************\
+            \ */\r\nvar urlOpen = require('urlopen');\r\n//fetch errorName and errorConfig\
+            \ JSON from context variables\r\nvar errorConfigURL = \"http://demo9811818.mockable.io/error-config\"\
+            ;\r\nvar errorConfigURLOptions = {\r\n    target: errorConfigURL,\r\n\
+            \    sslClientProfile: ''\r\n};\r\nurlOpen.open(errorConfigURLOptions,\
+            \ function (error, response) {\r\n    if (error) {\r\n        throw error;\r\
+            \n    } else {\r\n        response.readAsJSON(function (error, errorConfigJSON)\
+            \ {\r\n            if (error) {\r\n                throw error;\r\n  \
+            \          } else {\r\n                var errorName = apim.getvariable('errorName');\r\
+            \n                if (errorName == null) {\r\n                    errorName\
+            \ = 'default';\r\n                }\r\n                //fetch specific\
+            \ block from error config JSON\r\n                if (! isJSONEmpty(errorConfigJSON))\
+            \ {\r\n                    var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];\r\
+            \n                    var statusCode = errorDetails.statusCode;\r\n  \
+            \                  var reasonPhrase = errorDetails.reasonPhrase;\r\n \
+            \                   var errorMessage = errorDetails.errorMessage;\r\n\
+            \                    apim.setvariable('message.headers.content-type',\
+            \ 'application/json');\r\n                    apim.setvariable('message.status.code',\
+            \ statusCode);\r\n                    apim.setvariable('message.status.reason',\
+            \ reasonPhrase);\r\n                    apim.setvariable('message.body',\
+            \ errorMessage);\r\n                }\r\n                //else block\
+            \ executes in case error config file is not loaded. it will set a default\
+            \ error message\r\n                else {\r\n                    apim.setvariable('message.headers.content-type',\
+            \ 'application/json');\r\n                    apim.setvariable('message.status.code',\
+            \ 500);\r\n                    apim.setvariable('message.status.reason',\
+            \ 'Internal Server Error');\r\n                    apim.setvariable('message.body',\
+            \ {\r\n                        \"error\": \"Something went wrong\"\r\n\
+            \                    });\r\n                }\r\n            }\r\n   \
+            \     });\r\n    }\r\n});\r\n\r\n//below function checks if json object\
+            \ is null or not\r\nfunction isJSONEmpty(jsonObject) {\r\n    var member;\r\
+            \n    var result = true;\r\n    for (member in jsonObject) {\r\n     \
+            \   if (jsonObject[member] != null) {\r\n            result = false;\r\
+            \n        }\r\n    }\r\n    return result;\r\n}"
+  phase: "realized"
+paths:
+  /userprofile/v1/users/{UID}:
+    get:
+      responses:
+        200:
+          description: "200 OK"
+          schema:
+            $ref: "#/definitions/userProfileresponse"
+    parameters:
+    - name: "UID"
+      type: "string"
+      required: true
+      in: "path"
+definitions:
+  userProfileresponse:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+      name:
+        type: "string"
+      identities:
+        $ref: "#/definitions/identities"
+  identities:
+    type: "array"
+    items:
+      $ref: "#/definitions/identitiesType"
+  services:
+    type: "array"
+    items:
+      type: "string"
+  identitiesType:
+    properties:
+      type:
+        type: "string"
+      id:
+        type: "string"
+      services:
+        $ref: "#/definitions/services"
+    additionalProperties: false
+tags: []
+x-ibm-endpoints:
+- endpointUrl: "https://api.us.apiconnect.ibmcloud.com/cts-commtech-o2smipcrq22017-1000195327/sb"
+  type:
+  - "production"
+  - "development"

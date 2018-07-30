@@ -1,0 +1,3122 @@
+---
+swagger: "2.0"
+info:
+  x-ibm-name: "o2apic-Novum-postpayallowancemessage"
+  title: "O2APIC-Novum-PostpayAllowanceMessage"
+  version: "1.0.0"
+schemes:
+- "https"
+host: "$(catalog.host)"
+basePath: "/o2apic"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+securityDefinitions:
+  clientIdHeader:
+    type: "apiKey"
+    in: "header"
+    name: "X-IBM-Client-Id"
+security:
+- clientIdHeader: []
+x-ibm-configuration:
+  testable: true
+  enforced: true
+  cors:
+    enabled: true
+  assembly:
+    execute:
+    - activity-log:
+        title: "Log:Payload"
+        content: "payload"
+        error-content: "payload"
+        version: "1.0.0"
+    - invoke:
+        title: "Invoke:PropertiesHandler"
+        timeout: 60
+        verb: "GET"
+        cache-response: "protocol"
+        cache-ttl: 900
+        stop-on-error:
+        - null
+        - "ConnectionError"
+        - "OperationError"
+        version: "1.0.0"
+        target-url: "http://www.mocky.io/v2/5b0555ad3200007100ebf853"
+        output: "business-property"
+    - gatewayscript:
+        title: "GS:GetAccessToken"
+        version: "1.0.0"
+        source: "/* ***********************************************************************************************************************\
+          \ */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n/* FileName                                Version    Created By\
+          \                  Modified By               Date           */\r\n/* GetAccessToken.js\
+          \                       1.0        Dinesh Tomar                        \
+          \                  08-May-2018    */\r\n/*                             \
+          \                                                                      \
+          \                      */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n/* Purpose: This GW Script file will create request to get access\
+          \ token for the auth code received                         */\r\n/*    \
+          \                                                                      \
+          \                                               */\r\n/* Required params:\
+          \                                                                      \
+          \                                  */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n//load properties configuration from context variable\r\nvar messages\
+          \ = apim.getvariable('business-property.body');\r\n//get all headers\r\n\
+          var clientId = apim.getvariable('client.app.id');\r\nvar msisdn = apim.getvariable('request.parameters.msisdn');\r\
+          \nvar authCode = apim.getvariable('request.headers.x-authcode');\r\n//check\
+          \ all headers validation\r\nif (msisdn == null || msisdn == undefined ||\
+          \ isNaN(parseInt(msisdn))) {\r\n    apim.setvariable('errorName', InvalidMsisdn);\r\
+          \n    apim.error('InvalidMsisdn', 500, 'Internal Error', 'Missing or invalid\
+          \ msisdn');\r\n} else if (authCode == null) {\r\n    apim.setvariable('errorName',\
+          \ InvalidAuthCode);\r\n    apim.error('InvalidAuthCode', 500, 'Internal\
+          \ Error', 'Missing or invalid authcode');\r\n} else if (messages == null\
+          \ || isJSONEmpty(messages)) {\r\n    apim.setvariable('errorName', ConnectionError);\r\
+          \n    apim.error('ConnectionError', 500, 'Internal Error', 'Connection error');\r\
+          \n} else {\r\n    apim.setvariable('message.headers.x-ibm-client-id', clientId);\r\
+          \n    apim.setvariable('message.headers.msisdn', msisdn);\r\n    apim.setvariable('message.headers.x-authcode',\
+          \ authCode);\r\n    apim.setvariable('apicAccessTokenURL', messages.authserver.generateAccessToken.apicURI);\r\
+          \n    apim.setvariable('apicDisambiguationIdURL', messages.authserver.generateDisambiguationId.apicURI);\r\
+          \n}\r\n\r\nfunction isJSONEmpty(jsonObject) {\r\n    var member;\r\n   \
+          \ var result = true;\r\n    for (member in jsonObject) {\r\n        if (jsonObject[member]\
+          \ != null) {\r\n            result = false;\r\n        }\r\n    }\r\n  \
+          \  return result;\r\n}"
+    - set-variable:
+        title: "set-variable"
+        actions:
+        - set: "message.headers.x-ibm-client-id"
+          value: "1e8584b2-3f03-4714-9812-f40ff4d94d81"
+        version: "1.0.0"
+    - invoke:
+        title: "Invoke:GetAccessToken"
+        timeout: 60
+        verb: "GET"
+        cache-response: "protocol"
+        cache-ttl: 900
+        stop-on-error:
+        - null
+        - "ConnectionError"
+        - "OperationError"
+        version: "1.0.0"
+        target-url: "$(apicAccessTokenURL)"
+        output: "accessToken"
+    - invoke:
+        title: "Invoke:GetDisambiguationId"
+        timeout: 60
+        verb: "GET"
+        cache-response: "protocol"
+        cache-ttl: 900
+        stop-on-error:
+        - null
+        - "ConnectionError"
+        - "OperationError"
+        version: "1.0.0"
+        target-url: "$(apicDisambiguationIdURL)"
+        output: "disambiguationId"
+    - gatewayscript:
+        title: "GS:GetPhoneDetails"
+        version: "1.0.0"
+        source: "/* ***********************************************************************************************************************\
+          \ */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n/* FileName                                Version    Created By\
+          \                  Modified By               Date           */\r\n/* GetPhoneDetails.js\
+          \                      1.0        Dinesh Tomar                         \
+          \                 08-May-2018    */\r\n/*                              \
+          \                                                                      \
+          \                     */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n/* Purpose: This GW Script file will create request to get phone\
+          \ details                                                   */\r\n/*   \
+          \                                                                      \
+          \                                                */\r\n/* Required params:\
+          \                                                                      \
+          \                                  */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n//load properties configuration from context variable\r\nvar messages\
+          \ = apim.getvariable('business-property.body');\r\n//get access token and\
+          \ Disambiguation Id from context variables\r\nif (isJSONEmpty(apim.getvariable('accessToken.body')))\
+          \ {\r\n    apim.setvariable('errorName', ConnectionError);\r\n    apim.error('ConnectionError',\
+          \ 500, 'Internal Error', 'Connection error');\r\n} else if (isJSONEmpty(apim.getvariable('disambiguationId.body')))\
+          \ {\r\n    apim.setvariable('errorName', ConnectionError);\r\n    apim.error('ConnectionError',\
+          \ 500, 'Internal Error', 'Connection error');\r\n} else {\r\n    var accessToken\
+          \ = apim.getvariable('accessToken.body').access_token;\r\n    var disambiguationId\
+          \ = apim.getvariable('request.parameters.msisdn');\r\n    apim.setvariable('message.headers.disambiguation-id',\
+          \ disambiguationId);\r\n    apim.setvariable('message.headers.authorization',\
+          \ \"Bearer \" + accessToken);\r\n    var phoneDetailsURL = messages.phoneservice.msisdndetails.uri;\r\
+          \n    //phoneDetailsURL = phoneDetailsURL.replace('CURRENT', apim.getvariable('message.headers.msisdn'));\r\
+          \n    apim.setvariable('phoneDetailsURL', phoneDetailsURL);\r\n}\r\n\r\n\
+          function isJSONEmpty(jsonObject) {\r\n    var member;\r\n    var result\
+          \ = true;\r\n    for (member in jsonObject) {\r\n        if (jsonObject[member]\
+          \ != null) {\r\n            result = false;\r\n        }\r\n    }\r\n  \
+          \  return result;\r\n}"
+    - invoke:
+        target-url: "$(phoneDetailsURL)"
+        title: "Invoke:PhoneService"
+    - json-to-xml:
+        title: "json-to-xml"
+        root-element-name: "xml"
+        always-output-root-element: true
+        unnamed-element-name: "element"
+        version: "1.0.0"
+    - xslt:
+        title: "XSLT:CreateSOARequest"
+        input: false
+        version: "1.0.0"
+        source: "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"\
+          \ xmlns:dp=\"http://www.datapower.com/extensions\" xmlns:func=\"http://exslt.org/functions\"\
+          \ xmlns:apim=\"http://www.ibm.com/apimanagement\" extension-element-prefixes=\"\
+          dp func apim\">\r\n    <xsl:import href=\"local:///isp/policy/apim.custom.xsl\"\
+          \ />\r\n    <xsl:output method=\"xml\" omit-xml-declaration=\"yes\" indent=\"\
+          yes\"/>\r\n    <xsl:strip-space elements=\"*\"/>\r\n    <xsl:template match=\"\
+          /\">\r\n        <xsl:call-template name=\"apim:setVariable\">\r\n      \
+          \      <xsl:with-param name=\"varName\" select=\"'soaServiceEndpoint'\"\
+          \ />\r\n            <xsl:with-param name=\"value\" select=\"'http://www.mocky.io/v2/5b0521db3200005c00ebf6ed'\"\
+          \ />\r\n        </xsl:call-template>\r\n        <xsl:call-template name=\"\
+          apim:setVariable\">\r\n            <xsl:with-param name=\"varName\" select=\"\
+          'message.headers.content-type'\" />\r\n            <xsl:with-param name=\"\
+          value\" select=\"'application/xml'\" />\r\n        </xsl:call-template>\r\
+          \n        <xsl:call-template name=\"apim:setVariable\">\r\n            <xsl:with-param\
+          \ name=\"varName\" select=\"'message.headers.soapaction'\" />\r\n      \
+          \      <xsl:with-param name=\"value\" select=\"''\" />\r\n        </xsl:call-template>\r\
+          \n        <xsl:variable name=\"input\" select=\"apim:payloadRead()\"/>\r\
+          \n        <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+          >\r\n            <soap:Header xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+          >\r\n                <cor:debugFlag xmlns:cor=\"http://soa.o2.co.uk/coredata_1\"\
+          >true</cor:debugFlag>\r\n                <cor:applicationID xmlns:cor=\"\
+          http://soa.o2.co.uk/coredata_1\">myo2_app</cor:applicationID>\r\n      \
+          \          <cor:providerID xmlns:cor=\"http://soa.o2.co.uk/coredata_1\"\
+          >o2</cor:providerID>\r\n            </soap:Header>\r\n            <soapenv:Body>\r\
+          \n                <ns2:getNonDataAllowance_2\r\n                    xmlns:ns2=\"\
+          http://soa.o2.co.uk/viewallowancedata_2\"\r\n                    xmlns=\"\
+          http://soa.o2.co.uk/coredata_1\"\r\n                    xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+          >\r\n                    <ns2:account>\r\n                        <accountDetail>\r\
+          \n                            <msisdn><xsl:value-of select=\"apim:getContext('request.parameters.msisdn')\"\
+          /></msisdn>\r\n                            <billingAccountType>MOBILE</billingAccountType>\r\
+          \n                            <accountNumber><xsl:value-of select=\"$input/xml/accountId\"\
+          /></accountNumber>\r\n                        </accountDetail>    \r\n \
+          \                   </ns2:account>\r\n                </ns2:getNonDataAllowance_2>\r\
+          \n            </soapenv:Body>\r\n        </soapenv:Envelope>\r\n       \r\
+          \n    </xsl:template>\r\n</xsl:stylesheet>\r\n"
+    - invoke:
+        title: "GetNonDataAllowance_2Response:Invoke"
+        timeout: 60
+        verb: "GET"
+        cache-response: "protocol"
+        cache-ttl: 900
+        stop-on-error:
+        - null
+        version: "1.0.0"
+        target-url: "$(soaServiceEndpoint)"
+    - xslt:
+        title: "ConvertSoapToXML"
+        input: true
+        version: "1.0.0"
+        source: "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"\
+          \ xmlns:dp=\"http://www.datapower.com/extensions\" extension-element-prefixes=\"\
+          dp\">\n    <xsl:output method=\"xml\" omit-xml-declaration=\"yes\" indent=\"\
+          yes\"/>\n    <xsl:strip-space elements=\"*\"/>\n    <xsl:template match=\"\
+          @* | node()\">\n        <xsl:copy>\n            <xsl:apply-templates select=\"\
+          @* | node()\"/>\n        </xsl:copy>\n    </xsl:template>\n    <xsl:template\
+          \ match=\"*\">\n        <xsl:element name=\"{local-name()}\">\n        \
+          \    <xsl:apply-templates select=\"child::node()\"/>\n        </xsl:element>\n\
+          \    </xsl:template>\n</xsl:stylesheet>\n"
+    - xml-to-json:
+        title: "xml-to-json"
+        version: "1.0.0"
+    - set-variable:
+        title: "set-variable"
+        actions:
+        - set: "message.headers.content-type"
+          value: "application/xml"
+        version: "1.0.0"
+    - gatewayscript:
+        title: "GS:MessageAllowanceResponse"
+        version: "1.0.0"
+        source: "/* ***********************************************************************************************************************\
+          \ */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n/* FileName                                Version         Created\
+          \ By                  Modified By                Date     */\r\n/* GetAllowanceMessage.js\
+          \                   1.0          Shalini Mallick                       \
+          \               17-May-2018  */\r\n/*                                  \
+          \                                                                      \
+          \                 */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n/* Purpose: This GW Script file will create response for Message\
+          \ allowance                                                 */\r\n/*   \
+          \                                                                      \
+          \                                                */\r\n/*              \
+          \                                                                      \
+          \                                     */\r\n/* ***********************************************************************************************************************\
+          \ */\r\n\r\napim.setvariable('message.headers.content-type', 'application/json');\r\
+          \nvar messages = apim.getvariable('business-property.body');\r\nvar AllowanceUnitType\
+          \ = messages.AllowanceUnitType;\r\nvar AllowanceUnit = AllowanceUnitType.slice(0,\
+          \ 7);\r\nvar userInfoMessage = messages.msg.textallowance.unrestricted;\r\
+          \nvar footerMessage = messages.msg.account.footer;\r\nvar allowanceFooterMessage\
+          \ = messages.msg.allowance.footer;\r\nvar thresholdPercent = messages.messagesallowance.threshold;\r\
+          \nvar startingBalance = 0;\r\nvar allowanceUsed = 0;\r\nvar allowanceRemaining\
+          \ = 0;\r\nvar expiryDate = 0;\r\nvar longDescription = null;\r\nvar restrictionCategory\
+          \ = null;\r\nvar isUnlimited = null;\r\nvar isRestricted = null;\r\nvar\
+          \ allowanceUnit = null;\r\nvar orderIndex = 0;\r\nvar NonDataAllowancesResponse\
+          \ = {\r\n};\r\napim.readInputAsJSON(function (error, soaResponseJSON) {\r\
+          \n    if (error) {\r\n        throw error;\r\n    } else {\r\n        var\
+          \ allowances =[];\r\n        var msisdnLevelNonDataAllowances = soaResponseJSON.Envelope.Body.getNonDataAllowance_2Response.msisdnLevelNonDataAllowances.allowances;\r\
+          \n        if (!(isJSONEmpty(msisdnLevelNonDataAllowances.allowance)) &&\
+          \ isNaN(parseInt(msisdnLevelNonDataAllowances.allowance.length))) {\r\n\
+          \            var allowance =[];\r\n            allowances.allowance = allowance;\r\
+          \n            allowances.allowance.push(msisdnLevelNonDataAllowances.allowance);\r\
+          \n        } else if (msisdnLevelNonDataAllowances.allowance.length > 0)\
+          \ {\r\n            allowances = msisdnLevelNonDataAllowances;\r\n      \
+          \  }\r\n        if (! isJSONEmpty(msisdnLevelNonDataAllowances) && ! isJSONEmpty(msisdnLevelNonDataAllowances.allowance))\
+          \ {\r\n            for (var i = 0; i < allowances.allowance.length; i++)\
+          \ {\r\n                if (ifJsonHasKey(allowances.allowance[i], 'allowanceUnit')\
+          \ && allowances.allowance[i].allowanceUnit.$ != null) {\r\n            \
+          \        var filteredAllowances = filterAllowances(allowances);\r\n    \
+          \            }\r\n                if (ifJsonHasKey(allowances.allowance[i],\
+          \ 'orderIndex')) {\r\n                    var sortedAllowances = filteredAllowances.sort(function\
+          \ (o1, o2) {\r\n                        if (isNaN(parseFloat(o1.orderIndex.$)))\
+          \ {\r\n                            return parseFloat(o2.orderIndex.$) -\
+          \ Number.MAX_VALUE;\r\n                        } else if (isNaN(parseFloat(o2.orderIndex.$)))\
+          \ {\r\n                            return Number.MAX_VALUE - parseFloat(o1.orderIndex.$);\r\
+          \n                        } else {\r\n                            return\
+          \ parseFloat(o2.orderIndex.$) - parseFloat(o1.orderIndex.$);\r\n       \
+          \                 }\r\n                    });\r\n                }\r\n\
+          \            }\r\n            var WithMessgaeAllowances = messagesAllowance(sortedAllowances);\r\
+          \n            NonDataAllowancesResponse.allowance = WithMessgaeAllowances;\r\
+          \n            NonDataAllowancesResponse.footer_message = footerMessage;\r\
+          \n            NonDataAllowancesResponse.allowance_footer_message = allowanceFooterMessage;\r\
+          \n            NonDataAllowancesResponse.threshold_percentage = thresholdPercent;\r\
+          \n        } else {\r\n            var filteredAllowances =[];\r\n      \
+          \  }\r\n        apim.setvariable('message.body', NonDataAllowancesResponse);\r\
+          \n    }\r\n});\r\n\r\nfunction messagesAllowance(soaAllowance) {\r\n   \
+          \ var UNRESTRICTED = \"UNRES\";\r\n    var allowance =[];\r\n    var soaUsageSummary\
+          \ = soaUsageSummary(soaAllowance);\r\n    function soaUsageSummary(soaAllowance)\
+          \ {\r\n        var soaUsageSummary =[];\r\n        for (var i = 0; i < soaAllowance.length;\
+          \ i++) {\r\n            soaUsageSummary.push(soaAllowance[i].allowanceUsageSummary);\r\
+          \n        }\r\n        return soaUsageSummary;\r\n    }\r\n    for (var\
+          \ i = 0; i < soaAllowance.length; i++) {\r\n        var allowanceDetails\
+          \ = {\r\n        };\r\n        if (ifJsonHasKey(soaAllowance[i], 'restrictionCategory')\
+          \ && soaAllowance[i].restrictionCategory == UNRESTRICTED) {\r\n        \
+          \    allowanceDetails.usageInfoMessage = userInfoMessage;\r\n        }\r\
+          \n        if (isJSONEmpty(soaUsageSummary)) {\r\n            allowanceDetails.startingBalance\
+          \ = -1;\r\n        } else {\r\n            if (ifJsonHasKey(soaUsageSummary[i],\
+          \ 'startingBalance')) {\r\n                if (soaUsageSummary[i].startingBalance\
+          \ == null) {\r\n                    allowanceDetails.startingBalance = -1;\r\
+          \n                } else {\r\n                    allowanceDetails.startingBalance\
+          \ = soaUsageSummary[i].startingBalance.$;\r\n                }\r\n     \
+          \       }\r\n            if (ifJsonHasKey(soaUsageSummary[i], 'allowanceUsed'))\
+          \ {\r\n                if (soaUsageSummary[i].allowanceUsed == null) {\r\
+          \n                    allowanceDetails.allowanceUsed = null;\r\n       \
+          \         } else {\r\n                    allowanceDetails.allowanceUsed\
+          \ = soaUsageSummary[i].allowanceUsed.$;\r\n                }\r\n       \
+          \     }\r\n            if (ifJsonHasKey(soaUsageSummary[i], 'allowanceRemaining'))\
+          \ {\r\n                if (soaUsageSummary[i].allowanceRemaining == null)\
+          \ {\r\n                    allowanceDetails.allowanceRemaining = null;\r\
+          \n                } else {\r\n                    allowanceDetails.allowanceRemaining\
+          \ = soaUsageSummary[i].allowanceRemaining.$;\r\n                }\r\n  \
+          \          }\r\n            if (ifJsonHasKey(soaUsageSummary[i], 'allowanceUsed')\
+          \ && ifJsonHasKey(soaUsageSummary[i], 'startingBalance')) {\r\n        \
+          \        if ((soaUsageSummary[i].allowanceUsed == null || soaUsageSummary[i].allowanceUsed\
+          \ <= 0) || (soaUsageSummary[i].startingBalance == null || soaUsageSummary[i].startingBalance\
+          \ <= 0)) {\r\n                    allowanceDetails.percent_allowance_used\
+          \ = 0;\r\n                } else if (soaUsageSummary[i].allowanceUsed >=\
+          \ soaUsageSummary[i].startingBalance) {\r\n                    allowanceDetails.percent_allowance_used\
+          \ = 100;\r\n                } else {\r\n                    allowanceDetails.percent_allowance_used\
+          \ = (soaUsageSummary[i].allowanceUsed.$ / soaUsageSummary[i].startingBalance.$)\
+          \ * 100;;\r\n                }\r\n            }\r\n        }\r\n       \
+          \ if (ifJsonHasKey(soaAllowance[i], 'expiryDate') && soaAllowance[i].expiryDate\
+          \ != null) {\r\n            allowanceDetails.expiry_date = formatDate(soaAllowance[i].expiryDate.$);\r\
+          \n        }\r\n        function formatDate(date) {\r\n            var year\
+          \ = date.substr(0, 4);\r\n            var month = date.substr(5, 2);\r\n\
+          \            var day = date.substr(8, 2);\r\n            return day + \"\
+          .\" + month + \".\" + year;\r\n        }\r\n        if (ifJsonHasKey(soaAllowance[i],\
+          \ 'longDescription')) {\r\n            if (soaAllowance[i].longDescription\
+          \ != null) {\r\n                allowanceDetails.description = soaAllowance[i].longDescription.$;\r\
+          \n            }\r\n        }\r\n        if (ifJsonHasKey(soaAllowance[i],\
+          \ 'restrictionCategory')) {\r\n            if (soaAllowance[i].restrictionCategory\
+          \ != null) {\r\n                allowanceDetails.restrictionCategory = soaAllowance[i].restrictionCategory.$;\r\
+          \n            }\r\n        }\r\n        if (ifJsonHasKey(soaAllowance[i],\
+          \ 'isUnlimited') && soaAllowance[i].isUnlimited != null) {\r\n         \
+          \   if (soaAllowance[i].isUnlimited != null) {\r\n                allowanceDetails.unlimited\
+          \ = soaAllowance[i].isUnlimited.$;\r\n            }\r\n        }\r\n   \
+          \     if (ifJsonHasKey(soaAllowance[i], 'isRestricted')) {\r\n         \
+          \   if (soaAllowance[i].isRestricted != null) {\r\n                allowanceDetails.restricted\
+          \ = soaAllowance[i].isRestricted.$;\r\n            }\r\n        }\r\n  \
+          \      allowance.push(allowanceDetails);\r\n    }\r\n    return allowance;\r\
+          \n}\r\n\r\nfunction filterAllowances(Allowances) {\r\n    var filterAllowance\
+          \ =[];\r\n    for (var i = 0; i < Allowances.allowance.length; i++) {\r\n\
+          \        if (AllowanceUnit.includes(Allowances.allowance[i].allowanceUnit.$))\
+          \ {\r\n            \r\n            filterAllowance.push(Allowances.allowance[i]);\r\
+          \n        }\r\n    }\r\n    return filterAllowance;\r\n}\r\n\r\nfunction\
+          \ isJSONEmpty(jsonObject) {\r\n    var member;\r\n    var result = true;\r\
+          \n    for (member in jsonObject) {\r\n        if (jsonObject[member] !=\
+          \ null) {\r\n            result = false;\r\n        }\r\n    }\r\n    return\
+          \ result;\r\n}\r\n\r\nfunction ifJsonHasKey(jsonObject, key) {\r\n    var\
+          \ member;\r\n    var result = false;\r\n    for (member in jsonObject) {\r\
+          \n        if (member == key) {\r\n            result = true;\r\n       \
+          \ }\r\n    }\r\n    return result;\r\n}"
+    - validate:
+        title: "Validate:NonDataAllowanceResponse"
+        version: "1.0.0"
+        definition: "#/definitions/NonDataAllowancesResponse"
+    catch:
+    - errors:
+      - "InvalidAuthCode"
+      - "InvalidMsisdn"
+      - "ConnectionError"
+      - "UnauthorizedError"
+      execute:
+      - gatewayscript:
+          title: "GS:ErrorHandling"
+          version: "1.0.0"
+          source: "/* ***********************************************************************************************************************\
+            \ */\n/* ***********************************************************************************************************************\
+            \ */\n/* FileName                                Version    Created By\
+            \                  Modified By               Date           */\n/* Errorhandling.js\
+            \                        1.0        Dinesh Tomar                     \
+            \                     07-May-2018    */\n/*                          \
+            \                                                                    \
+            \                           */\n/* ***********************************************************************************************************************\
+            \ */\n/* Purpose: This GW Script file will read error config for the catch\
+            \ block error name and will set the necessary params    */\n/*       \
+            \   like status code, reason phrase and will return the error json   \
+            \                                              */\n/* Required params:\
+            \ errorName                                                          \
+            \                                    */\n/* ***********************************************************************************************************************\
+            \ */\nvar urlOpen = require('urlopen');\n//fetch errorName and errorConfig\
+            \ JSON from context variables\nvar errorConfigURL = \"http://demo9811818.mockable.io/error-config\"\
+            ;\nvar errorConfigURLOptions = {\n    target: errorConfigURL,\n    sslClientProfile:\
+            \ ''\n};\nurlOpen.open(errorConfigURLOptions, function (error, response)\
+            \ {\n    if (error) {\n        throw error;\n    } else {\n        response.readAsJSON(function\
+            \ (error, errorConfigJSON) {\n            if (error) {\n             \
+            \   throw error;\n            } else {\n                var errorName\
+            \ = apim.getvariable('errorName');\n                if (errorName == null)\
+            \ {\n                    errorName = 'default';\n                }\n \
+            \               //fetch specific block from error config JSON\n      \
+            \          if (! isJSONEmpty(errorConfigJSON)) {\n                   \
+            \ var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];\n\
+            \                    var statusCode = errorDetails.statusCode;\n     \
+            \               var reasonPhrase = errorDetails.reasonPhrase;\n      \
+            \              var errorMessage = errorDetails.errorMessage;\n       \
+            \             apim.setvariable('message.headers.content-type', 'application/json');\n\
+            \                    apim.setvariable('message.status.code', statusCode);\n\
+            \                    apim.setvariable('message.status.reason', reasonPhrase);\n\
+            \                    apim.setvariable('message.body', errorMessage);\n\
+            \                }\n                //else block executes in case error\
+            \ config file is not loaded. it will set a default error message\n   \
+            \             else {\n                    apim.setvariable('message.headers.content-type',\
+            \ 'application/json');\n                    apim.setvariable('message.status.code',\
+            \ 500);\n                    apim.setvariable('message.status.reason',\
+            \ 'Internal Server Error');\n                    apim.setvariable('message.body',\
+            \ {\n                        \"error\": \"Something went wrong\"\n   \
+            \                 });\n                }\n            }\n        });\n\
+            \    }\n});\n\n//below function checks if json object is null or not\n\
+            function isJSONEmpty(jsonObject) {\n    var member;\n    var result =\
+            \ true;\n    for (member in jsonObject) {\n        if (jsonObject[member]\
+            \ != null) {\n            result = false;\n        }\n    }\n    return\
+            \ result;\n}"
+  phase: "realized"
+  targets:
+    ViewAllowanceService:
+      swagger: "2.0"
+      info:
+        title: "ViewAllowanceService"
+        description: ""
+        x-ibm-name: "viewallowanceservice"
+        version: "1.0.0"
+      schemes:
+      - "https"
+      basePath: "/ViewAllowanceService"
+      produces:
+      - "application/xml"
+      consumes:
+      - "text/xml"
+      securityDefinitions:
+        clientID:
+          type: "apiKey"
+          name: "X-IBM-Client-Id"
+          in: "header"
+          description: ""
+      security:
+      - clientID: []
+      x-ibm-configuration:
+        type: "wsdl"
+        wsdl-definition:
+          wsdl: "5af01c770cf28f24d49574c6"
+          service: "ViewAllowanceService"
+          port: "ViewAllowancePort"
+          soap-version: "1.1"
+        assembly:
+          execute:
+          - proxy:
+              title: "proxy"
+              target-url: "https://sdpapi.o2.co.uk/services/ViewAllowance_2_0"
+        gateway: "datapower-gateway"
+        enforced: true
+        testable: true
+        phase: "realized"
+        cors:
+          enabled: true
+      paths:
+        /getAllowance:
+          post:
+            summary: "Operation getAllowance"
+            description: ""
+            operationId: "getAllowance"
+            x-ibm-soap:
+              soap-action: ""
+              soap-operation: "{http://soa.o2.co.uk/viewallowancedata_2}getAllowance"
+            parameters:
+            - in: "body"
+              name: "body"
+              required: true
+              schema:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowanceInput"
+            responses:
+              500:
+                description: ""
+                schema:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowanceFault"
+              default:
+                description: ""
+                schema:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowanceOutput"
+        /getDataAllowance_1:
+          post:
+            summary: "Operation getDataAllowance_1"
+            description: ""
+            operationId: "getDataAllowance_1"
+            x-ibm-soap:
+              soap-action: ""
+              soap-operation: "{http://soa.o2.co.uk/viewallowancedata_2}getDataAllowance_1"
+            parameters:
+            - in: "body"
+              name: "body"
+              required: true
+              schema:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getDataAllowance_1Input"
+            responses:
+              500:
+                description: ""
+                schema:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getDataAllowance_1Fault"
+              default:
+                description: ""
+                schema:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getDataAllowance_1Output"
+        /getNonDataAllowance_1:
+          post:
+            summary: "Operation getNonDataAllowance_1"
+            description: ""
+            operationId: "getNonDataAllowance_1"
+            x-ibm-soap:
+              soap-action: ""
+              soap-operation: "{http://soa.o2.co.uk/viewallowancedata_2}getNonDataAllowance_1"
+            parameters:
+            - in: "body"
+              name: "body"
+              required: true
+              schema:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_1Input"
+            responses:
+              500:
+                description: ""
+                schema:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_1Fault"
+              default:
+                description: ""
+                schema:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_1Output"
+        /getAllowance_2:
+          post:
+            summary: "Operation getAllowance_2"
+            description: ""
+            operationId: "getAllowance_2"
+            x-ibm-soap:
+              soap-action: ""
+              soap-operation: "{http://soa.o2.co.uk/viewallowancedata_2}getAllowance_2"
+            parameters:
+            - in: "body"
+              name: "body"
+              required: true
+              schema:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowance_2Input"
+            responses:
+              500:
+                description: ""
+                schema:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowance_2Fault"
+              default:
+                description: ""
+                schema:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowance_2Output"
+        /getNonDataAllowance_2:
+          post:
+            summary: "Operation getNonDataAllowance_2"
+            description: ""
+            operationId: "getNonDataAllowance_2"
+            x-ibm-soap:
+              soap-action: ""
+              soap-operation: "{http://soa.o2.co.uk/viewallowancedata_2}getNonDataAllowance_2"
+            parameters:
+            - in: "body"
+              name: "body"
+              required: true
+              schema:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_2Input"
+            responses:
+              500:
+                description: ""
+                schema:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_2Fault"
+              default:
+                description: ""
+                schema:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_2Output"
+      definitions:
+        Security:
+          xml:
+            namespace: "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+            prefix: "wsse"
+          type: "object"
+          properties:
+            UsernameToken:
+              xml:
+                namespace: "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+                prefix: "wsse"
+              type: "object"
+              properties:
+                Username:
+                  xml:
+                    namespace: "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+                    prefix: "wsse"
+                  type: "string"
+                Password:
+                  xml:
+                    namespace: "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+                    prefix: "wsse"
+                  type: "string"
+                Nonce:
+                  xml:
+                    namespace: "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+                    prefix: "wsse"
+                  type: "string"
+                  properties:
+                    EncodingType:
+                      xml:
+                        namespace: ""
+                        attribute: true
+                      type: "string"
+                Created:
+                  xml:
+                    namespace: "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+                    prefix: "wsu"
+                  type: "string"
+            Timestamp:
+              xml:
+                namespace: "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+                prefix: "wsu"
+              type: "object"
+              properties:
+                Created:
+                  xml:
+                    namespace: "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+                    prefix: "wsu"
+                  type: "string"
+                Expires:
+                  xml:
+                    namespace: "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+                    prefix: "wsu"
+                  type: "string"
+                Id:
+                  xml:
+                    namespace: "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+                    prefix: "wsu"
+                    attribute: true
+                  type: "string"
+        getAllowanceInput:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Header:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowanceHeader"
+                Body:
+                  type: "object"
+                  properties:
+                    getAllowance:
+                      $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowance_vad"
+                  required:
+                  - "getAllowance"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+          example: "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+            >\n <soapenv:Header>\n  <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"\
+            \ xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"\
+            >\n   <wsse:UsernameToken>\n    <wsse:Username>string</wsse:Username>\n\
+            \    <wsse:Password>string</wsse:Password>\n    <wsse:Nonce EncodingType=\"\
+            string\">string</wsse:Nonce>\n    <wsu:Created>string</wsu:Created>\n\
+            \   </wsse:UsernameToken>\n   <wsu:Timestamp wsu:Id=\"string\">\n    <wsu:Created>string</wsu:Created>\n\
+            \    <wsu:Expires>string</wsu:Expires>\n   </wsu:Timestamp>\n  </wsse:Security>\n\
+            \ </soapenv:Header>\n <soapenv:Body>\n  <vad:getAllowance xmlns:vad=\"\
+            http://soa.o2.co.uk/viewallowancedata_2\" xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\"\
+            ><!-- mandatory -->\n   <vad:account><!-- mandatory -->\n    <ns1:portalID>string</ns1:portalID>\n\
+            \    <ns1:msisdn>string</ns1:msisdn>\n    <ns1:accountDetail>\n     <ns1:billingAccountType><!--\
+            \ mandatory -->string</ns1:billingAccountType>\n     <ns1:accountNumber><!--\
+            \ mandatory -->string</ns1:accountNumber>\n     <ns1:msisdn><!-- mandatory\
+            \ -->string</ns1:msisdn>\n    </ns1:accountDetail>\n   </vad:account>\n\
+            \   <vad:allowanceCategory><!-- between zero and unlimited repetitions\
+            \ of this element -->string</vad:allowanceCategory>\n   <vad:dataSource>string</vad:dataSource>\n\
+            \   <vad:productList>\n    <vad:tariffProductId><!-- mandatory -->string</vad:tariffProductId>\n\
+            \    <vad:services>\n     <vad:productId><!-- mandatory --><!-- between\
+            \ 1 and unlimited repetitions of this element -->string</vad:productId>\n\
+            \    </vad:services>\n   </vad:productList>\n   <vad:returnAllowanceByBundleType>string</vad:returnAllowanceByBundleType>\n\
+            \  </vad:getAllowance>\n </soapenv:Body>\n</soapenv:Envelope>"
+        getAllowanceHeader:
+          type: "object"
+          properties:
+            Security:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/Security"
+        getAllowanceOutput:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Body:
+                  type: "object"
+                  properties:
+                    getAllowanceResponse:
+                      $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowanceResponse_vad"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+          example: "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+            >\n <soapenv:Body>\n  <vad:getAllowanceResponse xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            >\n   <vad:accountAllowances>\n    <vad:accountNumber><!-- mandatory -->string</vad:accountNumber>\n\
+            \    <vad:allowance><!-- between zero and unlimited repetitions of this\
+            \ element -->\n     <vad:productCode>string</vad:productCode>\n     <vad:productName><!--\
+            \ mandatory -->string</vad:productName>\n     <vad:productType><!-- mandatory\
+            \ -->string</vad:productType>\n     <vad:productDescription>string</vad:productDescription>\n\
+            \     <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n\
+            \     <vad:suspended>true</vad:suspended>\n     <vad:allowanceDetail><!--\
+            \ mandatory -->\n      <vad:allowanceSummary><!-- mandatory -->\n    \
+            \   <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n \
+            \      <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n  \
+            \     <vad:allowanceRemaining>3</vad:allowanceRemaining>\n      </vad:allowanceSummary>\n\
+            \      <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \      <vad:restricted>true</vad:restricted>\n     </vad:allowanceDetail>\n\
+            \     <vad:allowanceText>string</vad:allowanceText>\n    </vad:allowance>\n\
+            \   </vad:accountAllowances>\n   <vad:msisdnAllowances>\n    <vad:msisdn><!--\
+            \ mandatory -->string</vad:msisdn>\n    <vad:voiceAllowances>\n     <vad:totalAllowanceSummary><!--\
+            \ mandatory -->\n      <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \      <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n  \
+            \    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:totalAllowanceSummary>\n\
+            \     <vad:allowance><!-- mandatory --><!-- between 1 and unlimited repetitions\
+            \ of this element -->\n      <vad:productCode>string</vad:productCode>\n\
+            \      <vad:productName><!-- mandatory -->string</vad:productName>\n \
+            \     <vad:productType><!-- mandatory -->string</vad:productType>\n  \
+            \    <vad:productDescription>string</vad:productDescription>\n      <vad:expiryDate><!--\
+            \ mandatory -->2016-04-18</vad:expiryDate>\n      <vad:suspended>true</vad:suspended>\n\
+            \      <vad:allowanceDetail><!-- mandatory -->\n       <vad:allowanceSummary><!--\
+            \ mandatory -->\n        <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \        <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n\
+            \        <vad:allowanceRemaining>3</vad:allowanceRemaining>\n       </vad:allowanceSummary>\n\
+            \       <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \       <vad:restricted>true</vad:restricted>\n      </vad:allowanceDetail>\n\
+            \      <vad:allowanceText>string</vad:allowanceText>\n     </vad:allowance>\n\
+            \    </vad:voiceAllowances>\n    <vad:messageAllowances>\n     <vad:totalAllowanceSummary><!--\
+            \ mandatory -->\n      <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \      <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n  \
+            \    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:totalAllowanceSummary>\n\
+            \     <vad:allowance><!-- mandatory --><!-- between 1 and unlimited repetitions\
+            \ of this element -->\n      <vad:productCode>string</vad:productCode>\n\
+            \      <vad:productName><!-- mandatory -->string</vad:productName>\n \
+            \     <vad:productType><!-- mandatory -->string</vad:productType>\n  \
+            \    <vad:productDescription>string</vad:productDescription>\n      <vad:expiryDate><!--\
+            \ mandatory -->2016-04-18</vad:expiryDate>\n      <vad:suspended>true</vad:suspended>\n\
+            \      <vad:allowanceDetail><!-- mandatory -->\n       <vad:allowanceSummary><!--\
+            \ mandatory -->\n        <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \        <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n\
+            \        <vad:allowanceRemaining>3</vad:allowanceRemaining>\n       </vad:allowanceSummary>\n\
+            \       <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \       <vad:restricted>true</vad:restricted>\n      </vad:allowanceDetail>\n\
+            \      <vad:allowanceText>string</vad:allowanceText>\n     </vad:allowance>\n\
+            \    </vad:messageAllowances>\n    <vad:dataAllowances>\n     <vad:totalAllowanceSummary><!--\
+            \ between zero and unlimited repetitions of this element -->\n      <vad:startingBalance><!--\
+            \ mandatory -->3</vad:startingBalance>\n      <vad:allowanceUsed><!--\
+            \ mandatory -->3</vad:allowanceUsed>\n      <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \      <vad:dataThresholdType>string</vad:dataThresholdType>\n      <vad:startDate>2016-04-18T14:07:37</vad:startDate>\n\
+            \      <vad:renewalDate>2016-04-18</vad:renewalDate>\n      <vad:timestamp>2016-04-18T14:07:37</vad:timestamp>\n\
+            \     </vad:totalAllowanceSummary>\n     <vad:allowance><!-- between zero\
+            \ and unlimited repetitions of this element -->\n      <vad:productCode>string</vad:productCode>\n\
+            \      <vad:productName><!-- mandatory -->string</vad:productName>\n \
+            \     <vad:productType><!-- mandatory -->string</vad:productType>\n  \
+            \    <vad:productDescription>string</vad:productDescription>\n      <vad:expiryDate><!--\
+            \ mandatory -->2016-04-18</vad:expiryDate>\n      <vad:suspended>true</vad:suspended>\n\
+            \      <vad:allowanceDetail><!-- mandatory -->\n       <vad:allowanceSummary><!--\
+            \ mandatory -->\n        <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \        <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n\
+            \        <vad:allowanceRemaining>3</vad:allowanceRemaining>\n       </vad:allowanceSummary>\n\
+            \       <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \       <vad:restricted>true</vad:restricted>\n      </vad:allowanceDetail>\n\
+            \      <vad:allowanceText>string</vad:allowanceText>\n     </vad:allowance>\n\
+            \     <vad:dataAllowancesByBundleType>\n      <vad:dataBundle><!-- mandatory\
+            \ --><!-- between 1 and unlimited repetitions of this element -->\n  \
+            \     <vad:bundleType><!-- mandatory -->string</vad:bundleType>\n    \
+            \   <vad:startingAllowance><!-- mandatory -->3</vad:startingAllowance>\n\
+            \       <vad:allowanceUsed>3</vad:allowanceUsed>\n       <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \       <vad:expiryDate>2016-04-18</vad:expiryDate>\n      </vad:dataBundle>\n\
+            \     </vad:dataAllowancesByBundleType>\n    </vad:dataAllowances>\n \
+            \   <vad:unlimitedAllowances>\n     <vad:allowance><!-- mandatory --><!--\
+            \ between 1 and unlimited repetitions of this element -->\n      <vad:productCode>string</vad:productCode>\n\
+            \      <vad:productName><!-- mandatory -->string</vad:productName>\n \
+            \     <vad:productType><!-- mandatory -->string</vad:productType>\n  \
+            \    <vad:productDescription>string</vad:productDescription>\n      <vad:expiryDate><!--\
+            \ mandatory -->2016-04-18</vad:expiryDate>\n      <vad:suspended>true</vad:suspended>\n\
+            \      <vad:allowanceDetail><!-- mandatory -->\n       <vad:allowanceSummary><!--\
+            \ mandatory -->\n        <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \        <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n\
+            \        <vad:allowanceRemaining>3</vad:allowanceRemaining>\n       </vad:allowanceSummary>\n\
+            \       <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \       <vad:restricted>true</vad:restricted>\n      </vad:allowanceDetail>\n\
+            \      <vad:allowanceText>string</vad:allowanceText>\n     </vad:allowance>\n\
+            \    </vad:unlimitedAllowances>\n   </vad:msisdnAllowances>\n   <vad:chargingType><!--\
+            \ between zero and unlimited repetitions of this element -->string</vad:chargingType>\n\
+            \  </vad:getAllowanceResponse>\n </soapenv:Body>\n</soapenv:Envelope>"
+        getAllowanceFault:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Body:
+                  type: "object"
+                  properties:
+                    Fault:
+                      type: "object"
+                      properties:
+                        faultcode:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        faultstring:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        faultactor:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        detail:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "object"
+                          properties:
+                            getAllowanceFault:
+                              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowanceFault_val"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+        getDataAllowance_1Input:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Header:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getDataAllowance_1Header"
+                Body:
+                  type: "object"
+                  properties:
+                    getDataAllowance_1:
+                      $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getDataAllowance_1_vad"
+                  required:
+                  - "getDataAllowance_1"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+          example: "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+            >\n <soapenv:Header>\n  <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"\
+            \ xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"\
+            >\n   <wsse:UsernameToken>\n    <wsse:Username>string</wsse:Username>\n\
+            \    <wsse:Password>string</wsse:Password>\n    <wsse:Nonce EncodingType=\"\
+            string\">string</wsse:Nonce>\n    <wsu:Created>string</wsu:Created>\n\
+            \   </wsse:UsernameToken>\n   <wsu:Timestamp wsu:Id=\"string\">\n    <wsu:Created>string</wsu:Created>\n\
+            \    <wsu:Expires>string</wsu:Expires>\n   </wsu:Timestamp>\n  </wsse:Security>\n\
+            \ </soapenv:Header>\n <soapenv:Body>\n  <vad:getDataAllowance_1 xmlns:vad=\"\
+            http://soa.o2.co.uk/viewallowancedata_2\" xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\"\
+            ><!-- mandatory -->\n   <vad:account><!-- mandatory -->\n    <ns1:portalID>string</ns1:portalID>\n\
+            \    <ns1:msisdn>string</ns1:msisdn>\n    <ns1:accountDetail>\n     <ns1:billingAccountType><!--\
+            \ mandatory -->string</ns1:billingAccountType>\n     <ns1:accountNumber><!--\
+            \ mandatory -->string</ns1:accountNumber>\n     <ns1:msisdn><!-- mandatory\
+            \ -->string</ns1:msisdn>\n    </ns1:accountDetail>\n   </vad:account>\n\
+            \   <vad:dataSource>string</vad:dataSource>\n   <vad:productList>\n  \
+            \  <vad:tariffProductId><!-- mandatory -->string</vad:tariffProductId>\n\
+            \    <vad:services>\n     <vad:productId><!-- mandatory --><!-- between\
+            \ 1 and unlimited repetitions of this element -->string</vad:productId>\n\
+            \    </vad:services>\n   </vad:productList>\n   <vad:returnAllowanceByBundleType>string</vad:returnAllowanceByBundleType>\n\
+            \  </vad:getDataAllowance_1>\n </soapenv:Body>\n</soapenv:Envelope>"
+        getDataAllowance_1Header:
+          type: "object"
+          properties:
+            Security:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/Security"
+        getDataAllowance_1Output:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Body:
+                  type: "object"
+                  properties:
+                    getDataAllowance_1Response:
+                      $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getDataAllowance_1Response_vad"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+          example: "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+            >\n <soapenv:Body>\n  <vad:getDataAllowance_1Response xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            >\n   <vad:accountAllowances>\n    <vad:accountNumber><!-- mandatory -->string</vad:accountNumber>\n\
+            \    <vad:allowance><!-- between zero and unlimited repetitions of this\
+            \ element -->\n     <vad:productCode>string</vad:productCode>\n     <vad:productName><!--\
+            \ mandatory -->string</vad:productName>\n     <vad:productType><!-- mandatory\
+            \ -->string</vad:productType>\n     <vad:productDescription>string</vad:productDescription>\n\
+            \     <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n\
+            \     <vad:suspended>true</vad:suspended>\n     <vad:allowanceDetail><!--\
+            \ mandatory -->\n      <vad:allowanceSummary><!-- mandatory -->\n    \
+            \   <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n \
+            \      <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n  \
+            \     <vad:allowanceRemaining>3</vad:allowanceRemaining>\n      </vad:allowanceSummary>\n\
+            \      <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \      <vad:restricted>true</vad:restricted>\n     </vad:allowanceDetail>\n\
+            \     <vad:allowanceText>string</vad:allowanceText>\n    </vad:allowance>\n\
+            \   </vad:accountAllowances>\n   <vad:msisdnLevelAllowances>\n    <vad:msisdn><!--\
+            \ mandatory -->string</vad:msisdn>\n    <vad:dataAllowances>\n     <vad:totalAllowanceSummary><!--\
+            \ between zero and unlimited repetitions of this element -->\n      <vad:startingBalance><!--\
+            \ mandatory -->3</vad:startingBalance>\n      <vad:allowanceUsed><!--\
+            \ mandatory -->3</vad:allowanceUsed>\n      <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \      <vad:dataThresholdType>string</vad:dataThresholdType>\n      <vad:startDate>2016-04-18T14:07:37</vad:startDate>\n\
+            \      <vad:renewalDate>2016-04-18</vad:renewalDate>\n      <vad:timestamp>2016-04-18T14:07:37</vad:timestamp>\n\
+            \     </vad:totalAllowanceSummary>\n     <vad:allowance><!-- between zero\
+            \ and unlimited repetitions of this element -->\n      <vad:productCode>string</vad:productCode>\n\
+            \      <vad:productName><!-- mandatory -->string</vad:productName>\n \
+            \     <vad:productType><!-- mandatory -->string</vad:productType>\n  \
+            \    <vad:productDescription>string</vad:productDescription>\n      <vad:expiryDate><!--\
+            \ mandatory -->2016-04-18</vad:expiryDate>\n      <vad:suspended>true</vad:suspended>\n\
+            \      <vad:allowanceDetail><!-- mandatory -->\n       <vad:allowanceSummary><!--\
+            \ mandatory -->\n        <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \        <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n\
+            \        <vad:allowanceRemaining>3</vad:allowanceRemaining>\n       </vad:allowanceSummary>\n\
+            \       <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \       <vad:restricted>true</vad:restricted>\n      </vad:allowanceDetail>\n\
+            \      <vad:allowanceText>string</vad:allowanceText>\n     </vad:allowance>\n\
+            \    </vad:dataAllowances>\n    <vad:dataAllowancesByBundleType>\n   \
+            \  <vad:dataBundle><!-- mandatory --><!-- between 1 and unlimited repetitions\
+            \ of this element -->\n      <vad:bundleType><!-- mandatory -->string</vad:bundleType>\n\
+            \      <vad:startingAllowance><!-- mandatory -->3</vad:startingAllowance>\n\
+            \      <vad:allowanceUsed>3</vad:allowanceUsed>\n      <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \      <vad:expiryDate>2016-04-18</vad:expiryDate>\n     </vad:dataBundle>\n\
+            \    </vad:dataAllowancesByBundleType>\n   </vad:msisdnLevelAllowances>\n\
+            \   <vad:chargingType>string</vad:chargingType>\n  </vad:getDataAllowance_1Response>\n\
+            \ </soapenv:Body>\n</soapenv:Envelope>"
+        getDataAllowance_1Fault:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Body:
+                  type: "object"
+                  properties:
+                    Fault:
+                      type: "object"
+                      properties:
+                        faultcode:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        faultstring:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        faultactor:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        detail:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "object"
+                          properties:
+                            getDataAllowance_1Fault:
+                              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getDataAllowance_1Fault_val"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+        getNonDataAllowance_1Input:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Header:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_1Header"
+                Body:
+                  type: "object"
+                  properties:
+                    getNonDataAllowance_1:
+                      $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_1_vad"
+                  required:
+                  - "getNonDataAllowance_1"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+          example: "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+            >\n <soapenv:Header>\n  <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"\
+            \ xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"\
+            >\n   <wsse:UsernameToken>\n    <wsse:Username>string</wsse:Username>\n\
+            \    <wsse:Password>string</wsse:Password>\n    <wsse:Nonce EncodingType=\"\
+            string\">string</wsse:Nonce>\n    <wsu:Created>string</wsu:Created>\n\
+            \   </wsse:UsernameToken>\n   <wsu:Timestamp wsu:Id=\"string\">\n    <wsu:Created>string</wsu:Created>\n\
+            \    <wsu:Expires>string</wsu:Expires>\n   </wsu:Timestamp>\n  </wsse:Security>\n\
+            \ </soapenv:Header>\n <soapenv:Body>\n  <vad:getNonDataAllowance_1 xmlns:vad=\"\
+            http://soa.o2.co.uk/viewallowancedata_2\" xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\"\
+            ><!-- mandatory -->\n   <vad:account><!-- mandatory -->\n    <ns1:portalID>string</ns1:portalID>\n\
+            \    <ns1:msisdn>string</ns1:msisdn>\n    <ns1:accountDetail>\n     <ns1:billingAccountType><!--\
+            \ mandatory -->string</ns1:billingAccountType>\n     <ns1:accountNumber><!--\
+            \ mandatory -->string</ns1:accountNumber>\n     <ns1:msisdn><!-- mandatory\
+            \ -->string</ns1:msisdn>\n    </ns1:accountDetail>\n   </vad:account>\n\
+            \   <vad:allowanceCategory><!-- between zero and unlimited repetitions\
+            \ of this element -->string</vad:allowanceCategory>\n  </vad:getNonDataAllowance_1>\n\
+            \ </soapenv:Body>\n</soapenv:Envelope>"
+        getNonDataAllowance_1Header:
+          type: "object"
+          properties:
+            Security:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/Security"
+        getNonDataAllowance_1Output:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Body:
+                  type: "object"
+                  properties:
+                    getNonDataAllowance_1Response:
+                      $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_1Response_vad"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+          example: "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+            >\n <soapenv:Body>\n  <vad:getNonDataAllowance_1Response xmlns:vad=\"\
+            http://soa.o2.co.uk/viewallowancedata_2\">\n   <vad:accountAllowances>\n\
+            \    <vad:accountNumber><!-- mandatory -->string</vad:accountNumber>\n\
+            \    <vad:allowance><!-- between zero and unlimited repetitions of this\
+            \ element -->\n     <vad:productCode>string</vad:productCode>\n     <vad:productName><!--\
+            \ mandatory -->string</vad:productName>\n     <vad:productType><!-- mandatory\
+            \ -->string</vad:productType>\n     <vad:productDescription>string</vad:productDescription>\n\
+            \     <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n\
+            \     <vad:suspended>true</vad:suspended>\n     <vad:allowanceDetail><!--\
+            \ mandatory -->\n      <vad:allowanceSummary><!-- mandatory -->\n    \
+            \   <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n \
+            \      <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n  \
+            \     <vad:allowanceRemaining>3</vad:allowanceRemaining>\n      </vad:allowanceSummary>\n\
+            \      <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \      <vad:restricted>true</vad:restricted>\n     </vad:allowanceDetail>\n\
+            \     <vad:allowanceText>string</vad:allowanceText>\n    </vad:allowance>\n\
+            \   </vad:accountAllowances>\n   <vad:msisdnLevelAllowances>\n    <vad:msisdn><!--\
+            \ mandatory -->string</vad:msisdn>\n    <vad:voiceAllowances>\n     <vad:totalAllowanceSummary><!--\
+            \ mandatory -->\n      <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \      <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n  \
+            \    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:totalAllowanceSummary>\n\
+            \     <vad:allowance><!-- mandatory --><!-- between 1 and unlimited repetitions\
+            \ of this element -->\n      <vad:productCode>string</vad:productCode>\n\
+            \      <vad:productName><!-- mandatory -->string</vad:productName>\n \
+            \     <vad:productType><!-- mandatory -->string</vad:productType>\n  \
+            \    <vad:productDescription>string</vad:productDescription>\n      <vad:expiryDate><!--\
+            \ mandatory -->2016-04-18</vad:expiryDate>\n      <vad:suspended>true</vad:suspended>\n\
+            \      <vad:allowanceDetail><!-- mandatory -->\n       <vad:allowanceSummary><!--\
+            \ mandatory -->\n        <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \        <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n\
+            \        <vad:allowanceRemaining>3</vad:allowanceRemaining>\n       </vad:allowanceSummary>\n\
+            \       <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \       <vad:restricted>true</vad:restricted>\n      </vad:allowanceDetail>\n\
+            \      <vad:allowanceText>string</vad:allowanceText>\n     </vad:allowance>\n\
+            \    </vad:voiceAllowances>\n    <vad:messageAllowances>\n     <vad:totalAllowanceSummary><!--\
+            \ mandatory -->\n      <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \      <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n  \
+            \    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:totalAllowanceSummary>\n\
+            \     <vad:allowance><!-- mandatory --><!-- between 1 and unlimited repetitions\
+            \ of this element -->\n      <vad:productCode>string</vad:productCode>\n\
+            \      <vad:productName><!-- mandatory -->string</vad:productName>\n \
+            \     <vad:productType><!-- mandatory -->string</vad:productType>\n  \
+            \    <vad:productDescription>string</vad:productDescription>\n      <vad:expiryDate><!--\
+            \ mandatory -->2016-04-18</vad:expiryDate>\n      <vad:suspended>true</vad:suspended>\n\
+            \      <vad:allowanceDetail><!-- mandatory -->\n       <vad:allowanceSummary><!--\
+            \ mandatory -->\n        <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \        <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n\
+            \        <vad:allowanceRemaining>3</vad:allowanceRemaining>\n       </vad:allowanceSummary>\n\
+            \       <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \       <vad:restricted>true</vad:restricted>\n      </vad:allowanceDetail>\n\
+            \      <vad:allowanceText>string</vad:allowanceText>\n     </vad:allowance>\n\
+            \    </vad:messageAllowances>\n    <vad:unlimitedAllowances>\n     <vad:allowance><!--\
+            \ mandatory --><!-- between 1 and unlimited repetitions of this element\
+            \ -->\n      <vad:productCode>string</vad:productCode>\n      <vad:productName><!--\
+            \ mandatory -->string</vad:productName>\n      <vad:productType><!-- mandatory\
+            \ -->string</vad:productType>\n      <vad:productDescription>string</vad:productDescription>\n\
+            \      <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n\
+            \      <vad:suspended>true</vad:suspended>\n      <vad:allowanceDetail><!--\
+            \ mandatory -->\n       <vad:allowanceSummary><!-- mandatory -->\n   \
+            \     <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \        <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n\
+            \        <vad:allowanceRemaining>3</vad:allowanceRemaining>\n       </vad:allowanceSummary>\n\
+            \       <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \       <vad:restricted>true</vad:restricted>\n      </vad:allowanceDetail>\n\
+            \      <vad:allowanceText>string</vad:allowanceText>\n     </vad:allowance>\n\
+            \    </vad:unlimitedAllowances>\n   </vad:msisdnLevelAllowances>\n   <vad:chargingType><!--\
+            \ between zero and unlimited repetitions of this element -->string</vad:chargingType>\n\
+            \  </vad:getNonDataAllowance_1Response>\n </soapenv:Body>\n</soapenv:Envelope>"
+        getNonDataAllowance_1Fault:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Body:
+                  type: "object"
+                  properties:
+                    Fault:
+                      type: "object"
+                      properties:
+                        faultcode:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        faultstring:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        faultactor:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        detail:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "object"
+                          properties:
+                            getNonDataAllowance_1Fault:
+                              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_1Fault_val"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+        getAllowance_2Input:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Header:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowance_2Header"
+                Body:
+                  type: "object"
+                  properties:
+                    getAllowance_2:
+                      $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowance_2_vad"
+                  required:
+                  - "getAllowance_2"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+          example: "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+            >\n <soapenv:Header>\n  <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"\
+            \ xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"\
+            >\n   <wsse:UsernameToken>\n    <wsse:Username>string</wsse:Username>\n\
+            \    <wsse:Password>string</wsse:Password>\n    <wsse:Nonce EncodingType=\"\
+            string\">string</wsse:Nonce>\n    <wsu:Created>string</wsu:Created>\n\
+            \   </wsse:UsernameToken>\n   <wsu:Timestamp wsu:Id=\"string\">\n    <wsu:Created>string</wsu:Created>\n\
+            \    <wsu:Expires>string</wsu:Expires>\n   </wsu:Timestamp>\n  </wsse:Security>\n\
+            \ </soapenv:Header>\n <soapenv:Body>\n  <vad:getAllowance_2 xmlns:vad=\"\
+            http://soa.o2.co.uk/viewallowancedata_2\" xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\"\
+            ><!-- mandatory -->\n   <vad:account><!-- mandatory -->\n    <ns1:portalID>string</ns1:portalID>\n\
+            \    <ns1:msisdn>string</ns1:msisdn>\n    <ns1:accountDetail>\n     <ns1:billingAccountType><!--\
+            \ mandatory -->string</ns1:billingAccountType>\n     <ns1:accountNumber><!--\
+            \ mandatory -->string</ns1:accountNumber>\n     <ns1:msisdn><!-- mandatory\
+            \ -->string</ns1:msisdn>\n    </ns1:accountDetail>\n   </vad:account>\n\
+            \   <vad:allowanceCategory><!-- between zero and unlimited repetitions\
+            \ of this element -->string</vad:allowanceCategory>\n   <vad:dataSource>string</vad:dataSource>\n\
+            \   <vad:productList>\n    <vad:tariffProductId><!-- mandatory -->string</vad:tariffProductId>\n\
+            \    <vad:services>\n     <vad:productId><!-- mandatory --><!-- between\
+            \ 1 and unlimited repetitions of this element -->string</vad:productId>\n\
+            \    </vad:services>\n   </vad:productList>\n  </vad:getAllowance_2>\n\
+            \ </soapenv:Body>\n</soapenv:Envelope>"
+        getAllowance_2Header:
+          type: "object"
+          properties:
+            Security:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/Security"
+        getAllowance_2Output:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Body:
+                  type: "object"
+                  properties:
+                    getAllowance_2Response:
+                      $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowance_2Response_vad"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+          example: "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+            >\n <soapenv:Body>\n  <vad:getAllowance_2Response xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            >\n   <vad:accountNumber><!-- mandatory -->string</vad:accountNumber>\n\
+            \   <vad:accountAllowances>\n    <vad:allowance><!-- mandatory --><!--\
+            \ between 1 and unlimited repetitions of this element -->\n     <vad:productId>string</vad:productId>\n\
+            \     <vad:allowanceName><!-- mandatory -->string</vad:allowanceName>\n\
+            \     <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \     <vad:shortDescription><!-- mandatory -->string</vad:shortDescription>\n\
+            \     <vad:longDescription><!-- mandatory -->string</vad:longDescription>\n\
+            \     <vad:isRestricted><!-- mandatory -->true</vad:isRestricted>\n  \
+            \   <vad:restrictionCategory><!-- mandatory -->string</vad:restrictionCategory>\n\
+            \     <vad:isUnlimited><!-- mandatory -->true</vad:isUnlimited>\n    \
+            \ <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n    \
+            \ <vad:orderIndex><!-- mandatory -->3</vad:orderIndex>\n     <vad:allowanceUsageSummary>\n\
+            \      <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \      <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n  \
+            \    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:allowanceUsageSummary>\n\
+            \    </vad:allowance>\n   </vad:accountAllowances>\n   <vad:msisdnAllowances>\n\
+            \    <vad:msisdn><!-- mandatory -->string</vad:msisdn>\n    <vad:allowances>\n\
+            \     <vad:allowance><!-- between zero and unlimited repetitions of this\
+            \ element -->\n      <vad:productId>string</vad:productId>\n      <vad:allowanceName><!--\
+            \ mandatory -->string</vad:allowanceName>\n      <vad:allowanceUnit><!--\
+            \ mandatory -->string</vad:allowanceUnit>\n      <vad:shortDescription><!--\
+            \ mandatory -->string</vad:shortDescription>\n      <vad:longDescription><!--\
+            \ mandatory -->string</vad:longDescription>\n      <vad:isRestricted><!--\
+            \ mandatory -->true</vad:isRestricted>\n      <vad:restrictionCategory><!--\
+            \ mandatory -->string</vad:restrictionCategory>\n      <vad:isUnlimited><!--\
+            \ mandatory -->true</vad:isUnlimited>\n      <vad:expiryDate><!-- mandatory\
+            \ -->2016-04-18</vad:expiryDate>\n      <vad:orderIndex><!-- mandatory\
+            \ -->3</vad:orderIndex>\n      <vad:allowanceUsageSummary>\n       <vad:startingBalance><!--\
+            \ mandatory -->3</vad:startingBalance>\n       <vad:allowanceUsed><!--\
+            \ mandatory -->3</vad:allowanceUsed>\n       <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \      </vad:allowanceUsageSummary>\n     </vad:allowance>\n     <vad:fairUsageAllowances><!--\
+            \ between zero and unlimited repetitions of this element -->\n      <vad:startingBalance><!--\
+            \ mandatory -->3</vad:startingBalance>\n      <vad:allowanceUsed><!--\
+            \ mandatory -->3</vad:allowanceUsed>\n      <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \      <vad:thresholdType>string</vad:thresholdType>\n      <vad:startDate>2016-04-18T14:07:37</vad:startDate>\n\
+            \      <vad:renewalDate>2016-04-18</vad:renewalDate>\n      <vad:timestamp>2016-04-18T14:07:37</vad:timestamp>\n\
+            \     </vad:fairUsageAllowances>\n    </vad:allowances>\n   </vad:msisdnAllowances>\n\
+            \   <vad:chargingType><!-- between zero and unlimited repetitions of this\
+            \ element -->string</vad:chargingType>\n  </vad:getAllowance_2Response>\n\
+            \ </soapenv:Body>\n</soapenv:Envelope>"
+        getAllowance_2Fault:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Body:
+                  type: "object"
+                  properties:
+                    Fault:
+                      type: "object"
+                      properties:
+                        faultcode:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        faultstring:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        faultactor:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        detail:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "object"
+                          properties:
+                            getAllowance_2Fault:
+                              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getAllowance_2Fault_val"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+        getNonDataAllowance_2Input:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Header:
+                  $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_2Header"
+                Body:
+                  type: "object"
+                  properties:
+                    getNonDataAllowance_2:
+                      $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_2_vad"
+                  required:
+                  - "getNonDataAllowance_2"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+          example: "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+            >\n <soapenv:Header>\n  <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"\
+            \ xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\"\
+            >\n   <wsse:UsernameToken>\n    <wsse:Username>string</wsse:Username>\n\
+            \    <wsse:Password>string</wsse:Password>\n    <wsse:Nonce EncodingType=\"\
+            string\">string</wsse:Nonce>\n    <wsu:Created>string</wsu:Created>\n\
+            \   </wsse:UsernameToken>\n   <wsu:Timestamp wsu:Id=\"string\">\n    <wsu:Created>string</wsu:Created>\n\
+            \    <wsu:Expires>string</wsu:Expires>\n   </wsu:Timestamp>\n  </wsse:Security>\n\
+            \ </soapenv:Header>\n <soapenv:Body>\n  <vad:getNonDataAllowance_2 xmlns:vad=\"\
+            http://soa.o2.co.uk/viewallowancedata_2\" xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\"\
+            ><!-- mandatory -->\n   <vad:account><!-- mandatory -->\n    <ns1:portalID>string</ns1:portalID>\n\
+            \    <ns1:msisdn>string</ns1:msisdn>\n    <ns1:accountDetail>\n     <ns1:billingAccountType><!--\
+            \ mandatory -->string</ns1:billingAccountType>\n     <ns1:accountNumber><!--\
+            \ mandatory -->string</ns1:accountNumber>\n     <ns1:msisdn><!-- mandatory\
+            \ -->string</ns1:msisdn>\n    </ns1:accountDetail>\n   </vad:account>\n\
+            \   <vad:allowanceCategory><!-- between zero and unlimited repetitions\
+            \ of this element -->string</vad:allowanceCategory>\n  </vad:getNonDataAllowance_2>\n\
+            \ </soapenv:Body>\n</soapenv:Envelope>"
+        getNonDataAllowance_2Header:
+          type: "object"
+          properties:
+            Security:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/Security"
+        getNonDataAllowance_2Output:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Body:
+                  type: "object"
+                  properties:
+                    getNonDataAllowance_2Response:
+                      $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_2Response_vad"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+          example: "\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\
+            >\n <soapenv:Body>\n  <vad:getNonDataAllowance_2Response xmlns:vad=\"\
+            http://soa.o2.co.uk/viewallowancedata_2\">\n   <vad:accountNumber><!--\
+            \ mandatory -->string</vad:accountNumber>\n   <vad:accountAllowances>\n\
+            \    <vad:allowance><!-- mandatory --><!-- between 1 and unlimited repetitions\
+            \ of this element -->\n     <vad:productId>string</vad:productId>\n  \
+            \   <vad:allowanceName><!-- mandatory -->string</vad:allowanceName>\n\
+            \     <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \     <vad:shortDescription><!-- mandatory -->string</vad:shortDescription>\n\
+            \     <vad:longDescription><!-- mandatory -->string</vad:longDescription>\n\
+            \     <vad:isRestricted><!-- mandatory -->true</vad:isRestricted>\n  \
+            \   <vad:restrictionCategory><!-- mandatory -->string</vad:restrictionCategory>\n\
+            \     <vad:isUnlimited><!-- mandatory -->true</vad:isUnlimited>\n    \
+            \ <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n    \
+            \ <vad:orderIndex><!-- mandatory -->3</vad:orderIndex>\n     <vad:allowanceUsageSummary>\n\
+            \      <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \      <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n  \
+            \    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:allowanceUsageSummary>\n\
+            \    </vad:allowance>\n   </vad:accountAllowances>\n   <vad:msisdnLevelNonDataAllowances>\n\
+            \    <vad:msisdn><!-- mandatory -->string</vad:msisdn>\n    <vad:allowances>\n\
+            \     <vad:allowance><!-- mandatory --><!-- between 1 and unlimited repetitions\
+            \ of this element -->\n      <vad:productId>string</vad:productId>\n \
+            \     <vad:allowanceName><!-- mandatory -->string</vad:allowanceName>\n\
+            \      <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \      <vad:shortDescription><!-- mandatory -->string</vad:shortDescription>\n\
+            \      <vad:longDescription><!-- mandatory -->string</vad:longDescription>\n\
+            \      <vad:isRestricted><!-- mandatory -->true</vad:isRestricted>\n \
+            \     <vad:restrictionCategory><!-- mandatory -->string</vad:restrictionCategory>\n\
+            \      <vad:isUnlimited><!-- mandatory -->true</vad:isUnlimited>\n   \
+            \   <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n  \
+            \    <vad:orderIndex><!-- mandatory -->3</vad:orderIndex>\n      <vad:allowanceUsageSummary>\n\
+            \       <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \       <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n \
+            \      <vad:allowanceRemaining>3</vad:allowanceRemaining>\n      </vad:allowanceUsageSummary>\n\
+            \     </vad:allowance>\n    </vad:allowances>\n   </vad:msisdnLevelNonDataAllowances>\n\
+            \   <vad:chargingType><!-- between zero and unlimited repetitions of this\
+            \ element -->string</vad:chargingType>\n  </vad:getNonDataAllowance_2Response>\n\
+            \ </soapenv:Body>\n</soapenv:Envelope>"
+        getNonDataAllowance_2Fault:
+          type: "object"
+          properties:
+            Envelope:
+              xml:
+                prefix: "soapenv"
+                namespace: "http://schemas.xmlsoap.org/soap/envelope/"
+              type: "object"
+              properties:
+                Body:
+                  type: "object"
+                  properties:
+                    Fault:
+                      type: "object"
+                      properties:
+                        faultcode:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        faultstring:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        faultactor:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "string"
+                        detail:
+                          xml:
+                            prefix: ""
+                            namespace: ""
+                          type: "object"
+                          properties:
+                            getNonDataAllowance_2Fault:
+                              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/getNonDataAllowance_2Fault_val"
+              required:
+              - "Body"
+          required:
+          - "Envelope"
+        getAllowance_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            account:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/accountType_ns1_vad"
+            allowanceCategory:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceCategoryType_vad"
+            dataSource:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/dataSourceType_vad"
+            productList:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/productListType_vad"
+            returnAllowanceByBundleType:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/typeYesOrNo_vad"
+          required:
+          - "account"
+          description: "A complex type holding the keys to retrieve both airtime\n\
+            \t\t\t\tand data allowances and usage details."
+          example: "\n<vad:getAllowance xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            \ xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\">\n <vad:account><!-- mandatory\
+            \ -->\n  <ns1:portalID>string</ns1:portalID>\n  <ns1:msisdn>string</ns1:msisdn>\n\
+            \  <ns1:accountDetail>\n   <ns1:billingAccountType><!-- mandatory -->string</ns1:billingAccountType>\n\
+            \   <ns1:accountNumber><!-- mandatory -->string</ns1:accountNumber>\n\
+            \   <ns1:msisdn><!-- mandatory -->string</ns1:msisdn>\n  </ns1:accountDetail>\n\
+            \ </vad:account>\n <vad:allowanceCategory><!-- between zero and unlimited\
+            \ repetitions of this element -->string</vad:allowanceCategory>\n <vad:dataSource>string</vad:dataSource>\n\
+            \ <vad:productList>\n  <vad:tariffProductId><!-- mandatory -->string</vad:tariffProductId>\n\
+            \  <vad:services>\n   <vad:productId><!-- mandatory --><!-- between 1\
+            \ and unlimited repetitions of this element -->string</vad:productId>\n\
+            \  </vad:services>\n </vad:productList>\n <vad:returnAllowanceByBundleType>string</vad:returnAllowanceByBundleType>\n\
+            </vad:getAllowance>"
+        getAllowanceResponse_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            accountAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/accountAllowancesType_vad"
+            msisdnAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/msisdnAllowances_vad"
+            chargingType:
+              type: "array"
+              items:
+                type: "string"
+          description: "The service response, contains multiple allowances."
+          example: "\n<vad:getAllowanceResponse xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            >\n <vad:accountAllowances>\n  <vad:accountNumber><!-- mandatory -->string</vad:accountNumber>\n\
+            \  <vad:allowance><!-- between zero and unlimited repetitions of this\
+            \ element -->\n   <vad:productCode>string</vad:productCode>\n   <vad:productName><!--\
+            \ mandatory -->string</vad:productName>\n   <vad:productType><!-- mandatory\
+            \ -->string</vad:productType>\n   <vad:productDescription>string</vad:productDescription>\n\
+            \   <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n  \
+            \ <vad:suspended>true</vad:suspended>\n   <vad:allowanceDetail><!-- mandatory\
+            \ -->\n    <vad:allowanceSummary><!-- mandatory -->\n     <vad:startingBalance><!--\
+            \ mandatory -->3</vad:startingBalance>\n     <vad:allowanceUsed><!-- mandatory\
+            \ -->3</vad:allowanceUsed>\n     <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \    </vad:allowanceSummary>\n    <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \    <vad:restricted>true</vad:restricted>\n   </vad:allowanceDetail>\n\
+            \   <vad:allowanceText>string</vad:allowanceText>\n  </vad:allowance>\n\
+            \ </vad:accountAllowances>\n <vad:msisdnAllowances>\n  <vad:msisdn><!--\
+            \ mandatory -->string</vad:msisdn>\n  <vad:voiceAllowances>\n   <vad:totalAllowanceSummary><!--\
+            \ mandatory -->\n    <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \    <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \   </vad:totalAllowanceSummary>\n   <vad:allowance><!-- mandatory --><!--\
+            \ between 1 and unlimited repetitions of this element -->\n    <vad:productCode>string</vad:productCode>\n\
+            \    <vad:productName><!-- mandatory -->string</vad:productName>\n   \
+            \ <vad:productType><!-- mandatory -->string</vad:productType>\n    <vad:productDescription>string</vad:productDescription>\n\
+            \    <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n \
+            \   <vad:suspended>true</vad:suspended>\n    <vad:allowanceDetail><!--\
+            \ mandatory -->\n     <vad:allowanceSummary><!-- mandatory -->\n     \
+            \ <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n   \
+            \   <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n     \
+            \ <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:allowanceSummary>\n\
+            \     <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \     <vad:restricted>true</vad:restricted>\n    </vad:allowanceDetail>\n\
+            \    <vad:allowanceText>string</vad:allowanceText>\n   </vad:allowance>\n\
+            \  </vad:voiceAllowances>\n  <vad:messageAllowances>\n   <vad:totalAllowanceSummary><!--\
+            \ mandatory -->\n    <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \    <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \   </vad:totalAllowanceSummary>\n   <vad:allowance><!-- mandatory --><!--\
+            \ between 1 and unlimited repetitions of this element -->\n    <vad:productCode>string</vad:productCode>\n\
+            \    <vad:productName><!-- mandatory -->string</vad:productName>\n   \
+            \ <vad:productType><!-- mandatory -->string</vad:productType>\n    <vad:productDescription>string</vad:productDescription>\n\
+            \    <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n \
+            \   <vad:suspended>true</vad:suspended>\n    <vad:allowanceDetail><!--\
+            \ mandatory -->\n     <vad:allowanceSummary><!-- mandatory -->\n     \
+            \ <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n   \
+            \   <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n     \
+            \ <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:allowanceSummary>\n\
+            \     <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \     <vad:restricted>true</vad:restricted>\n    </vad:allowanceDetail>\n\
+            \    <vad:allowanceText>string</vad:allowanceText>\n   </vad:allowance>\n\
+            \  </vad:messageAllowances>\n  <vad:dataAllowances>\n   <vad:totalAllowanceSummary><!--\
+            \ between zero and unlimited repetitions of this element -->\n    <vad:startingBalance><!--\
+            \ mandatory -->3</vad:startingBalance>\n    <vad:allowanceUsed><!-- mandatory\
+            \ -->3</vad:allowanceUsed>\n    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \    <vad:dataThresholdType>string</vad:dataThresholdType>\n    <vad:startDate>2016-04-18T14:07:37</vad:startDate>\n\
+            \    <vad:renewalDate>2016-04-18</vad:renewalDate>\n    <vad:timestamp>2016-04-18T14:07:37</vad:timestamp>\n\
+            \   </vad:totalAllowanceSummary>\n   <vad:allowance><!-- between zero\
+            \ and unlimited repetitions of this element -->\n    <vad:productCode>string</vad:productCode>\n\
+            \    <vad:productName><!-- mandatory -->string</vad:productName>\n   \
+            \ <vad:productType><!-- mandatory -->string</vad:productType>\n    <vad:productDescription>string</vad:productDescription>\n\
+            \    <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n \
+            \   <vad:suspended>true</vad:suspended>\n    <vad:allowanceDetail><!--\
+            \ mandatory -->\n     <vad:allowanceSummary><!-- mandatory -->\n     \
+            \ <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n   \
+            \   <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n     \
+            \ <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:allowanceSummary>\n\
+            \     <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \     <vad:restricted>true</vad:restricted>\n    </vad:allowanceDetail>\n\
+            \    <vad:allowanceText>string</vad:allowanceText>\n   </vad:allowance>\n\
+            \   <vad:dataAllowancesByBundleType>\n    <vad:dataBundle><!-- mandatory\
+            \ --><!-- between 1 and unlimited repetitions of this element -->\n  \
+            \   <vad:bundleType><!-- mandatory -->string</vad:bundleType>\n     <vad:startingAllowance><!--\
+            \ mandatory -->3</vad:startingAllowance>\n     <vad:allowanceUsed>3</vad:allowanceUsed>\n\
+            \     <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     <vad:expiryDate>2016-04-18</vad:expiryDate>\n\
+            \    </vad:dataBundle>\n   </vad:dataAllowancesByBundleType>\n  </vad:dataAllowances>\n\
+            \  <vad:unlimitedAllowances>\n   <vad:allowance><!-- mandatory --><!--\
+            \ between 1 and unlimited repetitions of this element -->\n    <vad:productCode>string</vad:productCode>\n\
+            \    <vad:productName><!-- mandatory -->string</vad:productName>\n   \
+            \ <vad:productType><!-- mandatory -->string</vad:productType>\n    <vad:productDescription>string</vad:productDescription>\n\
+            \    <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n \
+            \   <vad:suspended>true</vad:suspended>\n    <vad:allowanceDetail><!--\
+            \ mandatory -->\n     <vad:allowanceSummary><!-- mandatory -->\n     \
+            \ <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n   \
+            \   <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n     \
+            \ <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:allowanceSummary>\n\
+            \     <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \     <vad:restricted>true</vad:restricted>\n    </vad:allowanceDetail>\n\
+            \    <vad:allowanceText>string</vad:allowanceText>\n   </vad:allowance>\n\
+            \  </vad:unlimitedAllowances>\n </vad:msisdnAllowances>\n <vad:chargingType><!--\
+            \ between zero and unlimited repetitions of this element -->string</vad:chargingType>\n\
+            </vad:getAllowanceResponse>"
+        getAllowanceFault_val:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            SOAFaultOriginator:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOAFaultOriginator_ns1"
+            SOAFaultCode:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOAFaultCode_ns1"
+            faultDescription:
+              type: "string"
+              xml:
+                namespace: "http://soa.o2.co.uk/coredata_1"
+                prefix: "ns1"
+              description: "A human readable description of the error."
+            faultTrace:
+              type: "string"
+              xml:
+                namespace: "http://soa.o2.co.uk/coredata_1"
+                prefix: "ns1"
+              description: "A computer generated dump of the fault (may help\n\t\t\
+                \t\t\t\tin debugging problems)."
+            SOATransactionID:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOATransactionID_ns1"
+          required:
+          - "SOAFaultOriginator"
+          - "SOAFaultCode"
+          description: "The type of the response sent to the calling\n\t\t\t\tapplication,\
+            \ if something goes wrong."
+          example: "\n<vad:getAllowanceFault xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            \ xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\">\n <ns1:SOAFaultOriginator><!--\
+            \ mandatory -->string</ns1:SOAFaultOriginator>\n <ns1:SOAFaultCode><!--\
+            \ mandatory -->string</ns1:SOAFaultCode>\n <ns1:faultDescription>string</ns1:faultDescription>\n\
+            \ <ns1:faultTrace>string</ns1:faultTrace>\n <ns1:SOATransactionID>string</ns1:SOATransactionID>\n\
+            </vad:getAllowanceFault>"
+        getDataAllowance_1_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            account:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/accountType_ns1_vad"
+            dataSource:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/dataSourceType_vad"
+            productList:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/productListType_vad"
+            returnAllowanceByBundleType:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/typeYesOrNo_vad"
+          required:
+          - "account"
+          description: "A complex type holding the keys to retrieve data allowance\
+            \ usage details."
+          example: "\n<vad:getDataAllowance_1 xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            \ xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\">\n <vad:account><!-- mandatory\
+            \ -->\n  <ns1:portalID>string</ns1:portalID>\n  <ns1:msisdn>string</ns1:msisdn>\n\
+            \  <ns1:accountDetail>\n   <ns1:billingAccountType><!-- mandatory -->string</ns1:billingAccountType>\n\
+            \   <ns1:accountNumber><!-- mandatory -->string</ns1:accountNumber>\n\
+            \   <ns1:msisdn><!-- mandatory -->string</ns1:msisdn>\n  </ns1:accountDetail>\n\
+            \ </vad:account>\n <vad:dataSource>string</vad:dataSource>\n <vad:productList>\n\
+            \  <vad:tariffProductId><!-- mandatory -->string</vad:tariffProductId>\n\
+            \  <vad:services>\n   <vad:productId><!-- mandatory --><!-- between 1\
+            \ and unlimited repetitions of this element -->string</vad:productId>\n\
+            \  </vad:services>\n </vad:productList>\n <vad:returnAllowanceByBundleType>string</vad:returnAllowanceByBundleType>\n\
+            </vad:getDataAllowance_1>"
+        getDataAllowance_1Response_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            accountAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/accountAllowancesType_vad"
+            msisdnLevelAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/msisdnLevelDataAllowancesType_vad"
+            chargingType:
+              type: "string"
+          description: "The service response, contains multiple allowances."
+          example: "\n<vad:getDataAllowance_1Response xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            >\n <vad:accountAllowances>\n  <vad:accountNumber><!-- mandatory -->string</vad:accountNumber>\n\
+            \  <vad:allowance><!-- between zero and unlimited repetitions of this\
+            \ element -->\n   <vad:productCode>string</vad:productCode>\n   <vad:productName><!--\
+            \ mandatory -->string</vad:productName>\n   <vad:productType><!-- mandatory\
+            \ -->string</vad:productType>\n   <vad:productDescription>string</vad:productDescription>\n\
+            \   <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n  \
+            \ <vad:suspended>true</vad:suspended>\n   <vad:allowanceDetail><!-- mandatory\
+            \ -->\n    <vad:allowanceSummary><!-- mandatory -->\n     <vad:startingBalance><!--\
+            \ mandatory -->3</vad:startingBalance>\n     <vad:allowanceUsed><!-- mandatory\
+            \ -->3</vad:allowanceUsed>\n     <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \    </vad:allowanceSummary>\n    <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \    <vad:restricted>true</vad:restricted>\n   </vad:allowanceDetail>\n\
+            \   <vad:allowanceText>string</vad:allowanceText>\n  </vad:allowance>\n\
+            \ </vad:accountAllowances>\n <vad:msisdnLevelAllowances>\n  <vad:msisdn><!--\
+            \ mandatory -->string</vad:msisdn>\n  <vad:dataAllowances>\n   <vad:totalAllowanceSummary><!--\
+            \ between zero and unlimited repetitions of this element -->\n    <vad:startingBalance><!--\
+            \ mandatory -->3</vad:startingBalance>\n    <vad:allowanceUsed><!-- mandatory\
+            \ -->3</vad:allowanceUsed>\n    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \    <vad:dataThresholdType>string</vad:dataThresholdType>\n    <vad:startDate>2016-04-18T14:07:37</vad:startDate>\n\
+            \    <vad:renewalDate>2016-04-18</vad:renewalDate>\n    <vad:timestamp>2016-04-18T14:07:37</vad:timestamp>\n\
+            \   </vad:totalAllowanceSummary>\n   <vad:allowance><!-- between zero\
+            \ and unlimited repetitions of this element -->\n    <vad:productCode>string</vad:productCode>\n\
+            \    <vad:productName><!-- mandatory -->string</vad:productName>\n   \
+            \ <vad:productType><!-- mandatory -->string</vad:productType>\n    <vad:productDescription>string</vad:productDescription>\n\
+            \    <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n \
+            \   <vad:suspended>true</vad:suspended>\n    <vad:allowanceDetail><!--\
+            \ mandatory -->\n     <vad:allowanceSummary><!-- mandatory -->\n     \
+            \ <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n   \
+            \   <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n     \
+            \ <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:allowanceSummary>\n\
+            \     <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \     <vad:restricted>true</vad:restricted>\n    </vad:allowanceDetail>\n\
+            \    <vad:allowanceText>string</vad:allowanceText>\n   </vad:allowance>\n\
+            \  </vad:dataAllowances>\n  <vad:dataAllowancesByBundleType>\n   <vad:dataBundle><!--\
+            \ mandatory --><!-- between 1 and unlimited repetitions of this element\
+            \ -->\n    <vad:bundleType><!-- mandatory -->string</vad:bundleType>\n\
+            \    <vad:startingAllowance><!-- mandatory -->3</vad:startingAllowance>\n\
+            \    <vad:allowanceUsed>3</vad:allowanceUsed>\n    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \    <vad:expiryDate>2016-04-18</vad:expiryDate>\n   </vad:dataBundle>\n\
+            \  </vad:dataAllowancesByBundleType>\n </vad:msisdnLevelAllowances>\n\
+            \ <vad:chargingType>string</vad:chargingType>\n</vad:getDataAllowance_1Response>"
+        getDataAllowance_1Fault_val:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            SOAFaultOriginator:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOAFaultOriginator_ns1"
+            SOAFaultCode:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOAFaultCode_ns1"
+            faultDescription:
+              type: "string"
+              xml:
+                namespace: "http://soa.o2.co.uk/coredata_1"
+                prefix: "ns1"
+              description: "A human readable description of the error."
+            faultTrace:
+              type: "string"
+              xml:
+                namespace: "http://soa.o2.co.uk/coredata_1"
+                prefix: "ns1"
+              description: "A computer generated dump of the fault (may help\n\t\t\
+                \t\t\t\tin debugging problems)."
+            SOATransactionID:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOATransactionID_ns1"
+          required:
+          - "SOAFaultOriginator"
+          - "SOAFaultCode"
+          description: "The type of the response sent to the calling\n\t\t\t\tapplication,\
+            \ if something goes wrong."
+          example: "\n<vad:getDataAllowance_1Fault xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            \ xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\">\n <ns1:SOAFaultOriginator><!--\
+            \ mandatory -->string</ns1:SOAFaultOriginator>\n <ns1:SOAFaultCode><!--\
+            \ mandatory -->string</ns1:SOAFaultCode>\n <ns1:faultDescription>string</ns1:faultDescription>\n\
+            \ <ns1:faultTrace>string</ns1:faultTrace>\n <ns1:SOATransactionID>string</ns1:SOATransactionID>\n\
+            </vad:getDataAllowance_1Fault>"
+        getNonDataAllowance_1_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            account:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/accountType_ns1_vad"
+            allowanceCategory:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceCategoryType_vad"
+          required:
+          - "account"
+          description: "A complex type holding the keys to retrieve both airtime\n\
+            \t\t\t\tand data allowances and usage details."
+          example: "\n<vad:getNonDataAllowance_1 xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            \ xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\">\n <vad:account><!-- mandatory\
+            \ -->\n  <ns1:portalID>string</ns1:portalID>\n  <ns1:msisdn>string</ns1:msisdn>\n\
+            \  <ns1:accountDetail>\n   <ns1:billingAccountType><!-- mandatory -->string</ns1:billingAccountType>\n\
+            \   <ns1:accountNumber><!-- mandatory -->string</ns1:accountNumber>\n\
+            \   <ns1:msisdn><!-- mandatory -->string</ns1:msisdn>\n  </ns1:accountDetail>\n\
+            \ </vad:account>\n <vad:allowanceCategory><!-- between zero and unlimited\
+            \ repetitions of this element -->string</vad:allowanceCategory>\n</vad:getNonDataAllowance_1>"
+        getNonDataAllowance_1Response_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            accountAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/accountAllowancesType_vad"
+            msisdnLevelAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/msisdnLevelNonDataAllowancesType_vad"
+            chargingType:
+              type: "array"
+              items:
+                type: "string"
+          description: "The service response, contains multiple allowances."
+          example: "\n<vad:getNonDataAllowance_1Response xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            >\n <vad:accountAllowances>\n  <vad:accountNumber><!-- mandatory -->string</vad:accountNumber>\n\
+            \  <vad:allowance><!-- between zero and unlimited repetitions of this\
+            \ element -->\n   <vad:productCode>string</vad:productCode>\n   <vad:productName><!--\
+            \ mandatory -->string</vad:productName>\n   <vad:productType><!-- mandatory\
+            \ -->string</vad:productType>\n   <vad:productDescription>string</vad:productDescription>\n\
+            \   <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n  \
+            \ <vad:suspended>true</vad:suspended>\n   <vad:allowanceDetail><!-- mandatory\
+            \ -->\n    <vad:allowanceSummary><!-- mandatory -->\n     <vad:startingBalance><!--\
+            \ mandatory -->3</vad:startingBalance>\n     <vad:allowanceUsed><!-- mandatory\
+            \ -->3</vad:allowanceUsed>\n     <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \    </vad:allowanceSummary>\n    <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \    <vad:restricted>true</vad:restricted>\n   </vad:allowanceDetail>\n\
+            \   <vad:allowanceText>string</vad:allowanceText>\n  </vad:allowance>\n\
+            \ </vad:accountAllowances>\n <vad:msisdnLevelAllowances>\n  <vad:msisdn><!--\
+            \ mandatory -->string</vad:msisdn>\n  <vad:voiceAllowances>\n   <vad:totalAllowanceSummary><!--\
+            \ mandatory -->\n    <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \    <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \   </vad:totalAllowanceSummary>\n   <vad:allowance><!-- mandatory --><!--\
+            \ between 1 and unlimited repetitions of this element -->\n    <vad:productCode>string</vad:productCode>\n\
+            \    <vad:productName><!-- mandatory -->string</vad:productName>\n   \
+            \ <vad:productType><!-- mandatory -->string</vad:productType>\n    <vad:productDescription>string</vad:productDescription>\n\
+            \    <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n \
+            \   <vad:suspended>true</vad:suspended>\n    <vad:allowanceDetail><!--\
+            \ mandatory -->\n     <vad:allowanceSummary><!-- mandatory -->\n     \
+            \ <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n   \
+            \   <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n     \
+            \ <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:allowanceSummary>\n\
+            \     <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \     <vad:restricted>true</vad:restricted>\n    </vad:allowanceDetail>\n\
+            \    <vad:allowanceText>string</vad:allowanceText>\n   </vad:allowance>\n\
+            \  </vad:voiceAllowances>\n  <vad:messageAllowances>\n   <vad:totalAllowanceSummary><!--\
+            \ mandatory -->\n    <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n\
+            \    <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \   </vad:totalAllowanceSummary>\n   <vad:allowance><!-- mandatory --><!--\
+            \ between 1 and unlimited repetitions of this element -->\n    <vad:productCode>string</vad:productCode>\n\
+            \    <vad:productName><!-- mandatory -->string</vad:productName>\n   \
+            \ <vad:productType><!-- mandatory -->string</vad:productType>\n    <vad:productDescription>string</vad:productDescription>\n\
+            \    <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n \
+            \   <vad:suspended>true</vad:suspended>\n    <vad:allowanceDetail><!--\
+            \ mandatory -->\n     <vad:allowanceSummary><!-- mandatory -->\n     \
+            \ <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n   \
+            \   <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n     \
+            \ <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:allowanceSummary>\n\
+            \     <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \     <vad:restricted>true</vad:restricted>\n    </vad:allowanceDetail>\n\
+            \    <vad:allowanceText>string</vad:allowanceText>\n   </vad:allowance>\n\
+            \  </vad:messageAllowances>\n  <vad:unlimitedAllowances>\n   <vad:allowance><!--\
+            \ mandatory --><!-- between 1 and unlimited repetitions of this element\
+            \ -->\n    <vad:productCode>string</vad:productCode>\n    <vad:productName><!--\
+            \ mandatory -->string</vad:productName>\n    <vad:productType><!-- mandatory\
+            \ -->string</vad:productType>\n    <vad:productDescription>string</vad:productDescription>\n\
+            \    <vad:expiryDate><!-- mandatory -->2016-04-18</vad:expiryDate>\n \
+            \   <vad:suspended>true</vad:suspended>\n    <vad:allowanceDetail><!--\
+            \ mandatory -->\n     <vad:allowanceSummary><!-- mandatory -->\n     \
+            \ <vad:startingBalance><!-- mandatory -->3</vad:startingBalance>\n   \
+            \   <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n     \
+            \ <vad:allowanceRemaining>3</vad:allowanceRemaining>\n     </vad:allowanceSummary>\n\
+            \     <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \     <vad:restricted>true</vad:restricted>\n    </vad:allowanceDetail>\n\
+            \    <vad:allowanceText>string</vad:allowanceText>\n   </vad:allowance>\n\
+            \  </vad:unlimitedAllowances>\n </vad:msisdnLevelAllowances>\n <vad:chargingType><!--\
+            \ between zero and unlimited repetitions of this element -->string</vad:chargingType>\n\
+            </vad:getNonDataAllowance_1Response>"
+        getNonDataAllowance_1Fault_val:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            SOAFaultOriginator:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOAFaultOriginator_ns1"
+            SOAFaultCode:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOAFaultCode_ns1"
+            faultDescription:
+              type: "string"
+              xml:
+                namespace: "http://soa.o2.co.uk/coredata_1"
+                prefix: "ns1"
+              description: "A human readable description of the error."
+            faultTrace:
+              type: "string"
+              xml:
+                namespace: "http://soa.o2.co.uk/coredata_1"
+                prefix: "ns1"
+              description: "A computer generated dump of the fault (may help\n\t\t\
+                \t\t\t\tin debugging problems)."
+            SOATransactionID:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOATransactionID_ns1"
+          required:
+          - "SOAFaultOriginator"
+          - "SOAFaultCode"
+          description: "The type of the response sent to the calling\n\t\t\t\tapplication,\
+            \ if something goes wrong."
+          example: "\n<vad:getNonDataAllowance_1Fault xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            \ xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\">\n <ns1:SOAFaultOriginator><!--\
+            \ mandatory -->string</ns1:SOAFaultOriginator>\n <ns1:SOAFaultCode><!--\
+            \ mandatory -->string</ns1:SOAFaultCode>\n <ns1:faultDescription>string</ns1:faultDescription>\n\
+            \ <ns1:faultTrace>string</ns1:faultTrace>\n <ns1:SOATransactionID>string</ns1:SOATransactionID>\n\
+            </vad:getNonDataAllowance_1Fault>"
+        getAllowance_2_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            account:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/accountType_ns1_vad"
+            allowanceCategory:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceCategoryType_vad"
+            dataSource:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/dataSourceType_vad"
+            productList:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/productListType_vad"
+          required:
+          - "account"
+          description: "A complex type holding the keys to retrieve both airtime\n\
+            \t\t\t\tand data allowances and usage details."
+          example: "\n<vad:getAllowance_2 xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            \ xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\">\n <vad:account><!-- mandatory\
+            \ -->\n  <ns1:portalID>string</ns1:portalID>\n  <ns1:msisdn>string</ns1:msisdn>\n\
+            \  <ns1:accountDetail>\n   <ns1:billingAccountType><!-- mandatory -->string</ns1:billingAccountType>\n\
+            \   <ns1:accountNumber><!-- mandatory -->string</ns1:accountNumber>\n\
+            \   <ns1:msisdn><!-- mandatory -->string</ns1:msisdn>\n  </ns1:accountDetail>\n\
+            \ </vad:account>\n <vad:allowanceCategory><!-- between zero and unlimited\
+            \ repetitions of this element -->string</vad:allowanceCategory>\n <vad:dataSource>string</vad:dataSource>\n\
+            \ <vad:productList>\n  <vad:tariffProductId><!-- mandatory -->string</vad:tariffProductId>\n\
+            \  <vad:services>\n   <vad:productId><!-- mandatory --><!-- between 1\
+            \ and unlimited repetitions of this element -->string</vad:productId>\n\
+            \  </vad:services>\n </vad:productList>\n</vad:getAllowance_2>"
+        getAllowance_2Response_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            accountNumber:
+              xml:
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                prefix: "vad"
+              type: "string"
+              maxLength: 20
+              minLength: 6
+              description: "A billing account, as it appears in the back end billing\n\
+                \t\t\t\tsystem (Companion).;\nThe Companion account number for this\
+                \ number (if\n\t\t\t\t\t\trelevant)."
+            accountAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/accountAllowances_2Type_vad"
+            msisdnAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/msisdnAllowances_2Type_vad"
+            chargingType:
+              type: "array"
+              items:
+                type: "string"
+          required:
+          - "accountNumber"
+          description: "The service response, contains multiple allowances."
+          example: "\n<vad:getAllowance_2Response xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            >\n <vad:accountNumber><!-- mandatory -->string</vad:accountNumber>\n\
+            \ <vad:accountAllowances>\n  <vad:allowance><!-- mandatory --><!-- between\
+            \ 1 and unlimited repetitions of this element -->\n   <vad:productId>string</vad:productId>\n\
+            \   <vad:allowanceName><!-- mandatory -->string</vad:allowanceName>\n\
+            \   <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \   <vad:shortDescription><!-- mandatory -->string</vad:shortDescription>\n\
+            \   <vad:longDescription><!-- mandatory -->string</vad:longDescription>\n\
+            \   <vad:isRestricted><!-- mandatory -->true</vad:isRestricted>\n   <vad:restrictionCategory><!--\
+            \ mandatory -->string</vad:restrictionCategory>\n   <vad:isUnlimited><!--\
+            \ mandatory -->true</vad:isUnlimited>\n   <vad:expiryDate><!-- mandatory\
+            \ -->2016-04-18</vad:expiryDate>\n   <vad:orderIndex><!-- mandatory -->3</vad:orderIndex>\n\
+            \   <vad:allowanceUsageSummary>\n    <vad:startingBalance><!-- mandatory\
+            \ -->3</vad:startingBalance>\n    <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n\
+            \    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n   </vad:allowanceUsageSummary>\n\
+            \  </vad:allowance>\n </vad:accountAllowances>\n <vad:msisdnAllowances>\n\
+            \  <vad:msisdn><!-- mandatory -->string</vad:msisdn>\n  <vad:allowances>\n\
+            \   <vad:allowance><!-- between zero and unlimited repetitions of this\
+            \ element -->\n    <vad:productId>string</vad:productId>\n    <vad:allowanceName><!--\
+            \ mandatory -->string</vad:allowanceName>\n    <vad:allowanceUnit><!--\
+            \ mandatory -->string</vad:allowanceUnit>\n    <vad:shortDescription><!--\
+            \ mandatory -->string</vad:shortDescription>\n    <vad:longDescription><!--\
+            \ mandatory -->string</vad:longDescription>\n    <vad:isRestricted><!--\
+            \ mandatory -->true</vad:isRestricted>\n    <vad:restrictionCategory><!--\
+            \ mandatory -->string</vad:restrictionCategory>\n    <vad:isUnlimited><!--\
+            \ mandatory -->true</vad:isUnlimited>\n    <vad:expiryDate><!-- mandatory\
+            \ -->2016-04-18</vad:expiryDate>\n    <vad:orderIndex><!-- mandatory -->3</vad:orderIndex>\n\
+            \    <vad:allowanceUsageSummary>\n     <vad:startingBalance><!-- mandatory\
+            \ -->3</vad:startingBalance>\n     <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n\
+            \     <vad:allowanceRemaining>3</vad:allowanceRemaining>\n    </vad:allowanceUsageSummary>\n\
+            \   </vad:allowance>\n   <vad:fairUsageAllowances><!-- between zero and\
+            \ unlimited repetitions of this element -->\n    <vad:startingBalance><!--\
+            \ mandatory -->3</vad:startingBalance>\n    <vad:allowanceUsed><!-- mandatory\
+            \ -->3</vad:allowanceUsed>\n    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \    <vad:thresholdType>string</vad:thresholdType>\n    <vad:startDate>2016-04-18T14:07:37</vad:startDate>\n\
+            \    <vad:renewalDate>2016-04-18</vad:renewalDate>\n    <vad:timestamp>2016-04-18T14:07:37</vad:timestamp>\n\
+            \   </vad:fairUsageAllowances>\n  </vad:allowances>\n </vad:msisdnAllowances>\n\
+            \ <vad:chargingType><!-- between zero and unlimited repetitions of this\
+            \ element -->string</vad:chargingType>\n</vad:getAllowance_2Response>"
+        getAllowance_2Fault_val:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            SOAFaultOriginator:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOAFaultOriginator_ns1"
+            SOAFaultCode:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOAFaultCode_ns1"
+            faultDescription:
+              type: "string"
+              xml:
+                namespace: "http://soa.o2.co.uk/coredata_1"
+                prefix: "ns1"
+              description: "A human readable description of the error."
+            faultTrace:
+              type: "string"
+              xml:
+                namespace: "http://soa.o2.co.uk/coredata_1"
+                prefix: "ns1"
+              description: "A computer generated dump of the fault (may help\n\t\t\
+                \t\t\t\tin debugging problems)."
+            SOATransactionID:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOATransactionID_ns1"
+          required:
+          - "SOAFaultOriginator"
+          - "SOAFaultCode"
+          description: "The type of the response sent to the calling\n\t\t\t\tapplication,\
+            \ if something goes wrong."
+          example: "\n<vad:getAllowance_2Fault xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            \ xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\">\n <ns1:SOAFaultOriginator><!--\
+            \ mandatory -->string</ns1:SOAFaultOriginator>\n <ns1:SOAFaultCode><!--\
+            \ mandatory -->string</ns1:SOAFaultCode>\n <ns1:faultDescription>string</ns1:faultDescription>\n\
+            \ <ns1:faultTrace>string</ns1:faultTrace>\n <ns1:SOATransactionID>string</ns1:SOATransactionID>\n\
+            </vad:getAllowance_2Fault>"
+        getNonDataAllowance_2_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            account:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/accountType_ns1_vad"
+            allowanceCategory:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceCategoryType_vad"
+          required:
+          - "account"
+          description: "A complex type holding the keys to retrieve both airtime\n\
+            \t\t\t\tand data allowances and usage details."
+          example: "\n<vad:getNonDataAllowance_2 xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            \ xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\">\n <vad:account><!-- mandatory\
+            \ -->\n  <ns1:portalID>string</ns1:portalID>\n  <ns1:msisdn>string</ns1:msisdn>\n\
+            \  <ns1:accountDetail>\n   <ns1:billingAccountType><!-- mandatory -->string</ns1:billingAccountType>\n\
+            \   <ns1:accountNumber><!-- mandatory -->string</ns1:accountNumber>\n\
+            \   <ns1:msisdn><!-- mandatory -->string</ns1:msisdn>\n  </ns1:accountDetail>\n\
+            \ </vad:account>\n <vad:allowanceCategory><!-- between zero and unlimited\
+            \ repetitions of this element -->string</vad:allowanceCategory>\n</vad:getNonDataAllowance_2>"
+        getNonDataAllowance_2Response_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            accountNumber:
+              xml:
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                prefix: "vad"
+              type: "string"
+              maxLength: 20
+              minLength: 6
+              description: "A billing account, as it appears in the back end billing\n\
+                \t\t\t\tsystem (Companion).;\nThe Companion account number for this\
+                \ number (if\n\t\t\t\t\t\trelevant)."
+            accountAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/accountAllowances_2Type_vad"
+            msisdnLevelNonDataAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/msisdnNonDataAllowances_2Type_vad"
+            chargingType:
+              type: "array"
+              items:
+                type: "string"
+          required:
+          - "accountNumber"
+          description: "The service response, contains multiple allowances."
+          example: "\n<vad:getNonDataAllowance_2Response xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            >\n <vad:accountNumber><!-- mandatory -->string</vad:accountNumber>\n\
+            \ <vad:accountAllowances>\n  <vad:allowance><!-- mandatory --><!-- between\
+            \ 1 and unlimited repetitions of this element -->\n   <vad:productId>string</vad:productId>\n\
+            \   <vad:allowanceName><!-- mandatory -->string</vad:allowanceName>\n\
+            \   <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n\
+            \   <vad:shortDescription><!-- mandatory -->string</vad:shortDescription>\n\
+            \   <vad:longDescription><!-- mandatory -->string</vad:longDescription>\n\
+            \   <vad:isRestricted><!-- mandatory -->true</vad:isRestricted>\n   <vad:restrictionCategory><!--\
+            \ mandatory -->string</vad:restrictionCategory>\n   <vad:isUnlimited><!--\
+            \ mandatory -->true</vad:isUnlimited>\n   <vad:expiryDate><!-- mandatory\
+            \ -->2016-04-18</vad:expiryDate>\n   <vad:orderIndex><!-- mandatory -->3</vad:orderIndex>\n\
+            \   <vad:allowanceUsageSummary>\n    <vad:startingBalance><!-- mandatory\
+            \ -->3</vad:startingBalance>\n    <vad:allowanceUsed><!-- mandatory -->3</vad:allowanceUsed>\n\
+            \    <vad:allowanceRemaining>3</vad:allowanceRemaining>\n   </vad:allowanceUsageSummary>\n\
+            \  </vad:allowance>\n </vad:accountAllowances>\n <vad:msisdnLevelNonDataAllowances>\n\
+            \  <vad:msisdn><!-- mandatory -->string</vad:msisdn>\n  <vad:allowances>\n\
+            \   <vad:allowance><!-- mandatory --><!-- between 1 and unlimited repetitions\
+            \ of this element -->\n    <vad:productId>string</vad:productId>\n   \
+            \ <vad:allowanceName><!-- mandatory -->string</vad:allowanceName>\n  \
+            \  <vad:allowanceUnit><!-- mandatory -->string</vad:allowanceUnit>\n \
+            \   <vad:shortDescription><!-- mandatory -->string</vad:shortDescription>\n\
+            \    <vad:longDescription><!-- mandatory -->string</vad:longDescription>\n\
+            \    <vad:isRestricted><!-- mandatory -->true</vad:isRestricted>\n   \
+            \ <vad:restrictionCategory><!-- mandatory -->string</vad:restrictionCategory>\n\
+            \    <vad:isUnlimited><!-- mandatory -->true</vad:isUnlimited>\n    <vad:expiryDate><!--\
+            \ mandatory -->2016-04-18</vad:expiryDate>\n    <vad:orderIndex><!-- mandatory\
+            \ -->3</vad:orderIndex>\n    <vad:allowanceUsageSummary>\n     <vad:startingBalance><!--\
+            \ mandatory -->3</vad:startingBalance>\n     <vad:allowanceUsed><!-- mandatory\
+            \ -->3</vad:allowanceUsed>\n     <vad:allowanceRemaining>3</vad:allowanceRemaining>\n\
+            \    </vad:allowanceUsageSummary>\n   </vad:allowance>\n  </vad:allowances>\n\
+            \ </vad:msisdnLevelNonDataAllowances>\n <vad:chargingType><!-- between\
+            \ zero and unlimited repetitions of this element -->string</vad:chargingType>\n\
+            </vad:getNonDataAllowance_2Response>"
+        getNonDataAllowance_2Fault_val:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            SOAFaultOriginator:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOAFaultOriginator_ns1"
+            SOAFaultCode:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOAFaultCode_ns1"
+            faultDescription:
+              type: "string"
+              xml:
+                namespace: "http://soa.o2.co.uk/coredata_1"
+                prefix: "ns1"
+              description: "A human readable description of the error."
+            faultTrace:
+              type: "string"
+              xml:
+                namespace: "http://soa.o2.co.uk/coredata_1"
+                prefix: "ns1"
+              description: "A computer generated dump of the fault (may help\n\t\t\
+                \t\t\t\tin debugging problems)."
+            SOATransactionID:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/SOATransactionID_ns1"
+          required:
+          - "SOAFaultOriginator"
+          - "SOAFaultCode"
+          description: "The type of the response sent to the calling\n\t\t\t\tapplication,\
+            \ if something goes wrong."
+          example: "\n<vad:getNonDataAllowance_2Fault xmlns:vad=\"http://soa.o2.co.uk/viewallowancedata_2\"\
+            \ xmlns:ns1=\"http://soa.o2.co.uk/coredata_1\">\n <ns1:SOAFaultOriginator><!--\
+            \ mandatory -->string</ns1:SOAFaultOriginator>\n <ns1:SOAFaultCode><!--\
+            \ mandatory -->string</ns1:SOAFaultCode>\n <ns1:faultDescription>string</ns1:faultDescription>\n\
+            \ <ns1:faultTrace>string</ns1:faultTrace>\n <ns1:SOATransactionID>string</ns1:SOATransactionID>\n\
+            </vad:getNonDataAllowance_2Fault>"
+        accountType_ns1_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            portalID:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/portalIDType_ns1"
+            msisdn:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/msisdnType_ns1"
+              description: "A msisdn, in international format i.e.,\"447712345678\""
+            accountDetail:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/accountDetail_ns1"
+              description: "Account Details"
+          description: "Data type to define a customers account. This could be\n\t\
+            \t\t\teither a portal account, msisdn, or a companion account\n\t\t\t\t\
+            and msisdn. Or a Bank Account program ID and account ID\n\t\t\t\t(initially\
+            \ for Timberlake)"
+          x-xsi-type: "accountType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          x-xsi-type-uniquename: "accountType_ns1_vad"
+        allowanceCategoryType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "string"
+          enum:
+          - "MINUTES"
+          - "MESSAGES"
+          - "DATA"
+          description: "A simple type to define the type of allowance to retrieve."
+          x-xsi-type: "allowanceCategoryType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "allowanceCategoryType_vad"
+        dataSourceType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "string"
+          enum:
+          - "BILLING"
+          - "FUP"
+          description: "A simple type to define the the source of the allowances.\n\
+            \t\t\t If this element is not provided then the data allowance\n\t\t\t\
+            \ source would be decided based on the data charging category by default."
+          x-xsi-type: "dataSourceType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "dataSourceType_vad"
+        productListType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            tariffProductId:
+              xml:
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                prefix: "vad"
+              type: "string"
+              description: "Identifies a product - temporarily the same as o2BFID\n\
+                \t\t\t\t(and hence customer ID)"
+            services:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/servicesType_vad"
+          required:
+          - "tariffProductId"
+          description: "The customer current tariff and the list of services present\
+            \ on the account. If this is provided then the customer data charging\
+            \ type \n\t\t\twould be determined using the tariff/services combination."
+          x-xsi-type: "productListType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "productListType_vad"
+        typeYesOrNo_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "string"
+          maxLength: 1
+          minLength: 1
+          enum:
+          - "Y"
+          - "N"
+          description: "Flag indicating whether or not there are outstanding\n\t\t\
+            \t\treturns on an order (Y/N). Field will be N if no returns\n\t\t\t\t\
+            have been requested."
+          x-xsi-type: "typeYesOrNo"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "typeYesOrNo_vad"
+        accountAllowancesType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            accountNumber:
+              xml:
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                prefix: "vad"
+              type: "string"
+              maxLength: 20
+              minLength: 6
+              description: "A billing account, as it appears in the back end billing\n\
+                \t\t\t\tsystem (Companion).;\nThe Companion account number for this\
+                \ number (if\n\t\t\t\t\t\trelevant)."
+            allowance:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceType_vad"
+          required:
+          - "accountNumber"
+          description: "Allowances shared across mobiles on an account."
+          x-xsi-type: "accountAllowancesType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "accountAllowancesType_vad"
+        msisdnAllowances_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            msisdn:
+              xml:
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                prefix: "vad"
+              type: "string"
+              description: "Mobile Phone numbers (MSISDNs) should always be defined\n\
+                \t\t\t\tas strings, including country codes i.e. \"447734123456\"\
+                ;\n\t\t\t\tand translated into localised formats on the\n\t\t\t\t\
+                presentation and backend layers.;\nThe mobile phone that the information\
+                \ is about."
+            voiceAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/voiceAllowancesType_vad"
+            messageAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/messageAllowancesType_vad"
+            dataAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/dataAllowances_2Type_vad"
+            unlimitedAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/unlimitedAllowancesType_vad"
+          required:
+          - "msisdn"
+          description: "Allowances relevant to MSISDN."
+          x-xsi-type: "msisdnAllowances"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "msisdnAllowances_vad"
+        SOAFaultOriginator_ns1:
+          xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          type: "string"
+        SOAFaultCode_ns1:
+          xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          type: "string"
+        SOATransactionID_ns1:
+          xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          type: "string"
+        msisdnLevelDataAllowancesType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            msisdn:
+              xml:
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                prefix: "vad"
+              type: "string"
+              description: "Mobile Phone numbers (MSISDNs) should always be defined\n\
+                \t\t\t\tas strings, including country codes i.e. \"447734123456\"\
+                ;\n\t\t\t\tand translated into localised formats on the\n\t\t\t\t\
+                presentation and backend layers.;\nThe mobile phone that the information\
+                \ is about."
+            dataAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/dataAllowancesType_vad"
+            dataAllowancesByBundleType:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/dataAllowancesByBundleTypeType_vad"
+          required:
+          - "msisdn"
+          description: "Allowances relevant to MSISDN."
+          x-xsi-type: "msisdnLevelDataAllowancesType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "msisdnLevelDataAllowancesType_vad"
+        msisdnLevelNonDataAllowancesType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            msisdn:
+              xml:
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                prefix: "vad"
+              type: "string"
+              description: "Mobile Phone numbers (MSISDNs) should always be defined\n\
+                \t\t\t\tas strings, including country codes i.e. \"447734123456\"\
+                ;\n\t\t\t\tand translated into localised formats on the\n\t\t\t\t\
+                presentation and backend layers.;\nThe mobile phone that the information\
+                \ is about."
+            voiceAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/voiceAllowancesType_vad"
+            messageAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/messageAllowancesType_vad"
+            unlimitedAllowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/unlimitedAllowancesType_vad"
+          required:
+          - "msisdn"
+          description: "Allowances relevant to MSISDN."
+          x-xsi-type: "msisdnLevelNonDataAllowancesType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "msisdnLevelNonDataAllowancesType_vad"
+        accountAllowances_2Type_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            allowance:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowance_2Type_vad"
+              minItems: 1
+              description: "Complex structure holding allowance details."
+          required:
+          - "allowance"
+          description: "Allowances shared across mobiles on an account."
+          x-xsi-type: "accountAllowances_2Type"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "accountAllowances_2Type_vad"
+        msisdnAllowances_2Type_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            msisdn:
+              xml:
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                prefix: "vad"
+              type: "string"
+              description: "Mobile Phone numbers (MSISDNs) should always be defined\n\
+                \t\t\t\tas strings, including country codes i.e. \"447734123456\"\
+                ;\n\t\t\t\tand translated into localised formats on the\n\t\t\t\t\
+                presentation and backend layers.;\nThe mobile phone that the information\
+                \ is about."
+            allowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowancesType_vad"
+          required:
+          - "msisdn"
+          description: "Allowances relevant to MSISDN."
+          x-xsi-type: "msisdnAllowances_2Type"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "msisdnAllowances_2Type_vad"
+        msisdnNonDataAllowances_2Type_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            msisdn:
+              xml:
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                prefix: "vad"
+              type: "string"
+              description: "Mobile Phone numbers (MSISDNs) should always be defined\n\
+                \t\t\t\tas strings, including country codes i.e. \"447734123456\"\
+                ;\n\t\t\t\tand translated into localised formats on the\n\t\t\t\t\
+                presentation and backend layers.;\nThe mobile phone that the information\
+                \ is about."
+            allowances:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowances_2Type_vad"
+          required:
+          - "msisdn"
+          description: "Non data allowances relevant to MSISDN."
+          x-xsi-type: "msisdnNonDataAllowances_2Type"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "msisdnNonDataAllowances_2Type_vad"
+        portalIDType_ns1:
+          xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          type: "string"
+          description: "The portal account username (i.e., Portal ID). \n\t\t\t\t\
+            A portal account is normally of the form “john.smith@o2.co.uk\". \n\t\t\
+            \t\tThe Portal ID in this example is \"john.smith\" and the domain is\
+            \ \"o2.co.uk\"."
+          x-xsi-type: "portalIDType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          x-xsi-type-uniquename: "portalIDType_ns1"
+        msisdnType_ns1:
+          xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          type: "string"
+          description: "Mobile Phone numbers (MSISDNs) should always be defined\n\t\
+            \t\t\tas strings, including country codes i.e. \"447734123456\";\n\t\t\
+            \t\tand translated into localised formats on the\n\t\t\t\tpresentation\
+            \ and backend layers."
+          x-xsi-type: "msisdnType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          x-xsi-type-uniquename: "msisdnType_ns1"
+        accountDetail_ns1:
+          xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          type: "object"
+          properties:
+            billingAccountType:
+              xml:
+                namespace: "http://soa.o2.co.uk/coredata_1"
+                prefix: "ns1"
+              type: "string"
+              enum:
+              - "MOBILE"
+              description: "The type of account as it is defined in the\n\t\t\t\t\t\
+                \tbilling system (only \"MOBILE\" currently\n\t\t\t\t\t\tdefined)."
+            accountNumber:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/billingAccountNumberType_ns1"
+              description: "The companion account."
+            msisdn:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/msisdnType_ns1"
+              description: "The msisdn within the above account."
+          required:
+          - "billingAccountType"
+          - "accountNumber"
+          - "msisdn"
+          description: "Account Details"
+          x-xsi-type: "accountDetail"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          x-xsi-type-uniquename: "accountDetail_ns1"
+        servicesType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            productId:
+              type: "array"
+              items:
+                xml:
+                  namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                  prefix: "vad"
+                type: "string"
+                description: "Identifies a product - temporarily the same as o2BFID\n\
+                  \t\t\t\t(and hence customer ID)"
+              minItems: 1
+          required:
+          - "productId"
+          description: "A list of services availalbe on the customer current tariff."
+          x-xsi-type: "servicesType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "servicesType_vad"
+        allowanceType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            productCode:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/productCode_vad"
+            productName:
+              type: "string"
+              description: "Marketing name of the product providing the allowance."
+            productType:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/productType_vad"
+            productDescription:
+              type: "string"
+              description: "Textual description of the product. Typically includes\n\
+                \t\t\t\t\t\tthe number and type of allowances included with the\n\t\
+                \t\t\t\t\tproduct."
+            expiryDate:
+              type: "string"
+              format: "date"
+              description: "Date on which the allowance expires."
+            suspended:
+              type: "boolean"
+              description: "Flag indicating whether the product (and by implication\n\
+                \t\t\t\t\t\tthe allowances provided by the product) are temporarily\n\
+                \t\t\t\t\t\tsuspended. This may be due (for example) to insufficient\n\
+                \t\t\t\t\t\tbalance to recharge the allowance. If the element is not\n\
+                \t\t\t\t\t\tincluded the product (and allowances) are currently\n\t\
+                \t\t\t\t\tactive."
+            allowanceDetail:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceDetailType_vad"
+              description: "Numerical descriptions of allowances delivered as part\n\
+                \t\t\t\t\t\tof a product. If there are no elements, and a\n\t\t\t\t\
+                \t\tproductDescription element exists, then the description\n\t\t\t\
+                \t\t\tshould be used instead."
+            allowanceText:
+              type: "string"
+              description: "This field can be used as an alternative to displaying\n\
+                \t\t\t\t\t\tallowanceDetail elements if it is supplied."
+          required:
+          - "productName"
+          - "productType"
+          - "expiryDate"
+          - "allowanceDetail"
+          description: "A set of allowances that are included as part of a \"product\"\
+            ."
+          x-xsi-type: "allowanceType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "allowanceType_vad"
+        voiceAllowancesType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            totalAllowanceSummary:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceSummaryType_vad"
+            allowance:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceType_vad"
+              minItems: 1
+          required:
+          - "totalAllowanceSummary"
+          - "allowance"
+          description: "Allowances related to voice. Provides an overall initial\n\
+            \t\t\t\tand remaining allowances and also a break down of each\n\t\t\t\
+            \tallowance"
+          x-xsi-type: "voiceAllowancesType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "voiceAllowancesType_vad"
+        messageAllowancesType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            totalAllowanceSummary:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceSummaryType_vad"
+            allowance:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceType_vad"
+              minItems: 1
+          required:
+          - "totalAllowanceSummary"
+          - "allowance"
+          description: "Allowances related to message that includes SMS and MMS.\n\
+            \t\t\t\tProvides an overall initial and remaining allowances and\n\t\t\
+            \t\talso a break down of each allowance"
+          x-xsi-type: "messageAllowancesType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "messageAllowancesType_vad"
+        dataAllowances_2Type_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            totalAllowanceSummary:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/dataAllowanceSummaryType_vad"
+            allowance:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceType_vad"
+            dataAllowancesByBundleType:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/dataAllowancesByBundleTypeType_vad"
+          description: "Allowances related to data in KB. Provides an overall\n\t\t\
+            \t\tinitial and remaining allowances and also a break down of\n\t\t\t\t\
+            each allowance"
+          x-xsi-type: "dataAllowances_2Type"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "dataAllowances_2Type_vad"
+        unlimitedAllowancesType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            allowance:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceType_vad"
+              minItems: 1
+          required:
+          - "allowance"
+          description: "All the unlimited Allowances related to Voice, Text and Data."
+          x-xsi-type: "unlimitedAllowancesType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "unlimitedAllowancesType_vad"
+        dataAllowancesType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            totalAllowanceSummary:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/dataAllowanceSummaryType_vad"
+            allowance:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceType_vad"
+          description: "Allowances related to data in KB. Provides an overall\n\t\t\
+            \t\tinitial and remaining allowances and also a break down of\n\t\t\t\t\
+            each allowance"
+          x-xsi-type: "dataAllowancesType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "dataAllowancesType_vad"
+        dataAllowancesByBundleTypeType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            dataBundle:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/dataBundleType_vad"
+              minItems: 1
+          required:
+          - "dataBundle"
+          x-xsi-type: "dataAllowancesByBundleTypeType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "dataAllowancesByBundleTypeType_vad"
+        allowance_2Type_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            productId:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/productCode_vad"
+            allowanceName:
+              type: "string"
+              description: "Marketing name of the product providing the allowance."
+            allowanceUnit:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceUnitType_vad"
+            shortDescription:
+              type: "string"
+              description: "Short textual description of the product."
+            longDescription:
+              type: "string"
+              description: "Long textual description of the product."
+            isRestricted:
+              type: "boolean"
+            restrictionCategory:
+              type: "string"
+            isUnlimited:
+              type: "boolean"
+            expiryDate:
+              type: "string"
+              format: "date"
+              description: "Date on which the allowance expires."
+            orderIndex:
+              type: "number"
+              description: "Describes the order in which the allowance need to displayed."
+            allowanceUsageSummary:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceUsageSummaryType_vad"
+          required:
+          - "allowanceName"
+          - "allowanceUnit"
+          - "shortDescription"
+          - "longDescription"
+          - "isRestricted"
+          - "restrictionCategory"
+          - "isUnlimited"
+          - "expiryDate"
+          - "orderIndex"
+          description: "A set of allowances that are included as part of a \"product\"\
+            ."
+          x-xsi-type: "allowance_2Type"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "allowance_2Type_vad"
+        allowancesType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            allowance:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowance_2Type_vad"
+              description: "Complex structure holding allowance details."
+            fairUsageAllowances:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/fairUsageAllowancesType_vad"
+          description: "Allowances relevant to MSISDN."
+          x-xsi-type: "allowancesType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "allowancesType_vad"
+        allowances_2Type_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            allowance:
+              type: "array"
+              items:
+                $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowance_2Type_vad"
+              minItems: 1
+              description: "Complex structure holding allowance details."
+          required:
+          - "allowance"
+          description: "Fair usage and non-fair usage allowances relevant to MSISDN."
+          x-xsi-type: "allowances_2Type"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "allowances_2Type_vad"
+        billingAccountNumberType_ns1:
+          xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          type: "string"
+          maxLength: 20
+          minLength: 6
+          description: "A billing account, as it appears in the back end billing\n\
+            \t\t\t\tsystem (Companion)."
+          x-xsi-type: "billingAccountNumberType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/coredata_1"
+            prefix: "ns1"
+          x-xsi-type-uniquename: "billingAccountNumberType_ns1"
+        productCode_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "string"
+          maxLength: 20
+          description: "System ID for the product, to aid aggregation (not available\
+            \ for\n\t\t\t\tall products)."
+          x-xsi-type: "productCode"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "productCode_vad"
+        productType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "string"
+          enum:
+          - "TARIFF"
+          - "BOLT-ON"
+          - "TREAT"
+          - "OTHER"
+          description: "The type of allowance (tarrif / bolt-on/ treat)"
+          x-xsi-type: "productType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "productType_vad"
+        allowanceDetailType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            allowanceSummary:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceSummaryType_vad"
+            allowanceUnit:
+              $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceUnitType_vad"
+            restricted:
+              type: "boolean"
+              description: "Indicates whether there are any restrictions on the use\n\
+                \t\t\t\t\t\tof the units (e.g. off-peak, week-ends only, on-net\n\t\
+                \t\t\t\t\tonly)."
+          required:
+          - "allowanceSummary"
+          - "allowanceUnit"
+          description: "Used to denote a product that gives a user an allowance."
+          x-xsi-type: "allowanceDetailType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "allowanceDetailType_vad"
+        allowanceSummaryType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            startingBalance:
+              type: "number"
+              description: "Total initial number of unit provided by the product."
+              xml:
+                prefix: "vad"
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            allowanceUsed:
+              type: "number"
+              description: "Total number of units used in the current month."
+              xml:
+                prefix: "vad"
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            allowanceRemaining:
+              type: "number"
+              description: "Total number of units available to use."
+              xml:
+                prefix: "vad"
+                namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+          required:
+          - "startingBalance"
+          - "allowanceUsed"
+          description: "Provides the total of allowances summary."
+          x-xsi-type: "allowanceSummaryType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "allowanceSummaryType_vad"
+          x-ibm-discriminator: true
+        dataAllowanceSummaryType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          allOf:
+          - $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceSummaryType_vad"
+          - xml:
+              namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+              prefix: "vad"
+            type: "object"
+            properties:
+              dataThresholdType:
+                type: "string"
+                xml:
+                  namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                  prefix: "vad"
+                description: "The data allowance threshold category. \n\t\t\t\t\t\t\
+                  \tExample values are:DomesticM,DomesticD,EuQuota,RoWQuota."
+              startDate:
+                type: "string"
+                format: "date-time"
+                xml:
+                  namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                  prefix: "vad"
+                description: "The allowance start date."
+              renewalDate:
+                type: "string"
+                format: "date"
+                xml:
+                  namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                  prefix: "vad"
+                description: "The allowance renewal date."
+              timestamp:
+                type: "string"
+                format: "date-time"
+                xml:
+                  namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                  prefix: "vad"
+                description: "The date and time in which the allowance retrieved was\
+                  \ valid."
+          description: "Provides the total of data allowances summary."
+          x-xsi-type: "dataAllowanceSummaryType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "dataAllowanceSummaryType_vad"
+        dataBundleType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            bundleType:
+              type: "string"
+            startingAllowance:
+              type: "number"
+            allowanceUsed:
+              type: "number"
+            allowanceRemaining:
+              type: "number"
+            expiryDate:
+              type: "string"
+              format: "date"
+          required:
+          - "bundleType"
+          - "startingAllowance"
+          x-xsi-type: "dataBundleType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "dataBundleType_vad"
+        allowanceUnitType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "string"
+          enum:
+          - "SECOND"
+          - "MESSAGE"
+          - "KB"
+          - "MMS"
+          - "SMS"
+          description: "The unit of measurement for the allowence."
+          x-xsi-type: "allowanceUnitType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "allowanceUnitType_vad"
+        allowanceUsageSummaryType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          type: "object"
+          properties:
+            startingBalance:
+              type: "number"
+              description: "Total initial number of unit provided by the product."
+            allowanceUsed:
+              type: "number"
+              description: "Total number of units used in the current month."
+            allowanceRemaining:
+              type: "number"
+              description: "Total number of units available to use."
+          required:
+          - "startingBalance"
+          - "allowanceUsed"
+          description: "Provides the summary of allowances usage."
+          x-xsi-type: "allowanceUsageSummaryType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "allowanceUsageSummaryType_vad"
+        fairUsageAllowancesType_vad:
+          xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          allOf:
+          - $ref: "#/x-ibm-configuration/targets/ViewAllowanceService/definitions/allowanceSummaryType_vad"
+          - xml:
+              namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+              prefix: "vad"
+            type: "object"
+            properties:
+              thresholdType:
+                type: "string"
+                xml:
+                  namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                  prefix: "vad"
+                description: "The data allowance threshold category. \n\t\t\t\t\t\t\
+                  \tExample values are:DomesticM,DomesticD,EuQuota,RoWQuota."
+              startDate:
+                type: "string"
+                format: "date-time"
+                xml:
+                  namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                  prefix: "vad"
+                description: "The allowance start date."
+              renewalDate:
+                type: "string"
+                format: "date"
+                xml:
+                  namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                  prefix: "vad"
+                description: "The allowance renewal date."
+              timestamp:
+                type: "string"
+                format: "date-time"
+                xml:
+                  namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+                  prefix: "vad"
+                description: "The date and time in which the allowance retrieved was\
+                  \ valid."
+          description: "Provide fair usage allowances summary."
+          x-xsi-type: "fairUsageAllowancesType"
+          x-xsi-type-xml:
+            namespace: "http://soa.o2.co.uk/viewallowancedata_2"
+            prefix: "vad"
+          x-xsi-type-uniquename: "fairUsageAllowancesType_vad"
+paths:
+  /PostpayAllowanceMessage:
+    get:
+      responses:
+        200:
+          description: "200 OK"
+          schema:
+            $ref: "#/definitions/NonDataAllowancesResponse"
+      parameters:
+      - name: "msisdn"
+        type: "string"
+        required: true
+        in: "query"
+      - name: "x-authcode"
+        type: "string"
+        required: true
+        in: "header"
+definitions:
+  Allowance:
+    type: "object"
+    properties:
+      startingBalance:
+        type: "integer"
+        format: "int32"
+      allowanceUsed:
+        type: "integer"
+        format: "int32"
+      allowanceRemaining:
+        type: "integer"
+        format: "int32"
+      percentAllowanceUsed:
+        type: "number"
+        format: "double"
+      expiryDate:
+        type: "string"
+        format: "date-time"
+      description:
+        type: "string"
+      restrictionCategory:
+        type: "string"
+      unlimited:
+        type: "boolean"
+      restricted:
+        type: "boolean"
+  NonDataAllowancesResponse:
+    type: "object"
+    properties:
+      footerMessage:
+        type: "string"
+      allowanceFooterMessage:
+        type: "string"
+      thresholdPercentage:
+        type: "integer"
+        format: "int32"
+      allowances:
+        type: "array"
+        items:
+          $ref: "#/definitions/Allowance"
+tags: []
