@@ -27,6 +27,6 @@ plans:
         hard-limit: false
 apis:
   o2apic-novum-postpayallowancedata:
-    $ref: 20180905\153908\o2apic-novum-postpayallowancedata_1.0.0.yaml
+    $ref: 20180905\154424\o2apic-novum-postpayallowancedata_1.0.0.yaml
   o2apic-novum-userconnections:
-    $ref: 20180905\153908\o2apic-novum-userconnections_1.0.0.yaml
+    $ref: 20180905\154424\o2apic-novum-userconnections_1.0.0.yaml
