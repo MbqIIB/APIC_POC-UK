@@ -27,10 +27,10 @@ plans:
         hard-limit: false
 apis:
   o2apic-authservice:
-    $ref: 20180905\151056\o2apic-authservice_2.0.0.yaml
+    $ref: 20180905\153908\o2apic-authservice_2.0.0.yaml
   o2apic-backendproxy:
-    $ref: 20180905\151056\o2apic-backendproxy_1.0.0.yaml
+    $ref: 20180905\153908\o2apic-backendproxy_1.0.0.yaml
   o2apic-cachinglayer:
-    $ref: 20180905\151056\o2apic-cachinglayer_1.0.0.yaml
+    $ref: 20180905\153908\o2apic-cachinglayer_1.0.0.yaml
   o2apic-novum-configapi:
-    $ref: 20180905\151056\o2apic-novum-configapi_2.0.0.yaml
+    $ref: 20180905\153908\o2apic-novum-configapi_2.0.0.yaml

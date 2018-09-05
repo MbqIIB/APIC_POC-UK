@@ -27,4 +27,4 @@ plans:
         hard-limit: false
 apis:
   authservice:
-    $ref: 20180905\151056\authservice_1.0.0.yaml
+    $ref: 20180905\153908\authservice_1.0.0.yaml

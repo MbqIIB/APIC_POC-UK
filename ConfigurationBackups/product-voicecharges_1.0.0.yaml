@@ -4,7 +4,7 @@ info:
   name: product-voicecharges
 apis:
   o2apic-novum-postpayvoicecharges:
-    $ref: 20180905\151056\o2apic-novum-postpayvoicecharges_1.0.0.yaml
+    $ref: 20180905\153908\o2apic-novum-postpayvoicecharges_1.0.0.yaml
 gateways:
 - datapower-gateway
 product: 1.0.0
