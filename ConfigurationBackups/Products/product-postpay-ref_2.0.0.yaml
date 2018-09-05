@@ -1,7 +1,7 @@
 info:
-  version: 1.0.0
-  title: product-userconnections
-  name: product-userconnections
+  version: 2.0.0
+  title: product-postpay-ref
+  name: product-postpay-ref
 gateways:
 - datapower-gateway
 product: 1.0.0
@@ -26,7 +26,5 @@ plans:
         value: 100/hour
         hard-limit: false
 apis:
-  o2apic-novum-postpayallowancedata:
-    $ref: 20180905\162024\o2apic-novum-postpayallowancedata_1.0.0.yaml
-  o2apic-novum-userconnections:
-    $ref: 20180905\162024\o2apic-novum-userconnections_1.0.0.yaml
+  o2apic-novum-postpayallowanceminutes:
+    $ref: 20180905\173942\Products\o2apic-novum-postpayallowanceminutes_2.0.0.yaml

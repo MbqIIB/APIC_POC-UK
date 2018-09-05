@@ -27,12 +27,12 @@ plans:
         hard-limit: false
 apis:
   o2apic-novum-postpayallowanceminutes:
-    $ref: 20180905\162024\o2apic-novum-postpayallowanceminutes_1.0.0.yaml
+    $ref: 20180905\173942\Products\o2apic-novum-postpayallowanceminutes_1.0.0.yaml
   o2apic-novum-postpayhistoricusage:
-    $ref: 20180905\162024\o2apic-novum-postpayhistoricusage_1.0.0.yaml
+    $ref: 20180905\173942\Products\o2apic-novum-postpayhistoricusage_1.0.0.yaml
   o2apic-novum-postpaypreviousbills:
-    $ref: 20180905\162024\o2apic-novum-postpaypreviousbills_1.0.0.yaml
+    $ref: 20180905\173942\Products\o2apic-novum-postpaypreviousbills_1.0.0.yaml
   o2apic-novum-postpaytariffdetails:
-    $ref: 20180905\162024\o2apic-novum-postpaytariffdetails_1.0.0.yaml
+    $ref: 20180905\173942\Products\o2apic-novum-postpaytariffdetails_1.0.0.yaml
   o2apic-novum-v2verify:
-    $ref: 20180905\162024\o2apic-novum-v2verify_1.0.0.yaml
+    $ref: 20180905\173942\Products\o2apic-novum-v2verify_1.0.0.yaml

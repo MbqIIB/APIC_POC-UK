@@ -1,10 +1,7 @@
 info:
   version: 1.0.0
-  title: Product-voicecharges
-  name: product-voicecharges
-apis:
-  o2apic-novum-postpayvoicecharges:
-    $ref: 20180905\162024\o2apic-novum-postpayvoicecharges_1.0.0.yaml
+  title: product-authservice
+  name: product-authservice
 gateways:
 - datapower-gateway
 product: 1.0.0
@@ -28,3 +25,6 @@ plans:
       default:
         value: 100/hour
         hard-limit: false
+apis:
+  authservice:
+    $ref: 20180905\173942\Products\authservice_1.0.0.yaml

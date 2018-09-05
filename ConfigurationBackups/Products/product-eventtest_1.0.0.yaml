@@ -1,7 +1,7 @@
 info:
   version: 1.0.0
-  title: product-authservice
-  name: product-authservice
+  title: product-eventTest
+  name: product-eventtest
 gateways:
 - datapower-gateway
 product: 1.0.0
@@ -26,5 +26,5 @@ plans:
         value: 100/hour
         hard-limit: false
 apis:
-  authservice:
-    $ref: 20180905\162024\authservice_1.0.0.yaml
+  o2apic-novum-postpaybilleventcharges:
+    $ref: 20180905\173942\Products\o2apic-novum-postpaybilleventcharges_1.0.0.yaml

@@ -1,7 +1,7 @@
 info:
-  name: product-apiassist-ref
-  title: product-apiassist-ref
-  version: 2.0.0
+  version: 1.0.0
+  title: product-apiassist
+  name: product-apiassist
 gateways:
 - datapower-gateway
 product: 1.0.0
@@ -27,6 +27,10 @@ plans:
         hard-limit: false
 apis:
   o2apic-authservice:
-    $ref: 20180905\162024\o2apic-authservice_1.0.0.yaml
+    $ref: 20180905\173942\Products\o2apic-authservice_2.0.0.yaml
+  o2apic-backendproxy:
+    $ref: 20180905\173942\Products\o2apic-backendproxy_1.0.0.yaml
+  o2apic-cachinglayer:
+    $ref: 20180905\173942\Products\o2apic-cachinglayer_1.0.0.yaml
   o2apic-novum-configapi:
-    $ref: 20180905\162024\o2apic-novum-configapi_1.0.0.yaml
+    $ref: 20180905\173942\Products\o2apic-novum-configapi_2.0.0.yaml
