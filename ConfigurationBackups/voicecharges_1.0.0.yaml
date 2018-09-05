@@ -1,0 +1,326 @@
+swagger: "2.0"
+info:
+  title: voicecharges
+  x-ibm-name: voicecharges
+  version: 1.0.0
+host: $(catalog.host)
+schemes:
+- https
+basePath: /voicecharges
+produces:
+- application/json
+- application/xml
+consumes:
+- application/json
+- application/xml
+security:
+- clientIdHeader: []
+securityDefinitions:
+  clientIdHeader:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+x-ibm-configuration:
+  phase: realized
+  testable: true
+  enforced: true
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  cors:
+    enabled: true
+  application-authentication:
+    certificate: false
+  assembly:
+    execute:
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ExtractInputLoggingData
+        source: "/* *************************************************************************************************************
+          */\r\n/* *************************************************************************************************************
+          */\r\n/* FileName                      Version    Created By                  Modified
+          By               Date           */\r\n/* ExtractInputLoggingData.js    1.0
+          \       Dinesh Tomar                                          06-July-2018
+          \  */\r\n/*                                                                                                               */\r\n/*
+          *************************************************************************************************************
+          */\r\n/* Purpose: This GW Script will extract input metadata for logging
+          \                                              */\r\n/*                                                                                                               */\r\n/*
+          Required params:                                                                                              */\r\n/*
+          ***************************************************************************************************************/\r\n//Extract
+          general metadata from system variables\r\nvar apiStartTimeMS = (new Date()).getTime();\r\napim.setvariable('apiStartTimeMS',
+          apiStartTimeMS);\r\nvar systemDateTime = apim.getvariable('system.datetime');\r\nvar
+          apicTxId = \"\";\r\nif (apim.getvariable('request.headers.apic-transaction-id')){\r\n
+          \   apicTxId = apim.getvariable('request.headers.apic-transaction-id');\r\n}\r\nelse
+          {\r\n    apicTxId = uuidv4();\r\n}\r\napim.setvariable('apic-transaction-id',
+          apicTxId);\r\napim.setvariable('message.headers.apic-transaction-id', apicTxId);\r\n\r\nvar
+          xGlobalTxId = apim.getvariable('request.headers.x-global-transaction-id');\r\n\r\n//Extract
+          client metadata from system variables\r\nvar clientIPAddress = apim.getvariable('request.headers.x-client-ip');\r\nvar
+          clientId = apim.getvariable('client.app.id');\r\nvar clientAppName = apim.getvariable('client.app.name');\r\nvar
+          clientAppType = apim.getvariable('client.app.type');\r\nvar clientOrgName
+          = apim.getvariable('client.org.name');\r\n\r\n//Extract api metadata from
+          system variables\r\nvar apiName = apim.getvariable('api.name');\r\nvar apiVersion
+          = apim.getvariable('api.version');\r\nvar providerOrgName = apim.getvariable('api.org.name');\r\nvar
+          catalogName = apim.getvariable('env.path');\r\nvar apiBasePath = apim.getvariable('api.root');\r\nvar
+          operationPath = apim.getvariable('api.operation.path');\r\n\r\n\r\n//Extract
+          product metadata from system variables\r\n//var productName = apim.getvariable('product.name');\r\n//var
+          productVersion = apim.getvariable('product.version');\r\nvar planName =
+          apim.getvariable('plan.name');\r\nvar planVersion = apim.getvariable('plan.version');\r\nvar
+          planRateLimit = apim.getvariable('plan.rate-limit');\r\n\r\n//Extract request
+          metadata from system variables\r\nvar requestMethod = apim.getvariable('request.verb');\r\nvar
+          requestURI = apim.getvariable('request.uri');\r\nvar requestHeaders = apim.getvariable('request.headers');\r\n\r\ndelete
+          requestHeaders['accept-encoding'];\r\ndelete requestHeaders['x-global-transaction-id'];\r\ndelete
+          requestHeaders['user-agent'];\r\ndelete requestHeaders['via'];\r\ndelete
+          requestHeaders['x-authcode'];\r\ndelete requestHeaders['authorization'];\r\n\r\nvar
+          requestHeadersString = JSON.stringify(requestHeaders);\r\n\r\nvar logString
+          = \"type:=request\"\r\n                + \" | system-datetime:=\" +        systemDateTime\r\n
+          \               + \" | apic-transaction-id:=\" +    apicTxId\r\n                +
+          \" | global-transaction-id:=\" +  xGlobalTxId\r\n                + \" |
+          consumer-ip-address:=\" +    clientIPAddress\r\n                + \" | x-ibm-client-id:=\"
+          +        clientId\r\n                + \" | client-app-name:=\" +        clientAppName\r\n
+          \               + \" | client-app-type:=\" +        clientAppType\r\n                +
+          \" | client-org-name:=\" +        clientOrgName\r\n                + \"
+          | api-name:=\" +               apiName\r\n                + \" | api-version:=\"
+          +            apiVersion\r\n                + \" | provider-org-name:=\"
+          +      providerOrgName\r\n                + \" | catalog-name:=\" +           catalogName\r\n
+          \               + \" | api-base-path:=\" +          apiBasePath\r\n                +
+          \" | operation-path:=\" +         operationPath\r\n                + \"
+          | plan-name:=\" +              planName\r\n                + \" | plan-version:=\"
+          +           planVersion\r\n                + \" | plan-rate-limit:=\" +
+          \       planRateLimit\r\n                + \" | request-http-method:=\"
+          +    requestMethod\r\n                + \" | request-uri:=\" +            requestURI\r\n
+          \               + \" | request-http-headers:=\" +   requestHeadersString;\r\n
+          \               \r\nconsole.log(logString);\r\nlogString = \"\";\r\napim.setvariable('logString',
+          logString);\r\n\r\nfunction uuidv4() {\r\n    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
+          function (c) {\r\n        var r = Math.random() * 16 | 0, v = c == 'x' ?
+          r: (r & 0x3 | 0x8);\r\n        return v.toString(16);\r\n    });\r\n}"
+    - activity-log:
+        version: 1.0.0
+        title: Log:Payload
+        content: payload
+        error-content: payload
+    - gatewayscript:
+        version: 1.0.0
+        title: GS:FetchValidationConfig
+        source: "/* *************************************************************************************************************
+          */\r\n/* *************************************************************************************************************
+          */\r\n/* FileName                      Version    Created By                  Modified
+          By               Date           */\r\n/* FetchValidationConfig.js      1.0
+          \       Dinesh Tomar                                          04-July-2018
+          \  */\r\n/*                                                                                                               */\r\n/*
+          *************************************************************************************************************
+          */\r\n/* Purpose: This GW Script will create URL to fetch validation config
+          for all apis                               */\r\n/*                                                                                                               */\r\n/*
+          Required params:                                                                                              */\r\n/*
+          ***************************************************************************************************************/\r\nvar
+          clientId = apim.getvariable('client.app.id');\r\napim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\r\napim.setvariable('message.headers.content-type', 'application/json');\r\n//form
+          url for to fetch errorConfig JSON\r\nvar orgName = apim.getvariable('api.org.name');\r\nvar
+          catalog = apim.getvariable('env.path');\r\napim.setvariable('apicURLPrefix',
+          'https://0.0.0.0:9443/'+orgName+'/'+catalog);\r\nvar validationConfigURL
+          = apim.getvariable('apicURLPrefix')+'/'+'config/validationconfig';\r\napim.setvariable('validationConfigURL',
+          validationConfigURL);\r\n\r\n//record time in ms just before the invoke
+          policy\r\napim.setvariable('startTimeMS', (new Date()).getTime());\r\napim.setvariable('policyName',
+          'Invoke-ValidationConfig');"
+    - invoke:
+        version: 1.0.0
+        title: Invoke-ValidationConfig
+        timeout: 60
+        verb: GET
+        cache-response: protocol
+        cache-ttl: 900
+        stop-on-error: []
+        target-url: $(validationConfigURL)
+        output: validationConfig
+    - gatewayscript:
+        version: 1.0.0
+        title: GS:ValidateParams
+        source: "/* **********************************************************************************************************
+          */\r\n/* **********************************************************************************************************
+          */\r\n/* FileName                   Version    Created By                  Modified
+          By               Date           */\r\n/* ValidateParams.js          1.0
+          \       Dinesh Tomar                                          03-July-2018
+          \  */\r\n/*                                                                                                            */\r\n/*
+          **********************************************************************************************************
+          */\r\n/* Purpose: This GW Script file will return all API configurations
+          to be used for validating input params     */\r\n/*                                                                                                            */\r\n/*
+          Required params:                                                                                           */\r\n/*
+          ************************************************************************************************************/\r\n\r\n//record
+          time in ms just after the invoke policy\r\nvar endTimeMS = (new Date()).getTime();\r\nvar
+          timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\r\nvar
+          logString = apim.getvariable('logString');\r\n\r\nvar validationConfig =
+          apim.getvariable('validationConfig.body');\r\nif (apim.getvariable('message.status.code')
+          != 200) {\r\n    apim.setvariable('errorName', 'BackendError');\r\n    var
+          errorPropertyName = 'other-backend-error';\r\n    logString += \" | error-scenario:=\"
+          + errorPropertyName;\r\n    apim.setvariable('logString', logString);\r\n
+          \   apim.setvariable('error-message', apim.getvariable(errorPropertyName));\r\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\r\n}\r\nelse {\r\n
+          \   logString += \" | \" + apim.getvariable('policyName') + \" := \" + timeTakenByPreviousPolicy
+          + \" ms\";\r\n    apim.setvariable('logString', logString);\r\n    var apiName
+          = apim.getvariable('api.name');\r\n    var operationName = apim.getvariable('api.operation.path');\r\n
+          \   var apiConfig = validationConfig.apisConfig[apiName][operationName];\r\n
+          \   var paramsConfig = validationConfig.paramsConfig;\r\n    var requiredPathParams
+          = apiConfig.requiredPathParams;\r\n    var requiredQueryParams = apiConfig.requiredQueryParams;\r\n
+          \   var requiredHeaderParams = apiConfig.requiredHeaderParams;\r\n    validateRequiredParams('headers',
+          requiredHeaderParams, paramsConfig);\r\n    validateRequiredParams('parameters',
+          requiredQueryParams, paramsConfig);\r\n    validateRequiredParams('parameters',
+          requiredPathParams, paramsConfig);\r\n    //record time in ms just before
+          the invoke policy\r\n    apim.setvariable('startTimeMS', (new Date()).getTime());\r\n
+          \   apim.setvariable('policyName', 'Invoke-PropertiesHandler');\r\n}\r\n\r\nfunction
+          validateRequiredParams(paramType, requiredParams, paramsConfig){\r\n    if
+          (requiredParams !== \"\"){\r\n        var reqParams = requiredParams.split('|');\r\n
+          \       for (var i = 0; i < reqParams.length; i++){\r\n            var paramConfig
+          = paramsConfig[reqParams[i]];\r\n            var inputParam = apim.getvariable('request.'+paramType+'.'+reqParams[i]);\r\n
+          \           var nullValidation = ((inputParam != undefined) || (inputParam
+          != null));\r\n            if (nullValidation){\r\n                var dataTypeValidation
+          = true;\r\n                dataTypeValidation = validateDataType(inputParam,
+          paramConfig);\r\n                var lengthValidation = true;\r\n                var
+          allowedValuesValidation = true;\r\n                if (paramConfig.manLength
+          || paramConfig.maxLength){\r\n                    lengthValidation = validateLength(inputParam,
+          paramConfig);\r\n                }\r\n                if (paramConfig.allowedValues){\r\n
+          \                   allowedValuesValidation = validateAllowedValues(inputParam,
+          paramConfig);\r\n                }\r\n                if (!(dataTypeValidation)
+          || !(lengthValidation) || !(allowedValuesValidation)){\r\n                    apim.setvariable('errorName',
+          paramConfig.validationErrorName);\r\n                    apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\r\n
+          \                   return;\r\n                }\r\n                else
+          {\r\n                    apim.setvariable('message.headers.'+reqParams[i],
+          inputParam);\r\n                    var clientId = apim.getvariable('client.app.id');\r\n
+          \                   apim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\r\n                    apim.setvariable('message.headers.content-type',
+          'application/json');\r\n                    //form url for to fetch properties
+          config JSON\r\n                    var configPropertiesURL = apim.getvariable('apicURLPrefix')+'/'+'config/properties';\r\n
+          \                   apim.setvariable('configPropertiesURL', configPropertiesURL);\r\n
+          \               }\r\n            }\r\n            else {\r\n                apim.setvariable('errorName',
+          paramConfig.validationErrorName);\r\n                apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\r\n
+          \               return;\r\n            }\r\n            \r\n        }\r\n
+          \   }\r\n}\r\n\r\nfunction validateDataType(inputParam, paramConfig){\r\n
+          \   if (paramConfig.dataType == 'number'){\r\n        return !(isNaN(parseInt(inputParam)));\r\n
+          \   }\r\n    else if (paramConfig.dataType == 'email'){ \r\n        if (inputParam.includes('.')
+          && inputParam.includes('@') && (! inputParam.includes(' ')))\r\n            return
+          true;\r\n        else\r\n            return false;\r\n    }\r\n    else
+          if (paramConfig.dataType == 'string'){\r\n        if (inputParam != null
+          && inputParam.length != 0)\r\n            return true;\r\n        else\r\n
+          \           return false;\r\n    }\r\n    else if (paramConfig.dataType
+          == 'version'){\r\n        if (inputParam == null || inputParam.length ==
+          0)\r\n            return false;\r\n        else if (inputParam.includes('.'))
+          {\r\n            var splittedArray = inputParam.split('.');\r\n            var
+          result = true;\r\n            for (var i = 0; i < splittedArray.length;
+          i++){\r\n                if (isNaN(parseInt(splittedArray[i]))){\r\n                    result
+          = false;\r\n                    return result;\r\n                }\r\n
+          \           }\r\n            return result;\r\n        }\r\n        else{\r\n
+          \           return !(isNaN(parseInt(inputParam)));\r\n        }\r\n    }\r\n
+          \   else\r\n        return true;\r\n}\r\n\r\nfunction validateLength(inputParam,
+          paramConfig){\r\n    var minLength = paramConfig.minLength;\r\n    var maxLength
+          = paramConfig.maxLength;\r\n    if ((inputParam.length >= minLength) &&
+          (inputParam.length <= maxLength))\r\n        return true;\r\n    else\r\n
+          \       return false;\r\n}\r\n\r\nfunction validateAllowedValues(inputParam,
+          paramConfig){\r\n    var allowedValues = paramConfig.allowedValues;\r\n
+          \   var allowedValuesArray = allowedValues.split('|');\r\n    var result
+          = false;\r\n    for (var i = 0; i < allowedValuesArray.length; i++){\r\n
+          \       if (allowedValuesArray[i] == inputParam){\r\n            result
+          = true;\r\n            return result;\r\n        }\r\n    }\r\n    return
+          result;\r\n}\r\n\r\nfunction isJSONEmpty(jsonObject) {\r\n    var member;\r\n
+          \   var result = true;\r\n    for (member in jsonObject) {\r\n        if
+          (jsonObject[member] != null) {\r\n            result = false;\r\n        }\r\n
+          \   }\r\n    return result;\r\n}"
+    - invoke:
+        version: 1.0.0
+        title: Invoke-PropertiesHandler
+        timeout: 60
+        verb: GET
+        cache-response: protocol
+        cache-ttl: 900
+        stop-on-error: []
+        target-url: $(configPropertiesURL)
+        output: Properties
+    - gatewayscript:
+        version: 1.0.0
+        title: GS:GetAccessTokenandDisambiguitionId
+        source: "/* ***********************************************************************************************************************
+          */\r\n/* ***********************************************************************************************************************
+          */\r\n/* FileName                                Version    Created By                  Modified
+          By               Date           */\r\n/* GetAccessToken.js                       1.0
+          \       Dinesh Tomar                                          08-May-2018
+          \   */\r\n/*                                                                                                                         */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n/* Purpose: This GW Script file will create request to get access
+          token for the auth code received                         */\r\n/*                                                                                                                         */\r\n/*
+          Required params:                                                                                                        */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n\r\n//record time in ms just after the invoke policy\r\nvar endTimeMS
+          = (new Date()).getTime();\r\nvar timeTakenByPreviousPolicy = endTimeMS -
+          apim.getvariable('startTimeMS');\r\nvar logString = apim.getvariable('logString');\r\n\r\n\r\n//load
+          properties configuration from context variable\r\nvar messages = apim.getvariable('Properties.body');\r\n//get
+          all headers\r\nvar clientId = apim.getvariable('client.app.id');\r\nvar
+          msisdn = apim.getvariable('request.parameters.msisdn');\r\nvar authCode
+          = apim.getvariable('request.headers.x-authcode');\r\n//var deviceType =
+          apim.getvariable('request.headers.x-device');\r\n//var userId = apim.getvariable('request.headers.x-user-id');\r\n//var
+          correlator = apim.getvariable('request.headers.x-correlator');\r\nif (apim.getvariable('message.status.code')
+          != 200) {\r\n    apim.setvariable('errorName', 'BackendError');\r\n    var
+          errorPropertyName = 'other-backend-error';\r\n    logString += \" | error-scenario:=\"
+          + errorPropertyName;\r\n    apim.setvariable('logString', logString);\r\n
+          \   apim.setvariable('error-message', apim.getvariable(errorPropertyName));\r\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\r\n} else {\r\n    logString
+          += \" | \" + apim.getvariable('policyName') + \" := \" + timeTakenByPreviousPolicy
+          + \" ms\";\r\n    apim.setvariable('logString', logString);\r\n    apim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\r\n    apim.setvariable('message.headers.msisdn', msisdn);\r\n
+          \   apim.setvariable('message.headers.x-authcode', authCode);\r\n    //var
+          apicAccessTokenURL = hostName + orgName + '/' + catalog + messages.authserver.generateAccessToken.apicURI;\r\n
+          \   var apicDisambiguationIdURL = apim.getvariable('apicURLPrefix') + messages.authserver.generateDisambiguationId.apicURI;\r\n
+          \   //apim.setvariable('apicAccessTokenURL', apicAccessTokenURL);\r\n    apim.setvariable('apicDisambiguationIdURL',
+          apicDisambiguationIdURL);\r\n    \r\n    //record time in ms just before
+          the invoke policy\r\n    apim.setvariable('startTimeMS', (new Date()).getTime());\r\n
+          \   apim.setvariable('policyName', 'Invoke-GetAccessTokenandDisambiguationId');\r\n}\r\n\r\nfunction
+          isJSONEmpty(jsonObject) {\r\n    var member;\r\n    var result = true;\r\n
+          \   for (member in jsonObject) {\r\n        if (jsonObject[member] != null)
+          {\r\n            result = false;\r\n        }\r\n    }\r\n    return result;\r\n}"
+    - proxy:
+        title: Invoke-GetDisambiguationId
+        version: 1.0.0
+        verb: keep
+        target-url: $(apicDisambiguationIdURL)
+        cache-ttl: 900
+        output: message.body
+  gateway: datapower-gateway
+  type: rest
+definitions:
+  DisambiguationId:
+    type: object
+    properties:
+      name:
+        type: string
+        example: john
+paths:
+  /{msisdn}/postpay/bill/recentcharges/voice/charges:
+    get:
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/DisambiguationId'
+      consumes: []
+      produces: []
+      parameters: []
+    parameters:
+    - name: msisdn
+      format: int32
+      type: integer
+      in: path
+      required: true
+    - name: x-device
+      type: string
+      in: header
+      required: true
+    - name: x-client-id
+      type: string
+      in: header
+      required: true
+    - name: x-user-id
+      type: string
+      in: header
+      required: true

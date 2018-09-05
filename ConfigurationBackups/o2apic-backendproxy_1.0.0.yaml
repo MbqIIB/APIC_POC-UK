@@ -1,0 +1,465 @@
+swagger: "2.0"
+info:
+  title: o2apic-backendproxy
+  x-ibm-name: o2apic-backendproxy
+  version: 1.0.0
+host: $(catalog.host)
+schemes:
+- https
+basePath: /backendproxy
+produces:
+- application/xml
+- application/json
+consumes:
+- application/xml
+- application/json
+security:
+- clientIdHeader: []
+securityDefinitions:
+  clientIdHeader:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+x-ibm-configuration:
+  phase: realized
+  testable: true
+  enforced: true
+  cors:
+    enabled: true
+  application-authentication:
+    certificate: false
+  assembly:
+    execute:
+    - activity-log:
+        title: Log-Payload
+        content: payload
+        error-content: payload
+        version: 1.0.0
+    - operation-switch:
+        title: operation-switch
+        case:
+        - operations:
+          - verb: get
+            path: /getsoapresponse
+          execute:
+          - gatewayscript:
+              title: GS-FetchSOAPConfig
+              version: 1.0.0
+              source: |-
+                /* ************************************************************************************************************ */
+                /* ************************************************************************************************************ */
+                /* FileName                     Version    Created By                  Modified By               Date           */
+                /* FetchSOAPConfig.js           1.0        Dinesh Tomar                                          07-May-2018    */
+                /*                                                                                                              */
+                /* ************************************************************************************************************ */
+                /* Purpose: This GW Script will create URL to fetch SOAP config from config api                                 */
+                /*                                                                                                              */
+                /* Required params:                                                                                             */
+                /* **************************************************************************************************************/
+                var clientId = apim.getvariable('client.app.id');
+                apim.setvariable('message.headers.x-ibm-client-id', clientId);
+                apim.setvariable('message.headers.content-type', 'application/xml');
+                //form url for to fetch errorConfig JSON
+                var orgName = apim.getvariable('api.org.name');
+                var catalog = apim.getvariable('env.path');
+                apim.setvariable('apicURLPrefix', 'https://0.0.0.0:9443/'+orgName+'/'+catalog);
+                var soapConfigURL = apim.getvariable('apicURLPrefix')+'/config/soapconfig';
+                apim.setvariable('soapConfigURL', soapConfigURL);
+              description: This GW Script will create URL to fetch SOAP config from
+                config api
+          - invoke:
+              title: Invoke-SOAPConfig
+              timeout: 60
+              verb: GET
+              cache-response: time-to-live
+              cache-ttl: 60
+              stop-on-error:
+              - null
+              version: 1.0.0
+              target-url: $(soapConfigURL)
+          - xslt:
+              title: XSLT-RESTtoSOAPConversion
+              input: true
+              version: 1.0.0
+              source: "<!-- **************************************************************************************************
+                -->\n<!-- **************************************************************************************************
+                -->\n<!-- FileName                   Version    Created By          Modified
+                By               Date           -->\n<!-- RESTtoSOAPConversion.xsl
+                \  1.0        Dinesh Tomar                                  07-May-2018
+                \   -->\n<!--                                                                                                    -->\n<!--
+                **************************************************************************************************
+                -->\n<!-- Purpose: This XSLT code will create SOAP request from REST
+                request received query parameters       -->\n<!--                                                                                                    -->\n<!--
+                Required params: request specific                                                                  -->\n<!--
+                **************************************************************************************************
+                -->\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"
+                xmlns:exsl=\"my:dummyNS\" xmlns:str=\"http://exslt.org/strings\" xmlns:apim=\"http://www.ibm.com/apimanagement\"
+                xmlns:dp=\"http://www.datapower.com/extensions\" extension-element-prefixes=\"dp\"
+                exclude-result-prefixes=\"exsl str apim dp\">\n    <xsl:import href=\"local:///isp/policy/apim.custom.xsl\"
+                />\n    <xsl:output method=\"xml\" omit-xml-declaration=\"yes\" indent=\"yes\"/>\n
+                \   <xsl:strip-space elements=\"*\"/>\n    <xsl:namespace-alias result-prefix=\"xsl\"
+                stylesheet-prefix=\"exsl\"/>\n    <xsl:template match=\"/\">\n        <xsl:variable
+                name=\"soapConfig\" select=\".\"/>\n        <xsl:variable name=\"inputQueryParamsString\"
+                select=\"apim:getContext('request.querystring')\"/>\n        <xsl:variable
+                name=\"inputParamsTokens\">\n            <xsl:copy-of select=\"str:tokenize($inputQueryParamsString,
+                '&amp;')\"/>\n        </xsl:variable>\n        <xsl:variable name=\"inputParams\">\n
+                \           <params>\n                <xsl:for-each select=\"$inputParamsTokens/token\">\n
+                \                   <xsl:element name=\"{substring-before(., '=')}\">\n
+                \                       <xsl:value-of select=\"substring-after(.,
+                '=')\"/>\n                    </xsl:element>\n                </xsl:for-each>\n
+                \           </params>\n        </xsl:variable>\n        <xsl:variable
+                name=\"serviceName\" select=\"$inputParams/params/x-service/text()\"/>\n
+                \       <xsl:variable name=\"operationName\" select=\"$inputParams/params/x-operation/text()\"/>\n
+                \       <xsl:variable name=\"serviceConfig\" select=\"$soapConfig//*[local-name()
+                = 'services']//*[local-name() = $serviceName]\"/>\n        <xsl:variable
+                name=\"operationConfig\" select=\"$soapConfig//*[local-name() = 'services']//*[local-name()
+                = $serviceName]//*[local-name() = 'operations']//*[local-name() =
+                $operationName]\"/>\n        <xsl:variable name=\"backEndURL\" select=\"$serviceConfig/backendURL/text()\"/>\n
+                \       <xsl:variable name=\"requiredParams\">\n            <tokens>\n
+                \               <xsl:copy-of select=\"str:tokenize($operationConfig/@requiredParams,
+                '|')\"/>\n            </tokens>\n        </xsl:variable>\n        <xsl:choose>\n
+                \           <xsl:when test=\"not($serviceConfig)\">\n                <xsl:call-template
+                name=\"apim:setVariable\">\n                    <xsl:with-param name=\"varName\"
+                select=\"'errorName'\" />\n                    <xsl:with-param name=\"value\"
+                select=\"'InvalidService'\" />\n                </xsl:call-template>\n
+                \               <xsl:call-template name=\"apim:error\">\n                    <xsl:with-param
+                name=\"httpCode\" select=\"'400'\" />\n                    <xsl:with-param
+                name=\"httpReasonPhrase\" select=\"'Invalid request'\" />\n                    <xsl:with-param
+                name=\"errorMessage\" select=\"concat('Invalid service name : ', $serviceName)\"
+                />\n                </xsl:call-template>\n            </xsl:when>\n
+                \           <xsl:when test=\"not($operationConfig)\">\n                <xsl:call-template
+                name=\"apim:setVariable\">\n                    <xsl:with-param name=\"varName\"
+                select=\"'errorName'\" />\n                    <xsl:with-param name=\"value\"
+                select=\"'InvalidOperation'\" />\n                </xsl:call-template>\n
+                \               <xsl:call-template name=\"apim:error\">\n                    <xsl:with-param
+                name=\"httpCode\" select=\"'400'\" />\n                    <xsl:with-param
+                name=\"httpReasonPhrase\" select=\"'Invalid request'\" />\n                    <xsl:with-param
+                name=\"errorMessage\" select=\"concat('Invalid operation name : ',
+                $operationName)\" />\n                </xsl:call-template>\n            </xsl:when>\n
+                \           <xsl:otherwise>\n                <xsl:if test=\"string-length($requiredParams)
+                != 0\">\n                    <xsl:for-each select=\"$requiredParams/tokens/token\">\n
+                \                       <xsl:variable name=\"requiredParam\" select=\"./text()\"/>\n
+                \                       <xsl:if test=\"string-length($inputParams//*[local-name()
+                = 'params']//*[local-name() = $requiredParam]) = 0\">\n                            <xsl:call-template
+                name=\"apim:setVariable\">\n                                <xsl:with-param
+                name=\"varName\" select=\"'errorName'\" />\n                                <xsl:with-param
+                name=\"value\" select=\"'MissingBodyParam'\" />\n                            </xsl:call-template>\n
+                \                           <xsl:call-template name=\"apim:error\">\n
+                \                               <xsl:with-param name=\"httpCode\"
+                select=\"'400'\" />\n                                <xsl:with-param
+                name=\"httpReasonPhrase\" select=\"'Invalid request'\" />\n                                <xsl:with-param
+                name=\"errorMessage\" select=\"concat('Body parameter missing : ',
+                $requiredParam)\" />\n                            </xsl:call-template>\n
+                \                       </xsl:if>\n                    </xsl:for-each>\n
+                \               </xsl:if>\n                <xsl:call-template name=\"apim:setVariable\">\n
+                \                   <xsl:with-param name=\"varName\" select=\"'soapServiceEndpoint'\"
+                />\n                    <xsl:with-param name=\"value\" select=\"$backEndURL\"/>\n
+                \               </xsl:call-template>\n                <xsl:call-template
+                name=\"apim:setVariable\">\n                    <xsl:with-param name=\"varName\"
+                select=\"'message.headers.x-ibm-client-id'\" />\n                    <xsl:with-param
+                name=\"value\" select=\"apim:getContext('client.app.id')\"/>\n                </xsl:call-template>\n
+                \               <xsl:call-template name=\"apim:setVariable\">\n                    <xsl:with-param
+                name=\"varName\" select=\"'message.headers.content-type'\"/>\n                    <xsl:with-param
+                name=\"value\" select=\"'application/xml'\"/>\n                </xsl:call-template>\n
+                \               <xsl:call-template name=\"apim:setVariable\">\n                    <xsl:with-param
+                name=\"varName\" select=\"'message.headers.soapaction'\"/>\n                    <xsl:with-param
+                name=\"value\" select=\"$operationName\"/>\n                </xsl:call-template>\n
+                \               <xsl:variable name=\"xsltCode\">                    \n
+                \                   <exsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\n
+                \                       <exsl:output method=\"xml\" omit-xml-declaration=\"yes\"
+                indent=\"yes\"/>\n                        <exsl:strip-space elements=\"*\"/>\n
+                \                       <exsl:template match=\"/\">\n                            <exsl:variable
+                name=\"inputParams\" select=\".\"/>\n                            <xsl:copy-of
+                select=\"$soapConfig//*[local-name() = 'services']//*[local-name()
+                = $serviceName]//*[local-name() = 'operations']//*[local-name() =
+                $operationName]/xsltcode/*\"/>\n                        </exsl:template>\n
+                \                   </exsl:stylesheet>\n                </xsl:variable>\n
+                \               <!--create dummy context-->\n                <dp:set-variable
+                name=\"'var://context/xform'\" value=\"''\"/>\n                <!--form
+                unique attachement url-->\n                <xsl:variable name=\"xsltAttachmentURL\"
+                select=\"concat('attachment://xform/cid:_', $serviceName,'_',$operationName)\"/>\n
+                \               \n                <!-- store stylesheet in attachment
+                -->\n                <dp:url-open target=\"{$xsltAttachmentURL}\"
+                response=\"ignore\">\n                    <xsl:copy-of select=\"$xsltCode\"/>\n
+                \               </dp:url-open>\n                <!-- do  dp:transform()
+                \ with attached stylesheet and send to output -->                \n
+                \               <xsl:copy-of select=\"dp:transform($xsltAttachmentURL,
+                $inputParams/params)\"/>\n                <!--<xsl:copy-of select=\"$inputParams/params\"/>-->\n
+                \           </xsl:otherwise>\n        </xsl:choose>\n    </xsl:template>\n</xsl:stylesheet>"
+              description: This XSLT code will create SOAP request from REST request
+                received query parameters
+          - invoke:
+              title: Invoke-SOAPService
+              timeout: 60
+              verb: POST
+              cache-response: no-cache
+              stop-on-error:
+              - ConnectionError
+              - OperationError
+              - SOAPError
+              version: 1.0.0
+              target-url: $(soapServiceEndpoint)
+              tls-profile: apic-tls-client-profile:1.0.0
+              username: dinesht
+              password: Infy@123
+        - operations:
+          - verb: get
+            path: /getrestresponse
+          execute:
+          - gatewayscript:
+              title: GS-FetchRESTConfig
+              version: 1.0.0
+              source: |-
+                /* ************************************************************************************************************ */
+                /* ************************************************************************************************************ */
+                /* FileName                     Version    Created By                  Modified By               Date           */
+                /* FetchRESTConfig.js           1.0        Dinesh Tomar                                          07-May-2018    */
+                /*                                                                                                              */
+                /* ************************************************************************************************************ */
+                /* Purpose: This GW Script will create URL to fetch REST config from config api                                 */
+                /*                                                                                                              */
+                /* Required params:                                                                                             */
+                /* **************************************************************************************************************/
+                var clientId = apim.getvariable('client.app.id');
+                apim.setvariable('message.headers.x-ibm-client-id', clientId);
+                apim.setvariable('message.headers.content-type', 'application/json');
+                //form url for to fetch errorConfig JSON
+                var orgName = apim.getvariable('api.org.name');
+                var catalog = apim.getvariable('env.path');
+                apim.setvariable('apicURLPrefix', 'https://0.0.0.0:9443/'+orgName+'/'+catalog);
+                var restConfigURL = apim.getvariable('apicURLPrefix')+'/config/restconfig';
+                apim.setvariable('restConfigURL', restConfigURL);
+              description: This GW Script will create URL to fetch REST config from
+                config api
+          - invoke:
+              title: Invoke-RESTConfig
+              timeout: 60
+              verb: GET
+              cache-response: time-to-live
+              cache-ttl: 60
+              stop-on-error:
+              - null
+              version: 1.0.0
+              target-url: $(restConfigURL)
+              output: restConfig
+          - gatewayscript:
+              title: GS-GenericRESTToRESTConversion
+              version: 1.0.0
+              source: "/* ************************************************************************************************************
+                */\n/* ************************************************************************************************************
+                */\n/* FileName                     Version    Created By                  Modified
+                By               Date           */\n/* RESTToRESTConversion.js      1.0
+                \       Dinesh Tomar                                          07-May-2018
+                \   */\n/*                                                                                                              */\n/*
+                ************************************************************************************************************
+                */\n/* Purpose: This GW Script will convert incoming REST request
+                to backend supported REST format                  */\n/*                                                                                                              */\n/*
+                Required params:                                                                                             */\n/*
+                **************************************************************************************************************/\nvar
+                restConfigHandle = apim.getvariable('restConfig.body');\n\nvar service
+                = apim.getvariable('request.parameters.x-service');\nvar operation
+                = apim.getvariable('request.parameters.x-operation');\n\nif (service
+                == null || service == undefined || operation == null || operation
+                == undefined) {\n    apim.setvariable('errorName', 'InvalidServiceOrOperation');\n
+                \   apim.error('InvalidServiceOrOperation', 500, 'Internal Error',
+                'Either service or operation name is missing.');\n} else {\n    var
+                allServicesConfig = restConfigHandle.restConfig.services;\n    var
+                serviceConfig;\n    for (var i = 0; i < allServicesConfig.length;
+                i++) {\n        if (allServicesConfig[i][service]) {\n            serviceConfig
+                = allServicesConfig[i][service];\n        }\n    }\n    if (serviceConfig
+                == undefined) {\n        apim.setvariable('errorName', 'InvalidService');\n
+                \       apim.error('InvalidService', 500, 'Internal Error', 'Service
+                name is invalid.');\n    } else {\n        var serviceEndpoint = serviceConfig.endpoint;\n
+                \       var allOperationsConfig = serviceConfig.operations;\n        var
+                operationConfig;\n        for (var j = 0; j < allOperationsConfig.length;
+                j++) {\n            if (allOperationsConfig[j][operation]) {\n                operationConfig
+                = allOperationsConfig[j][operation];\n            }\n        }\n        if
+                (operationConfig == undefined) {\n            apim.setvariable('errorName',
+                'InvalidOperation');\n            apim.error('InvalidOperation', 500,
+                'Internal Error', 'Operation name is invalid.');\n        } else {\n
+                \           var operationURI = operationConfig.uri;\n            var
+                inputRequestParams = apim.getvariable('request.parameters');\n            var
+                inputParamsKeys = Object.keys(inputRequestParams);\n            var
+                inputParamsCount = inputParamsKeys.length;\n            var cacheKey
+                = \"\";\n            if (operationConfig.requiredPathParams != undefined
+                && operationConfig.requiredPathParams != \"\") {\n                var
+                requiredPathParams = operationConfig.requiredPathParams.split('|');\n
+                \               for (var k = 0; k < requiredPathParams.length; k++)
+                {\n                    if (inputRequestParams[requiredPathParams[k]])
+                {\n                        var strToBeReplaced = \"<\" + requiredPathParams[k]
+                + \">\";\n                        operationURI = operationURI.replace(strToBeReplaced,
+                inputRequestParams[requiredPathParams[k]]);\n                        cacheKey
+                += inputRequestParams[requiredPathParams[k]] + \"-\";\n                    }
+                else {\n                        apim.setvariable('errorName', 'MissingPathParam');\n
+                \                       apim.error('MissingPathParam', 500, 'Internal
+                Error', requiredPathParams[k] + ' path parameter is missing.');\n
+                \                       k = requiredPathParams.length;\n                    }\n
+                \               }\n            }\n            \n            if (operationConfig.requiredQueryParams
+                != undefined && operationConfig.requiredQueryParams != \"\") {\n                var
+                requiredQueryParams = operationConfig.requiredQueryParams.split('|');\n
+                \               operationURI += \"?\";\n                for (var l
+                = 0; l < requiredQueryParams.length; l++) {\n                    if
+                (inputRequestParams[requiredQueryParams[l]]) {\n                        //do
+                nothing\n                    } else {\n                        apim.setvariable('errorName',
+                'MissingQueryParam');\n                        apim.error('MissingQueryParam',
+                500, 'Internal Error', requiredQueryParams[l] + ' query parameter
+                is missing.');\n                        l = requiredQueryParams.length;\n
+                \                   }\n                }\n                for (var
+                r = 0; r < inputParamsKeys.length; r++) {\n                    operationURI
+                += inputParamsKeys[r] + \"=\" + inputRequestParams[inputParamsKeys[r]];\n
+                \                   cacheKey += inputRequestParams[inputParamsKeys[r]]
+                + \"-\";\n                    if (r < inputParamsKeys.length -1) {\n
+                \                       operationURI += \"&\";\n                    }\n
+                \               }\n            }\n            \n            var headers
+                = {\n            };\n            headers = apim.getvariable('message.headers');\n
+                \           \n            if (operationConfig.requiredHeaders != undefined
+                && operationConfig.requiredHeaders != \"\") {\n                var
+                requiredHeaders = operationConfig.requiredHeaders.split('|');\n                for
+                (var m = 0; m < requiredHeaders.length; m++) {\n                    if
+                (inputRequestParams[requiredHeaders[m]]) {\n                        headers[requiredHeaders[m]]
+                = decodeURI(inputRequestParams[requiredHeaders[m]]);\n                        cacheKey
+                += inputRequestParams[requiredHeaders[m]];\n                        if
+                (m < requiredHeaders.length -1) {\n                            cacheKey
+                += \"-\";\n                        }\n                    } else {\n
+                \                       apim.setvariable('errorName', 'MissingHeadersParam');\n
+                \                       apim.error('MissingHeadersParam', 500, 'Internal
+                Error', requiredHeaders[m] + ' header is missing.');\n                        m
+                = requiredHeaders.length;\n                    }\n                }\n
+                \           }\n            \n            if (operationConfig.body
+                != undefined && operationConfig.body != \"\") {\n                var
+                requestBody = operationConfig.body;\n                var requestBodyKeys
+                = Object.keys(requestBody);\n                requestBody = populateJsonObject(requestBody,
+                inputRequestParams);\n                apim.setvariable('message.body',
+                requestBody);\n            }\n            headers[ 'x-ibm-client-id']
+                = apim.getvariable('client.app.id');\n            apim.setvariable('message.headers',
+                headers);\n            apim.setvariable('HttpMethod', operationConfig.method);\n
+                \           apim.setvariable('restServiceEndpoint', serviceEndpoint
+                + operationURI);\n            apim.setvariable('cacheKey', cacheKey);\n
+                \       }\n    }\n}\n\nfunction populateJsonObject(jsonObject, inputRequestParams)
+                {\n    var jsonObjectKeys = Object.keys(jsonObject);\n    var inputParamsKeys
+                = Object.keys(inputRequestParams);\n    for (var i = 0; i < jsonObjectKeys.length;
+                i++) {\n        var isFieldSet = false;\n        for (var j = 0; j
+                < inputParamsKeys.length; j++) {\n            if (isJson(jsonObject[jsonObjectKeys[i]]))
+                {\n                jsonObject[jsonObjectKeys[i]] = populateJsonObject(jsonObject[jsonObjectKeys[i]],
+                inputRequestParams);\n            } else if (jsonObject[jsonObjectKeys[i]]
+                == inputParamsKeys[j]) {\n                jsonObject[jsonObjectKeys[i]]
+                = inputRequestParams[inputParamsKeys[j]];\n                isFieldSet
+                = true;\n            }\n        }\n        if (! isFieldSet) {\n            jsonObject[jsonObjectKeys[i]]
+                = \"\";\n        }\n    }\n    return jsonObject;\n}\n\n\nfunction
+                isJson(item) {\n    item = typeof item !== \"string\" ? JSON.stringify(item):
+                item;\n    \n    try {\n        item = JSON.parse(item);\n    }\n
+                \   catch (e) {\n        return false;\n    }\n    \n    if (typeof
+                item === \"object\" && item !== null) {\n        return true;\n    }\n
+                \   \n    return false;\n}"
+              description: This GW Script will convert incoming REST request to backend
+                supported REST format
+          - switch:
+              title: SwitchCase-HttpMethod
+              case:
+              - condition: apim.getvariable('HttpMethod') == 'GET'
+                execute:
+                - invoke:
+                    title: Invoke-RESTService-GET
+                    timeout: 60
+                    verb: GET
+                    cache-response: no-cache
+                    stop-on-error: []
+                    version: 1.0.0
+                    target-url: $(restServiceEndpoint)
+                    cache-key: ""
+              - condition: apim.getvariable('HttpMethod') == 'POST'
+                execute:
+                - invoke:
+                    title: Invoke-RESTService-POST
+                    timeout: 60
+                    verb: POST
+                    cache-response: no-cache
+                    stop-on-error: []
+                    version: 1.0.0
+                    target-url: $(restServiceEndpoint)
+                    cache-key: ""
+              version: 1.0.0
+        otherwise: []
+        version: 1.0.0
+    catch:
+    - default:
+      - gatewayscript:
+          title: GS-ErrorHandling
+          version: 1.0.0
+          source: "/* ******************************************************************************************************************
+            */\n/* ******************************************************************************************************************
+            */\n/* FileName                           Version    Created By                  Modified
+            By               Date           */\n/* Errorhandling.js                   1.0
+            \       Dinesh Tomar                                          07-May-2018
+            \   */\n/*                                                                                                                    */\n/*
+            ******************************************************************************************************************
+            */\n/* Purpose: This GW Script file will read error config for the catch
+            block error name and will set the necessary      */\n/*          params
+            like status code, reason phrase and will return the error json                                     */\n/*
+            Required params: errorName                                                                                         */\n/*
+            ******************************************************************************************************************
+            */\nvar urlOpen = require('urlopen');\n//form url for to fetch errorConfig
+            JSON\nvar orgName = apim.getvariable('api.org.name');\nvar catalog = apim.getvariable('env.path');\napim.setvariable('apicURLPrefix',
+            'https://0.0.0.0:9443/'+orgName+'/'+catalog);\nvar errorConfigURL = apim.getvariable('apicURLPrefix')
+            +'/config/errorconfig';\nvar clientId = apim.getvariable('client.app.id');\napim.setvariable('message.headers.content-type',
+            'application/json');\nvar errorConfigURLOptions = {\n    target: errorConfigURL,\n
+            \   sslClientProfile: 'api-sslcli-all',\n    headers: {'x-ibm-client-id':
+            clientId, 'content-type': 'application/json' }\n};\n//fetch errorName
+            and errorConfig JSON from context variables\nurlOpen.open(errorConfigURLOptions,
+            function (error, response) {\n    if (error) {\n        throw error;\n
+            \   } else {\n        response.readAsJSON(function (error, errorConfigJSON)
+            {\n            if (error) {\n                throw error;\n            }
+            else {\n                var errorName = apim.getvariable('errorName');\n
+            \               if (errorName == null) {\n                    errorName
+            = 'default';\n                } \n                if (apim.getvariable('message.status.reason')
+            != null && apim.getvariable('message.status.reason').startsWith('APIC:')
+            ) {\n                    errorName = 'default';\n                    apim.setvariable('message.status.code',
+            apim.getvariable('message.status.code'));\n                    apim.setvariable('message.status.reason',
+            apim.getvariable('message.status.reason'));\n                    apim.setvariable('message.body',
+            apim.getvariable('message.body'));\n                } else {\n                    if
+            (errorName == 'BackendError') {\n                        var errorDetails
+            = errorConfigJSON.errorConfig.errorTypes[errorName];\n                        apim.setvariable('message.status.reason',
+            errorDetails.reasonPhrase);\n                        var errorMessage
+            = errorDetails.errorMessage;\n                        errorMessage.error.message
+            = apim.getvariable('error-message');\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                    //fetch specific
+            block from error config JSON\n                    else if (! isJSONEmpty(errorConfigJSON))
+            {\n                        var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];\n
+            \                       var statusCode = errorDetails.statusCode;\n                        var
+            reasonPhrase = errorDetails.reasonPhrase;\n                        var
+            errorMessage = errorDetails.errorMessage;\n                        apim.setvariable('message.status.code',
+            statusCode);\n                        apim.setvariable('message.status.reason',
+            reasonPhrase);\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                    //else block
+            executes in case error config file is not loaded. it will set a default
+            error message\n                    else {\n                        apim.setvariable('message.status.code',
+            500);\n                        apim.setvariable('message.status.reason',
+            'Internal Error');\n                        var errorMessage = {};\n                        errorMessage.httpCode
+            = 500;\n                        errorMessage.httpMessage = \"Internal
+            Error\";\n                        errorMessage.moreInformation = \"Something's
+            wrong. Please try again later.\";\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                }\n            }\n
+            \       });\n    }\n});\n\n//below function checks if json object is null
+            or not\nfunction isJSONEmpty(jsonObject) {\n    var member;\n    var result
+            = true;\n    for (member in jsonObject) {\n        if (jsonObject[member]
+            != null) {\n            result = false;\n        }\n    }\n    return
+            result;\n}"
+          description: This GW Script file will read error config for the catch block
+            error name and will set the necessary params like status code, reason
+            phrase and will return the error json
+  gateway: datapower-gateway
+  type: rest
+tags: []
+definitions: {}
+paths:
+  /getsoapresponse:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+    parameters: []
+  /getrestresponse:
+    get:
+      responses:
+        "200":
+          description: 200 OK

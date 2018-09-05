@@ -1,0 +1,1013 @@
+swagger: "2.0"
+info:
+  title: o2apic-novum-postpaybillprofile
+  x-ibm-name: o2apic-novum-postpaybillprofile
+  version: 1.0.0
+host: $(catalog.host)
+schemes:
+- https
+basePath: /apic
+produces:
+- application/json
+consumes:
+- application/json
+security:
+- clientIdHeader: []
+securityDefinitions:
+  clientIdHeader:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+x-ibm-configuration:
+  phase: realized
+  testable: true
+  enforced: true
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+    auth-400:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    auth-401:
+      value: That PIN isn't the one you've used before. Please try again or change
+        your PIN.
+      description: That PIN isn't the one you've used before. Please try again or
+        change your PIN.
+    auth-500:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    auth-404:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    phoneservice-500:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    other-backend-error:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    phoneservice-503:
+      value: The server is busy. Please try again after some time.
+      description: The server is busy. Please try again after some time.
+    phoneservice-404:
+      value: No billing data found for MSISDN.
+      description: No billing data found for MSISDN.
+    phoneservice-403:
+      value: Something's wrong. Please try again later.
+  catalogs: {}
+  cors:
+    enabled: true
+  application-authentication:
+    certificate: false
+  assembly:
+    execute:
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ExtractInputLoggingData
+        description: This GW Script will extract input metadata for logging
+        source: "/* *************************************************************************************************************
+          */\n/* *************************************************************************************************************
+          */\n/* FileName                      Version    Created By                  Modified
+          By               Date           */\n/* ExtractInputLoggingData.js    1.0
+          \       Dinesh Tomar                                          06-July-2018
+          \  */\n/*                                                                                                               */\n/*
+          *************************************************************************************************************
+          */\n/* Purpose: This GW Script will extract input metadata for logging                                               */\n/*
+          \                                                                                                              */\n/*
+          Required params:                                                                                              */\n/*
+          ***************************************************************************************************************/\n//Extract
+          general metadata from system variables\nvar apiStartTimeMS = (new Date()).getTime();\napim.setvariable('apiStartTimeMS',
+          apiStartTimeMS);\nvar systemDateTime = apim.getvariable('system.datetime');\nvar
+          apicTxId = \"\";\nif (apim.getvariable('request.headers.apic-transaction-id')){\n
+          \   apicTxId = apim.getvariable('request.headers.apic-transaction-id');\n}\nelse
+          {\n    apicTxId = uuidv4();\n}\napim.setvariable('apic-transaction-id',
+          apicTxId);\napim.setvariable('message.headers.apic-transaction-id', apicTxId);\n\nvar
+          xGlobalTxId = apim.getvariable('request.headers.x-global-transaction-id');\n\n//Extract
+          client metadata from system variables\nvar clientIPAddress = apim.getvariable('request.headers.x-client-ip');\nvar
+          clientId = apim.getvariable('client.app.id');\nvar clientAppName = apim.getvariable('client.app.name');\nvar
+          clientAppType = apim.getvariable('client.app.type');\nvar clientOrgName
+          = apim.getvariable('client.org.name');\n\n//Extract api metadata from system
+          variables\nvar apiName = apim.getvariable('api.name');\nvar apiVersion =
+          apim.getvariable('api.version');\nvar providerOrgName = apim.getvariable('api.org.name');\nvar
+          catalogName = apim.getvariable('env.path');\nvar apiBasePath = apim.getvariable('api.root');\nvar
+          operationPath = apim.getvariable('api.operation.path');\n\n\n//Extract product
+          metadata from system variables\n//var productName = apim.getvariable('product.name');\n//var
+          productVersion = apim.getvariable('product.version');\nvar planName = apim.getvariable('plan.name');\nvar
+          planVersion = apim.getvariable('plan.version');\nvar planRateLimit = apim.getvariable('plan.rate-limit');\n\n//Extract
+          request metadata from system variables\nvar requestMethod = apim.getvariable('request.verb');\nvar
+          requestURI = apim.getvariable('request.uri');\nvar requestHeaders = apim.getvariable('request.headers');\n\ndelete
+          requestHeaders['accept-encoding'];\ndelete requestHeaders['x-global-transaction-id'];\ndelete
+          requestHeaders['user-agent'];\ndelete requestHeaders['via'];\n//delete requestHeaders['x-authcode'];\ndelete
+          requestHeaders['authorization'];\n\nvar requestHeadersString = JSON.stringify(requestHeaders);\n\nvar
+          logString = \"type:=request\"\n                + \" | system-datetime:=\"
+          +        systemDateTime\n                + \" | apic-transaction-id:=\"
+          +    apicTxId\n                + \" | global-transaction-id:=\" +  xGlobalTxId\n
+          \               + \" | consumer-ip-address:=\" +    clientIPAddress\n                +
+          \" | x-ibm-client-id:=\" +        clientId\n                + \" | client-app-name:=\"
+          +        clientAppName\n                + \" | client-app-type:=\" +        clientAppType\n
+          \               + \" | client-org-name:=\" +        clientOrgName\n                +
+          \" | api-name:=\" +               apiName\n                + \" | api-version:=\"
+          +            apiVersion\n                + \" | provider-org-name:=\" +
+          \     providerOrgName\n                + \" | catalog-name:=\" +           catalogName\n
+          \               + \" | api-base-path:=\" +          apiBasePath\n                +
+          \" | operation-path:=\" +         operationPath\n                + \" |
+          plan-name:=\" +              planName\n                + \" | plan-version:=\"
+          +           planVersion\n                + \" | plan-rate-limit:=\" +        planRateLimit\n
+          \               + \" | request-http-method:=\" +    requestMethod\n                +
+          \" | request-uri:=\" +            requestURI\n                + \" | request-http-headers:=\"
+          +   requestHeadersString;\n                \nconsole.log(logString);\nlogString
+          = \"\";\napim.setvariable('logString', logString);\n\nfunction uuidv4()
+          {\n    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function
+          (c) {\n        var r = Math.random() * 16 | 0, v = c == 'x' ? r: (r & 0x3
+          | 0x8);\n        return v.toString(16);\n    });\n}"
+    - activity-log:
+        version: 1.0.0
+        title: Log:Payload
+        content: payload
+        error-content: payload
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-FetchValidationConfig
+        description: This GW Script will create URL to fetch validation config for
+          all apis
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* FetchValidationConfig.js      1.0        Dinesh Tomar                                          04-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will create URL to fetch validation config for all apis                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          var clientId = apim.getvariable('client.app.id');
+          apim.setvariable('message.headers.x-ibm-client-id', clientId);
+          apim.setvariable('message.headers.content-type', 'application/json');
+          //form url for to fetch errorConfig JSON
+          var orgName = apim.getvariable('api.org.name');
+          var catalog = apim.getvariable('env.path');
+          apim.setvariable('apicURLPrefix', 'https://0.0.0.0:9443/'+orgName+'/'+catalog);
+          var validationConfigURL = apim.getvariable('apicURLPrefix')+'/'+'config/validationconfig';
+          apim.setvariable('validationConfigURL', validationConfigURL);
+
+          //record time in ms just before the invoke policy
+          apim.setvariable('startTimeMS', (new Date()).getTime());
+          apim.setvariable('policyName', 'Invoke-ValidationConfig');
+    - invoke:
+        version: 1.0.0
+        title: Invoke-ValidationConfig
+        timeout: 60
+        verb: GET
+        cache-response: protocol
+        cache-ttl: 900
+        description: Load all messages  and properties in context
+        target-url: $(validationConfigURL)
+        output: validationConfig
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ValidateParams
+        description: This GW Script file will return all API configurations to be
+          used for validating input params
+        source: "/* **********************************************************************************************************
+          */\n/* **********************************************************************************************************
+          */\n/* FileName                   Version    Created By                  Modified
+          By               Date           */\n/* ValidateParams.js          1.0        Dinesh
+          Tomar                                          03-July-2018   */\n/*                                                                                                            */\n/*
+          **********************************************************************************************************
+          */\n/* Purpose: This GW Script file will return all API configurations to
+          be used for validating input params     */\n/*                                                                                                            */\n/*
+          Required params:                                                                                           */\n/*
+          ************************************************************************************************************/\n\n//record
+          time in ms just after the invoke policy\nvar endTimeMS = (new Date()).getTime();\nvar
+          timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\nvar
+          logString = apim.getvariable('logString');\n\nvar validationConfig = apim.getvariable('validationConfig.body');\nif
+          (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+          'BackendError');\n    var errorPropertyName = 'other-backend-error';\n    logString
+          += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+          logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\n}\nelse {\n    logString
+          += \" | \" + apim.getvariable('policyName') + \" := \" + timeTakenByPreviousPolicy
+          + \" ms\";\n    apim.setvariable('logString', logString);\n    var apiName
+          = apim.getvariable('api.name');\n    var operationName = apim.getvariable('api.operation.path');\n
+          \   var apiConfig = validationConfig.apisConfig[apiName][operationName];\n
+          \   var paramsConfig = validationConfig.paramsConfig;\n    var requiredPathParams
+          = apiConfig.requiredPathParams;\n    var requiredQueryParams = apiConfig.requiredQueryParams;\n
+          \   var requiredHeaderParams = apiConfig.requiredHeaderParams;\n    validateRequiredParams('headers',
+          requiredHeaderParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredQueryParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredPathParams, paramsConfig);\n    //record time in ms just before
+          the invoke policy\n    apim.setvariable('startTimeMS', (new Date()).getTime());\n
+          \   apim.setvariable('policyName', 'Invoke-PropertiesHandler');\n}\n\nfunction
+          validateRequiredParams(paramType, requiredParams, paramsConfig){\n    if
+          (requiredParams !== \"\"){\n        var reqParams = requiredParams.split('|');\n
+          \       for (var i = 0; i < reqParams.length; i++){\n            var paramConfig
+          = paramsConfig[reqParams[i]];\n            var inputParam = apim.getvariable('request.'+paramType+'.'+reqParams[i]);\n
+          \           var nullValidation = ((inputParam != undefined) || (inputParam
+          != null));\n            if (nullValidation){\n                var dataTypeValidation
+          = true;\n                dataTypeValidation = validateDataType(inputParam,
+          paramConfig);\n                var lengthValidation = true;\n                var
+          allowedValuesValidation = true;\n                if (paramConfig.manLength
+          || paramConfig.maxLength){\n                    lengthValidation = validateLength(inputParam,
+          paramConfig);\n                }\n                if (paramConfig.allowedValues){\n
+          \                   allowedValuesValidation = validateAllowedValues(inputParam,
+          paramConfig);\n                }\n                if (!(dataTypeValidation)
+          || !(lengthValidation) || !(allowedValuesValidation)){\n                    apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                    apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \                   return;\n                }\n                else {\n
+          \                   apim.setvariable('message.headers.'+reqParams[i], inputParam);\n
+          \                   var clientId = apim.getvariable('client.app.id');\n
+          \                   apim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\n                    apim.setvariable('message.headers.content-type',
+          'application/json');\n                    //form url for to fetch properties
+          config JSON\n                    var configPropertiesURL = apim.getvariable('apicURLPrefix')+'/'+'config/properties';\n
+          \                   apim.setvariable('configPropertiesURL', configPropertiesURL);\n
+          \               }\n            }\n            else {\n                apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \               return;\n            }\n            \n        }\n    }\n}\n\nfunction
+          validateDataType(inputParam, paramConfig){\n    if (paramConfig.dataType
+          == 'number'){\n        return !(isNaN(parseInt(inputParam)));\n    }\n    else
+          if (paramConfig.dataType == 'email'){ \n        if (inputParam.includes('.')
+          && inputParam.includes('@') && (! inputParam.includes(' ')))\n            return
+          true;\n        else\n            return false;\n    }\n    else if (paramConfig.dataType
+          == 'string'){\n        if (inputParam != null && inputParam.length != 0)\n
+          \           return true;\n        else\n            return false;\n    }\n
+          \   else if (paramConfig.dataType == 'version'){\n        if (inputParam
+          == null || inputParam.length == 0)\n            return false;\n        else
+          if (inputParam.includes('.')) {\n            var splittedArray = inputParam.split('.');\n
+          \           var result = true;\n            for (var i = 0; i < splittedArray.length;
+          i++){\n                if (isNaN(parseInt(splittedArray[i]))){\n                    result
+          = false;\n                    return result;\n                }\n            }\n
+          \           return result;\n        }\n        else{\n            return
+          !(isNaN(parseInt(inputParam)));\n        }\n    }\n    else\n        return
+          true;\n}\n\nfunction validateLength(inputParam, paramConfig){\n    var minLength
+          = paramConfig.minLength;\n    var maxLength = paramConfig.maxLength;\n    if
+          ((inputParam.length >= minLength) && (inputParam.length <= maxLength))\n
+          \       return true;\n    else\n        return false;\n}\n\nfunction validateAllowedValues(inputParam,
+          paramConfig){\n    var allowedValues = paramConfig.allowedValues;\n    var
+          allowedValuesArray = allowedValues.split('|');\n    var result = false;\n
+          \   for (var i = 0; i < allowedValuesArray.length; i++){\n        if (allowedValuesArray[i]
+          == inputParam){\n            result = true;\n            return result;\n
+          \       }\n    }\n    return result;\n}\n\nfunction isJSONEmpty(jsonObject)
+          {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+          {\n        if (jsonObject[member] != null) {\n            result = false;\n
+          \       }\n    }\n    return result;\n}"
+    - invoke:
+        title: Invoke-PropertiesHandler
+        timeout: 60
+        verb: GET
+        cache-response: protocol
+        cache-ttl: 900
+        version: 1.0.0
+        target-url: $(configPropertiesURL)
+        output: Properties
+        description: Load all messages and properties in context
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-GetAccessTokenandDisambiguitionId
+        source: "/* ***********************************************************************************************************************
+          */\r\n/* ***********************************************************************************************************************
+          */\r\n/* FileName                                Version    Created By                  Modified
+          By               Date           */\r\n/* GetAccessToken.js                       1.0
+          \       Dinesh Tomar                                          08-May-2018
+          \   */\r\n/*                                                                                                                         */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n/* Purpose: This GW Script file will create request to get access
+          token for the auth code received                         */\r\n/*                                                                                                                         */\r\n/*
+          Required params:                                                                                                        */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n\r\n//record time in ms just after the invoke policy\r\nvar endTimeMS
+          = (new Date()).getTime();\r\nvar timeTakenByPreviousPolicy = endTimeMS -
+          apim.getvariable('startTimeMS');\r\nvar logString = apim.getvariable('logString');\r\n\r\n\r\n//load
+          properties configuration from context variable\r\nvar messages = apim.getvariable('Properties.body');\r\n//get
+          all headers\r\nvar clientId = apim.getvariable('client.app.id');\r\nvar
+          msisdn = apim.getvariable('request.parameters.msisdn');\r\nvar authCode
+          = apim.getvariable('request.headers.x-authcode');\r\n//var deviceType =
+          apim.getvariable('request.headers.x-device');\r\n//var userId = apim.getvariable('request.headers.x-user-id');\r\n//var
+          correlator = apim.getvariable('request.headers.x-correlator');\r\nif (apim.getvariable('message.status.code')
+          != 200) {\r\n    apim.setvariable('errorName', 'BackendError');\r\n    var
+          errorPropertyName = 'other-backend-error';\r\n    logString += \" | error-scenario:=\"
+          + errorPropertyName;\r\n    apim.setvariable('logString', logString);\r\n
+          \   apim.setvariable('error-message', apim.getvariable(errorPropertyName));\r\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\r\n} else {\r\n    logString
+          += \" | \" + apim.getvariable('policyName') + \" := \" + timeTakenByPreviousPolicy
+          + \" ms\";\r\n    apim.setvariable('logString', logString);\r\n    apim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\r\n    apim.setvariable('message.headers.msisdn', msisdn);\r\n
+          \   apim.setvariable('message.headers.x-authcode', authCode);\r\n    //var
+          apicAccessTokenURL = hostName + orgName + '/' + catalog + messages.authserver.generateAccessToken.apicURI;\r\n
+          \   var apicDisambiguationIdURL = apim.getvariable('apicURLPrefix') + messages.authserver.generateDisambiguationId.apicURI;\r\n
+          \   //apim.setvariable('apicAccessTokenURL', apicAccessTokenURL);\r\n    apim.setvariable('apicDisambiguationIdURL',
+          apicDisambiguationIdURL);\r\n    \r\n    //record time in ms just before
+          the invoke policy\r\n    apim.setvariable('startTimeMS', (new Date()).getTime());\r\n
+          \   apim.setvariable('policyName', 'Invoke-GetAccessTokenandDisambiguationId');\r\n}\r\n\r\nfunction
+          isJSONEmpty(jsonObject) {\r\n    var member;\r\n    var result = true;\r\n
+          \   for (member in jsonObject) {\r\n        if (jsonObject[member] != null)
+          {\r\n            result = false;\r\n        }\r\n    }\r\n    return result;\r\n}"
+    - invoke:
+        version: 1.0.0
+        title: Invoke-GetAccessTokenandDisambiguationId
+        timeout: 60
+        verb: GET
+        cache-response: protocol
+        cache-ttl: 900
+        target-url: $(apicDisambiguationIdURL)
+        output: disambiguationId
+    - gatewayscript:
+        title: GS-GetPhoneServiceDetails
+        version: 1.0.0
+        source: "/* ***********************************************************************************************************************
+          */\r\n/* ***********************************************************************************************************************
+          */\r\n/* FileName                                Version    Created By                  Modified
+          By               Date           */\r\n/* GetPhoneServiceDetails.js                1.0
+          \       Dinesh Tomar                                          08-May-2018
+          \  */\r\n/*                                                                                                                         */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n/* Purpose: This GW Script file will extract phone service URL's from
+          URI Handler file.                                    */\r\n/*                                                                                                                         */\r\n/*
+          Required params:                                                                                                        */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n\r\n//record time in ms just after the invoke policy\r\nvar endTimeMS
+          = (new Date()).getTime();\r\nvar timeTakenByPreviousPolicy = endTimeMS -
+          apim.getvariable('startTimeMS');\r\nvar logString = apim.getvariable('logString');\r\n\r\n//load
+          properties configuration from context variable\r\nvar messages = apim.getvariable('Properties.body');\r\n//var
+          billNumber = apim.getvariable('request.parameters.billnumber');\r\n/*apim.setvariable('message.headers.billnum',
+          billNumber);*/\r\n//get access token and Disambiguation Id from context
+          variables\r\n\r\n if (apim.getvariable('message.status.code') != 201) {\r\n
+          \   apim.setvariable('errorName', 'BackendError');\r\n    var errorPropertyName
+          = 'auth-' + apim.getvariable('message.status.code');\r\n    logString +=
+          \" | error-scenario:=\" + errorPropertyName;\r\n    apim.setvariable('logString',
+          logString);\r\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\r\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\r\n} else {\r\n   logString
+          += \" | \" + apim.getvariable('policyName') + \" := \" + timeTakenByPreviousPolicy
+          + \" \";\r\n    apim.setvariable('logString', logString);\r\n    var accessToken
+          = apim.getvariable('disambiguationId.body').access_token;\r\n    var disambiguationId
+          = apim.getvariable('disambiguationId.body').disambiguation_id;\r\n    apim.setvariable('message.headers.disambiguation-id',
+          disambiguationId);\r\n    apim.setvariable('message.headers.authorization',
+          \"Bearer \" + accessToken);\r\n    var billProfileURL = messages.phoneservice.billprofile.uri;\r\n
+          \   //phoneDetailsURL = phoneDetailsURL.replace('CURRENT', apim.getvariable('message.headers.msisdn'));\r\n
+          \   if(apim.getvariable('request.parameters.billnumber'))\r\n    {\r\n    billProfileURL
+          = billProfileURL + '?billnumber=' + billNumber;\r\n    //apim.setvariable('billProfileURL',
+          billProfileURL);\r\n    }\r\n    apim.setvariable('billProfileURL', billProfileURL);\r\n
+          \   \r\n    //record time in ms just before the invoke policy\r\n    apim.setvariable('startTimeMS',
+          (new Date()).getTime());\r\n    apim.setvariable('policyName', 'Invoke-BillProfile');\r\n
+          \   \r\n    //var recommendationsURL = messages.phoneservice.billedcharges.recommendation.uri;\r\n
+          \   //phonePlanURL = phonePlanURL.replace('CURRENT', apim.getvariable('message.headers.msisdn'));\r\n
+          \   //apim.setvariable('recommendationsURL', recommendationsURL);\r\n}\r\n"
+    - invoke:
+        title: Invoke-BillProfile
+        timeout: 60
+        verb: GET
+        cache-response: protocol
+        cache-ttl: 900
+        version: 1.0.0
+        target-url: $(billProfileURL)
+        output: BillProfileResponse
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-CreateRequestforRecommendations
+        source: "/* ***********************************************************************************************************************
+          */\r\n/* ***********************************************************************************************************************
+          */\r\n/* FileName                                Version    Created By                  Modified
+          By               Date           */\r\n/* GetPhoneServiceDetails.js                1.0
+          \       Dinesh Tomar                                          08-May-2018
+          \  */\r\n/*                                                                                                                         */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n/* Purpose: This GW Script file will extract phone service URL's from
+          URI Handler file.                                    */\r\n/*                                                                                                                         */\r\n/*
+          Required params:                                                                                                        */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n\r\n//record time in ms just after the invoke policy\r\nvar endTimeMS
+          = (new Date()).getTime();\r\nvar timeTakenByPreviousPolicy = endTimeMS -
+          apim.getvariable('startTimeMS');\r\nvar logString = apim.getvariable('logString');\r\n\r\n//load
+          properties configuration from context variable\r\nvar messages = apim.getvariable('Properties.body');\r\n//get
+          access token and Disambiguation Id from context variables\r\n\r\n if (apim.getvariable('message.status.code')
+          != 200) {\r\n    apim.setvariable('errorName', 'BackendError');\r\n    var
+          errorPropertyName = 'phoneservice-'+apim.getvariable('message.status.code');\r\n
+          \   \r\n    logString += \" | error-scenario:=\" + errorPropertyName;\r\n
+          \   apim.setvariable('logString', logString);\r\n    apim.setvariable('error-message',
+          apim.getvariable(errorPropertyName));\r\n    console.log(JSON.stringify(apim.getvariable('BillProfileResponse')));\r\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\r\n} else {\r\n   logString
+          += \" | \" + apim.getvariable('policyName') + \" := \" + timeTakenByPreviousPolicy
+          + \" \";\r\n    apim.setvariable('logString', logString);\r\n    var accessToken
+          = apim.getvariable('disambiguationId.body').access_token;\r\n    var disambiguationId
+          = apim.getvariable('disambiguationId.body').disambiguation_id;\r\n    apim.setvariable('message.headers.disambiguation-id',
+          disambiguationId);\r\n    apim.setvariable('message.headers.authorization',
+          \"Bearer \" + accessToken);\r\n    var recommendationsURL = messages.phoneservice.billedcharges.recommendation.uri;\r\n
+          \   //phonePlanURL = phonePlanURL.replace('CURRENT', apim.getvariable('message.headers.msisdn'));\r\n
+          \   apim.setvariable('recommendationsURL', recommendationsURL);\r\n    //record
+          time in ms just before the invoke policy\r\n    apim.setvariable('startTimeMS',
+          (new Date()).getTime());\r\n    apim.setvariable('policyName', 'Invoke-Recommendations');\r\n
+          \   \r\n    \r\n}\r\n"
+    - invoke:
+        version: 1.0.0
+        title: Invoke-Recommendations
+        timeout: 60
+        verb: GET
+        cache-response: protocol
+        cache-ttl: 900
+        target-url: http://172.31.209.143:8425/phone/v2/consumer/CURRENT/paym/bill/profile
+        output: RecommendationsResponse
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-BillProfileResponse
+        source: "/* ***********************************************************************************************************************
+          */\r\n/* ***********************************************************************************************************************
+          */\r\n/* FileName                                Version    Created By                  Modified
+          By               Date           */\r\n/* GetBillProfile.js                      1.0
+          \      Shalini Chauhan                                       17-May-2018
+          \   */\r\n/*                                                                                                                         */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n/* Purpose: This GW Script file will create response for data allowance
+          \                                                   */\r\n/*                                                                                                                         */\r\n/*
+          \                                                                                                                        */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n\r\n//record time in ms just after the invoke policy\r\nvar endTimeMS
+          = (new Date()).getTime();\r\nvar timeTakenByPreviousPolicy = endTimeMS -
+          apim.getvariable('startTimeMS');\r\nvar logString = apim.getvariable('logString');\r\n//set
+          content type\r\napim.setvariable('message.headers.content-type', 'application/json');\r\n//
+          loading variables\r\nvar properties = apim.getvariable('Properties.body');\r\n\r\n/*if(apim.getvariable('message.status.code')
+          != 200) {\r\n    apim.setvariable('errorName', 'BackendError');\r\n    var
+          errorPropertyName = 'phoneservice-'+apim.getvariable('message.status.code');\r\n
+          \   logString += \" | error-scenario:=\" + errorPropertyName;\r\n    apim.setvariable('logString',
+          logString);\r\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\r\n
+          \   console.log(JSON.stringify(apim.getvariable('RecommendationsResponse')));\r\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\r\n    }else {*/\r\n
+          \   //api\r\n    logString += \" | \" + apim.getvariable('policyName') +
+          \" := \" + timeTakenByPreviousPolicy + \" ms\";\r\n    apim.setvariable('logString',
+          logString);\r\n    \r\n    var billResponse = apim.getvariable('BillProfileResponse.body');\r\n
+          \   var recommendationsResponse = apim.getvariable('RecommendationsResponse.body');\r\n
+          \   var latePaymentChargeDetailsList =[];\r\n    var msisdnBillDetails =[];\r\n
+          \   var BillProfileResponse = {\r\n    };\r\n    var billPeriod = {\r\n
+          \   };\r\n    var latePaymentDetails = {\r\n    };\r\n    var i = 0;\r\n
+          \   var lpfAmount = 0;\r\n    if (ifJsonHasKey(billResponse, 'latePaymentChargeDetailsList'))
+          {\r\n        if(billResponse.latePaymentChargeDetailsList.length > 0){\r\n
+          \           BillProfileResponse.lpfaddedToBill = true;\r\n        }else{\r\n
+          \           BillProfileResponse.lpfaddedToBill = false;\r\n        }\r\n
+          \   }\r\n     if (ifJsonHasKey(billResponse, 'latePaymentChargeDetailsList'))
+          {\r\n        for (var x = 0; x < billResponse.latePaymentChargeDetailsList.length;
+          x++) {\r\n            (ifJsonHasKey(billResponse.latePaymentChargeDetailsList[x],
+          'charge'))\r\n            {\r\n                lpfAmount = lpfAmount + (billResponse.latePaymentChargeDetailsList[x].charge);\r\n
+          \           }          \r\n        }\r\n        if (lpfAmount.toString().includes(\"-\"))
+          {\r\n        BillProfileResponse.billedLPFAmount = \"-\" + (parseFloat(lpfAmount).toFixed(2).replace(\"-\",
+          \"£\"));\r\n    } else {\r\n        BillProfileResponse.billedLPFAmount
+          = \"£\" + parseFloat(lpfAmount).toFixed(2);\r\n    }\r\n        \r\n    }\r\n
+          \   if ((properties.defaultLPFCharge).toString().includes(\"-\")) {\r\n
+          \       BillProfileResponse.defaultLPFCharge = \"-\" + (parseFloat(properties.defaultLPFCharge).toFixed(2).replace(\"-\",
+          \"£\"));\r\n    } else {\r\n        BillProfileResponse.defaultLPFCharge
+          = \"£\" + parseFloat(properties.defaultLPFCharge).toFixed(2);\r\n    }\r\n
+          \   if (ifJsonHasKey(billResponse, 'latePaymentDetails')) {\r\n        if
+          (ifJsonHasKey(billResponse.latePaymentDetails, 'showBannerMessage')) {\r\n
+          \           latePaymentDetails.showBannerMessage = billResponse.latePaymentDetails.showBannerMessage;\r\n
+          \       }\r\n        if (ifJsonHasKey(billResponse.latePaymentDetails, 'latePaymentFeeStatus'))
+          {\r\n            latePaymentDetails.latePaymentFeeStatus = billResponse.latePaymentDetails.latePaymentFeeStatus;\r\n
+          \       }\r\n        if (ifJsonHasKey(billResponse.latePaymentDetails, 'billPaymentStatus'))
+          {\r\n            latePaymentDetails.billPaymentStatus = billResponse.latePaymentDetails.billPaymentStatus;\r\n
+          \       }\r\n        if (ifJsonHasKey(billResponse.latePaymentDetails, 'latePaymentFeeScheduledDate'))
+          {\r\n            latePaymentDetails.latePaymentFeeScheduledDate = billResponse.latePaymentDetails.latePaymentFeeScheduledDate;\r\n
+          \       }\r\n        if (ifJsonHasKey(billResponse.latePaymentDetails, 'latePaymentFee'))
+          {\r\n            if ((billResponse.latePaymentDetails.latePaymentFee).toString().includes(\"-\"))
+          {\r\n                latePaymentDetails.latePaymentFee = \"-\" + (parseFloat(billResponse.latePaymentDetails.latePaymentFee).toFixed(2).replace(\"-\",
+          \"£\"));\r\n            } else {\r\n                latePaymentDetails.latePaymentFee
+          = \"£\" + parseFloat(billResponse.latePaymentDetails.latePaymentFee).toFixed(2);\r\n
+          \           }\r\n        }\r\n        BillProfileResponse.latePaymentDetails
+          = latePaymentDetails;\r\n    }\r\n    if (ifJsonHasKey(billResponse, 'billPeriod'))
+          {\r\n    if (ifJsonHasKey(billResponse.billPeriod, 'billDateFrom')){\r\n
+          \       billPeriod.bill_date_from = billResponse.billPeriod.billDateFrom;\r\n
+          \   }\r\n    if (ifJsonHasKey(billResponse.billPeriod, 'billDateTo')){\r\n
+          \       billPeriod.bill_date_to = billResponse.billPeriod.billDateTo;\r\n
+          \   }    \r\n        BillProfileResponse.bill_period = billPeriod;\r\n    }\r\n
+          \   if (ifJsonHasKey(billResponse, 'msisdnBillDetails')) {\r\n        for
+          (i = 0; i < billResponse.msisdnBillDetails.length; i++) {\r\n            var
+          msisdnBillDetail = {\r\n            };\r\n            if (ifJsonHasKey(billResponse.msisdnBillDetails[i],
+          'msisdn')) {\r\n                msisdnBillDetail.msisdn = billResponse.msisdnBillDetails[i].msisdn;\r\n
+          \           }\r\n            if (ifJsonHasKey(billResponse.msisdnBillDetails[i],
+          'billTotalWithoutVAT')) {\r\n                if ((billResponse.msisdnBillDetails[i].billTotalWithoutVAT).toString().includes(\"-\"))
+          {\r\n                    msisdnBillDetail.billtotal_without_VAT = \"-\"
+          + (parseFloat(billResponse.msisdnBillDetails[i].billTotalWithoutVAT).toFixed(2).replace(\"-\",
+          \"£\"));\r\n                } else {\r\n                    msisdnBillDetail.billtotal_without_VAT
+          = \"£\" + parseFloat(billResponse.msisdnBillDetails[i].billTotalWithoutVAT).toFixed(2);\r\n
+          \               }\r\n            }\r\n            \r\n            msisdnBillDetails.push(msisdnBillDetail);\r\n
+          \       }\r\n        \r\n        BillProfileResponse.msisdn_billdetails_list
+          = msisdnBillDetails;\r\n    }\r\n    \r\n    if (ifJsonHasKey(billResponse,
+          'latePaymentChargeDetailsList')) {\r\n        for (i = 0; i < billResponse.latePaymentChargeDetailsList.length;
+          i++) {\r\n            var latePaymentDetailList = {\r\n            };\r\n
+          \           if (ifJsonHasKey(billResponse.latePaymentChargeDetailsList[i],
+          'appliedDate')) {\r\n                latePaymentDetailList.applied_date
+          = billResponse.latePaymentChargeDetailsList[i].appliedDate;\r\n            }\r\n
+          \           if (ifJsonHasKey(billResponse.latePaymentChargeDetailsList[i],
+          'charge')) {\r\n                if ((billResponse.latePaymentChargeDetailsList[i].charge).toString().includes(\"-\"))
+          {\r\n                    latePaymentDetailList.charge = \"-\" + (parseFloat(billResponse.latePaymentChargeDetailsList[i].charge).toFixed(2).replace(\"-\",
+          \"£\"));\r\n                } else {\r\n                    latePaymentDetailList.charge
+          = \"£\" + parseFloat(billResponse.latePaymentChargeDetailsList[i].charge).toFixed(2);\r\n
+          \               }\r\n            }\r\n            if (ifJsonHasKey(billResponse.latePaymentChargeDetailsList[i],
+          'billNumber')) {\r\n                latePaymentDetailList.billNumber = billResponse.latePaymentChargeDetailsList[i].billNumber;\r\n
+          \           }\r\n            if (ifJsonHasKey(billResponse.latePaymentChargeDetailsList[i],
+          'productName')) {\r\n                latePaymentDetailList.productName =
+          billResponse.latePaymentChargeDetailsList[i].productName;\r\n            }\r\n
+          \           \r\n            latePaymentChargeDetailsList.push(latePaymentDetailList);\r\n
+          \       }\r\n        \r\n        BillProfileResponse.late_payment_charge_details_list
+          = latePaymentChargeDetailsList;\r\n    }\r\n    if (ifJsonHasKey(billResponse,
+          'amountDue')) {\r\n        if ((billResponse.amountDue).toString().includes(\"-\"))
+          {\r\n            BillProfileResponse.amount_due = \"-\" + (parseFloat(billResponse.amountDue).toFixed(2).replace(\"-\",
+          \"£\"));\r\n        } else {\r\n            BillProfileResponse.amount_due
+          = \"£\" + parseFloat(billResponse.amountDue).toFixed(2);\r\n        }\r\n
+          \   }\r\n    if (ifJsonHasKey(billResponse, 'balanceBroughtForward')) {\r\n
+          \       if ((billResponse.balanceBroughtForward).toString().includes(\"-\"))
+          {\r\n            BillProfileResponse.balance_brought_forward = \"-\" + (parseFloat(billResponse.balanceBroughtForward).toFixed(2).replace(\"-\",
+          \"£\"));\r\n        } else {\r\n            BillProfileResponse.balance_brought_forward
+          = \"£\" + parseFloat(billResponse.balanceBroughtForward).toFixed(2);\r\n
+          \       }\r\n    }\r\n    if (ifJsonHasKey(billResponse, 'billAmount'))
+          {\r\n        if ((billResponse.billAmount).toString().includes(\"-\")) {\r\n
+          \           BillProfileResponse.bill_amount = \"-\" + (parseFloat(billResponse.billAmount).toFixed(2).replace(\"-\",
+          \"£\"));\r\n        } else {\r\n            BillProfileResponse.bill_amount
+          = \"£\" + parseFloat(billResponse.billAmount).toFixed(2);\r\n        }\r\n
+          \   }\r\n    if (ifJsonHasKey(billResponse, 'billDate')) {\r\n        BillProfileResponse.bill_date
+          = billResponse.billDate;\r\n    }\r\n    if (ifJsonHasKey(billResponse,
+          'billDiscounts')) {\r\n        if ((billResponse.billDiscounts).toString().includes(\"-\"))
+          {\r\n            BillProfileResponse.bill_discounts = \"-\" + (parseFloat(billResponse.billDiscounts).toFixed(2).replace(\"-\",
+          \"£\"));\r\n        } else {\r\n            BillProfileResponse.bill_discounts
+          = \"£\" + parseFloat(billResponse.billDiscounts).toFixed(2);\r\n        }\r\n
+          \   }\r\n    if (ifJsonHasKey(billResponse, 'paymentDate')) {\r\n        BillProfileResponse.payment_date
+          = billResponse.paymentDate;\r\n    }\r\n    if (ifJsonHasKey(billResponse,
+          'nextBillDate')) {\r\n        BillProfileResponse.next_bill_date = billResponse.nextBillDate;\r\n
+          \   }\r\n    if (ifJsonHasKey(billResponse, 'orderCharges')) {\r\n        if
+          ((billResponse.orderCharges).toString().includes(\"-\")) {\r\n            BillProfileResponse.order_charges
+          = \"-\" + (parseFloat(billResponse.orderCharges).toFixed(2).replace(\"-\",
+          \"£\"));\r\n        } else {\r\n            BillProfileResponse.order_charges
+          = \"£\" + parseFloat(billResponse.orderCharges).toFixed(2);\r\n        }\r\n
+          \   }\r\n    \r\n    if (ifJsonHasKey(billResponse, 'recycleCredit')) {\r\n
+          \       if ((billResponse.recycleCredit).toString().includes(\"-\")) {\r\n
+          \           BillProfileResponse.recycle_credit = \"-\" + (parseFloat(billResponse.recycleCredit).toFixed(2).replace(\"-\",
+          \"£\"));\r\n        } else {\r\n            BillProfileResponse.recycle_credit
+          = \"£\" + parseFloat(billResponse.recycleCredit).toFixed(2);\r\n        }\r\n
+          \   }\r\n    if (ifJsonHasKey(billResponse, 'recycleChange')) {\r\n        if
+          ((billResponse.recycleChange).toString().includes(\"-\")) {\r\n            BillProfileResponse.recycle_change
+          = \"-\" + (parseFloat(billResponse.recycleChange).toFixed(2).replace(\"-\",
+          \"£\"));\r\n        } else {\r\n            BillProfileResponse.recycle_change
+          = \"£\" + parseFloat(billResponse.recycleChange).toFixed(2);\r\n        }\r\n
+          \   }\r\n    if (ifJsonHasKey(billResponse, 'otherChargesAndCredits')) {\r\n
+          \       if ((billResponse.otherChargesAndCredits).toString().includes(\"-\"))
+          {\r\n            BillProfileResponse.other_charges_and_credits = \"-\" +
+          (parseFloat(billResponse.otherChargesAndCredits).toFixed(2).replace(\"-\",
+          \"£\"));\r\n        } else {\r\n            BillProfileResponse.other_charges_and_credits
+          = \"£\" + parseFloat(billResponse.otherChargesAndCredits).toFixed(2);\r\n
+          \       }\r\n    }\r\n    if (ifJsonHasKey(billResponse, 'vat')) {\r\n        if
+          ((billResponse.vat).toString().includes(\"-\")) {\r\n            BillProfileResponse.vat
+          = \"-\" + (parseFloat(billResponse.vat).toFixed(2).replace(\"-\", \"£\"));\r\n
+          \       } else {\r\n            BillProfileResponse.vat = \"£\" + parseFloat(billResponse.vat).toFixed(2);\r\n
+          \       }\r\n    }\r\n    if (ifJsonHasKey(billResponse, 'totalBeforeVAT'))
+          {\r\n        if ((billResponse.totalBeforeVAT).toString().includes(\"-\"))
+          {\r\n            BillProfileResponse.total_before_vat = \"-\" + (parseFloat(billResponse.totalBeforeVAT).toFixed(2).replace(\"-\",
+          \"£\"));\r\n        } else {\r\n            BillProfileResponse.total_before_vat
+          = \"£\" + parseFloat(billResponse.totalBeforeVAT).toFixed(2);\r\n        }\r\n
+          \   }\r\n    \r\n    \r\n    \r\n    if (ifJsonHasKey(billResponse, 'isMultiMsisdn'))
+          {\r\n        BillProfileResponse.multi_msisdn = billResponse.isMultiMsisdn;\r\n
+          \   }\r\n    \r\n    \r\n    \r\n    if (ifJsonHasKey(billResponse, 'friendlyBillPaymentStatus'))
+          {\r\n        BillProfileResponse.paymentStatus = billResponse.friendlyBillPaymentStatus;\r\n
+          \   }\r\n    if(ifJsonHasKey(recommendationsResponse, 'recommendations'))\r\n
+          \   {\r\n        var extraChargesRecommendation = recommendation(recommendationsResponse);\r\n
+          \       if (extraChargesRecommendation != null) {\r\n        BillProfileResponse.extraChargesRecommendation
+          = extraChargesRecommendation;\r\n    }\r\n    }\r\n    \r\n    \r\n    \r\n
+          \   \r\n    apim.setvariable('BillProfileResponse', BillProfileResponse);\r\n//}\r\n\r\nfunction
+          recommendation(recommendations) {\r\n    var extraChargesRecommendation
+          = {\r\n    };\r\n    var extraChargesRecommendationResponse = {\r\n    };\r\n
+          \   if (recommendationsResponse.recommendations.length > 0) {\r\n        extraChargesRecommendationResponse
+          = ExtraChargesRecommendation(recommendations.recommendations);\r\n        \r\n
+          \       if (! isJSONEmpty(extraChargesRecommendationResponse) && ! isJSONEmpty(extraChargesRecommendationResponse.recommendations)
+          && extraChargesRecommendationResponse.recommendations.length > 0) {\r\n
+          \           extraChargesRecommendation = properties.recommendation.homepage.message;\r\n
+          \           return extraChargesRecommendation;\r\n        }\r\n        return
+          null;\r\n    }\r\n    return null;\r\n}\r\n\r\nfunction ExtraChargesRecommendation(recommendation)
+          {\r\n    var extraChargesRecommendation = {\r\n    };\r\n    var recommendation
+          = setUpRecommendations(recommendation);\r\n    var hasMultipleMessages =
+          false;\r\n    var header = null;\r\n    if (recommendation.length > 1) {\r\n
+          \       hasMultipleMessages = true;\r\n    }\r\n    header = hasMultipleMessages
+          ? properties.recommendation.header: null;\r\n    extraChargesRecommendation.hasMultipleMessages
+          = hasMultipleMessages;\r\n    extraChargesRecommendation.header = header;\r\n
+          \   extraChargesRecommendation.recommendations = recommendation;\r\n    return
+          extraChargesRecommendation;\r\n}\r\nfunction setUpRecommendations(recommendation)
+          {\r\n    var recommendationDetails =[];\r\n    var boltOnsRecommendations
+          = filterBoltOnRecommendationTypes(recommendation);\r\n    var boltOnRecommendationDetails
+          = getBoltOnRecommendationDetails(boltOnsRecommendations, boltOnsRecommendations);\r\n
+          \   var tariffRecommendationDetails = getTariffRecommendationDetails(recommendation);\r\n
+          \   \r\n    if (! isJSONEmpty(boltOnRecommendationDetails)) {\r\n        recommendationDetails.push(boltOnRecommendationDetails);\r\n
+          \   }\r\n    if (! isJSONEmpty(tariffRecommendationDetails)) {\r\n        recommendationDetails.push(tariffRecommendationDetails);\r\n
+          \   }\r\n    return recommendationDetails;\r\n}\r\nfunction filterBoltOnRecommendationTypes(recommendation)
+          {\r\n    var boltOnRecommendationTypes =[];\r\n    for (var i = 0; i < recommendation.length;
+          i++) {\r\n        if (recommendation[i] != 'TARIFF') {\r\n            boltOnRecommendationTypes.push(recommendation[i]);\r\n
+          \       }\r\n    }\r\n    return boltOnRecommendationTypes;\r\n}\r\nfunction
+          getBoltOnRecommendationDetails(recommendation, boltOnsRecommendations) {\r\n
+          \   if (! isJSONEmpty(boltOnsRecommendations)) {\r\n        for (var i =
+          0; i < recommendation.length; i++) {\r\n            \r\n            return
+          boltOnsRecommendations.length > 1 ? createRecommendationDetails('MULTIPLE_BOLTONS'):\r\n
+          \           createRecommendationDetails(recommendation[i]);\r\n        }\r\n
+          \   }\r\n    return null;\r\n}\r\nfunction getTariffRecommendationDetails(recommendation)
+          {\r\n    for (var i = 0; i < recommendation.length; i++) {\r\n        if
+          (recommendation[i] == 'TARIFF') {\r\n            return createRecommendationDetails(recommendation[i]);\r\n
+          \       }\r\n    }\r\n    \r\n    return null;\r\n}\r\nfunction createRecommendationDetails(recommendationType)
+          {\r\n    var recommendationDetails = {\r\n    };\r\n    recommendationDetails.Type
+          = properties.recommendation[recommendationType].type;\r\n    recommendationDetails.Action
+          = properties.recommendation[recommendationType].action;\r\n    recommendationDetails.LinkText
+          = properties.recommendation[recommendationType].linkText;\r\n    recommendationDetails.Message
+          = properties.recommendation[recommendationType].message;\r\n    return recommendationDetails;\r\n}\r\nfunction
+          isJSONEmpty(jsonObject) {\r\n    var member;\r\n    var result = true;\r\n
+          \   for (member in jsonObject) {\r\n        if (jsonObject[member] != null)
+          {\r\n            result = false;\r\n        }\r\n    }\r\n    return result;\r\n}\r\nfunction
+          ifJsonHasKey(jsonObject, key) {\r\n    var member;\r\n    var result = false;\r\n
+          \   for (member in jsonObject) {\r\n        if (member == key) {\r\n            result
+          = true;\r\n        }\r\n    }\r\n    return result;\r\n}"
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ResponseAligning
+        source: "var response = apim.getvariable('BillProfileResponse');\r\nvar billresponse
+          = {\r\n};\r\n\r\n\r\n    billresponse.paymentStatus = response.paymentStatus;\r\n\r\n\r\n
+          \   billresponse.latePaymentDetails = response.latePaymentDetails;\r\n\r\n\r\n
+          \   billresponse.defaultLPFCharge = response.defaultLPFCharge;\r\n\r\n\r\n
+          \   billresponse.bill_amount = response.bill_amount;\r\n\r\n\r\n    billresponse.bill_date
+          = response.bill_date;\r\n\r\n\r\n    billresponse.payment_date = response.payment_date;\r\n\r\n\r\n
+          \   billresponse.amount_due = response.amount_due;\r\n\r\n\r\n    billresponse.total_before_vat
+          = response.total_before_vat;\r\n\r\n\r\n    billresponse.vat = response.vat;\r\n\r\n\r\n
+          \   billresponse.other_charges_and_credits = response.other_charges_and_credits;\r\n\r\n\r\n
+          \   billresponse.order_charges = response.order_charges;\r\n\r\n\r\n    billresponse.bill_period
+          = response.bill_period;\r\n\r\n\r\n    billresponse.next_bill_date = response.next_bill_date;\r\n\r\n\r\n
+          \   billresponse.balance_brought_forward = response.balance_brought_forward;\r\n
+          \   \r\n    billresponse.bill_discounts = response.bill_discounts;\r\n\r\n\r\n
+          \   billresponse.msisdn_billdetails_list = response.msisdn_billdetails_list;\r\n\r\n\r\n
+          \   billresponse.multi_msisdn = response.multi_msisdn;\r\n    \r\n     billresponse.isLPFAddedToBill
+          = response.lpfaddedToBill;\r\n\r\n    billresponse.billedLPFAmount = response.billedLPFAmount;\r\n
+          \   \r\n    billresponse.latePaymentChargeDetailsList = response.late_payment_charge_details_list;\r\n\r\n\r\n
+          \   billresponse.recycle_credit = response.recycle_credit;\r\n    \r\n    billresponse.recycle_change
+          = response.recycle_change;\r\n\r\n\r\n    billresponse.extraChargesRecommendation
+          = response.extraChargesRecommendation;\r\n    \r\n    apim.setvariable('message.status.code',
+          '200');\r\n\r\napim.setvariable('message.body', billresponse);\r\n\r\n"
+        description: Aligns the response in a particular sequence.
+    - validate:
+        version: 1.0.0
+        title: Validate-BillResponse
+        definition: '#/definitions/BillProfileResponse'
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ExtractFinalLoggingData
+        description: This GW Script will extract final metadata for logging
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* ExtractFinalLoggingData.js    1.0        Dinesh Tomar                                          06-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will extract final metadata for logging                                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          //Extract general metadata from system variables
+          var systemDateTime = apim.getvariable('system.datetime');
+          var apicTxId = apim.getvariable('apic-transaction-id');
+          var xGlobalTxId = apim.getvariable('request.headers.x-global-transaction-id');
+          var requestURI = apim.getvariable('request.uri');
+
+          //Extract response metadata from system variables
+          var responseHeaders = apim.getvariable('message.headers');
+
+          delete responseHeaders['Accept-Encoding'];
+          delete responseHeaders['X-Global-Transaction-ID'];
+          delete responseHeaders['User-Agent'];
+          delete responseHeaders['Via'];
+          delete responseHeaders['x-authcode'];
+          delete responseHeaders['authorization'];
+          delete responseHeaders['Authorization'];
+          delete responseHeaders['Access-Control-Allow-Methods'];
+          delete responseHeaders['Access-Control-Allow-Origin'];
+          delete responseHeaders['Access-Control-Allow-Headers'];
+          delete responseHeaders['Access-Control-Expose-Headers'];
+
+          var responseHeadersString = JSON.stringify(responseHeaders);
+          var responseStatusCode = apim.getvariable('message.status.code');
+          var responseStatusReason = apim.getvariable('message.status.reason');
+          //calculate time elapsed
+          var apiStartTimeMS = apim.getvariable('apiStartTimeMS');
+          var apiEndTimeMS = (new Date()).getTime();
+          var totalTimeElapsed = (apiEndTimeMS - apiStartTimeMS) + " ms";
+          var logString = "type:=response"
+                          + " | system-datetime:=" +        systemDateTime
+                          + " | apic-transaction-id:=" +    apicTxId
+                          + " | global-transaction-id:=" +  xGlobalTxId
+                          + " | request-uri:=" +            requestURI
+                          + apim.getvariable('logString')
+                          + " | response-http-headers:=" +  responseHeadersString
+                          + " | response-status-code:=" +   responseStatusCode
+                          + " | response-status-reason:=" + responseStatusReason
+                          + " | total-time-elapsed:=" +     totalTimeElapsed;
+                          ;
+          console.log(logString);
+    catch:
+    - errors:
+      - InvalidMsisdn
+      - ConnectionError
+      - OperationError
+      - InvalidDeviceType
+      - InvalidUserId
+      - InvalidCorrelator
+      - SOAPError
+      - InvalidClientId
+      - InvalidAuthCode
+      - BackendError
+      execute:
+      - gatewayscript:
+          title: GS-ErrorHandling
+          version: 1.0.0
+          source: |-
+            /* ****************************************************************************************************************** */
+            /* ****************************************************************************************************************** */
+            /* FileName                           Version    Created By                  Modified By               Date           */
+            /* Errorhandling.js                   1.0        Dinesh Tomar                                          07-May-2018    */
+            /*                                                                                                                    */
+            /* ****************************************************************************************************************** */
+            /* Purpose: This GW Script file will read error config for the catch block error name and will set the necessary      */
+            /*          params like status code, reason phrase and will return the error json                                     */
+            /* Required params: errorName                                                                                         */
+            /* ****************************************************************************************************************** */
+            var urlOpen = require('urlopen');
+            //form url for to fetch errorConfig JSON
+            var requestURL = apim.getvariable('request.uri');
+            var orgName = apim.getvariable('api.org.name');
+            var hostName = requestURL.substr(0, requestURL.indexOf(orgName));
+            var catalog = apim.getvariable('env.path');
+            var errorConfigURL = hostName+orgName+'/'+catalog+'/'+'config/errorconfig';
+            var clientId = apim.getvariable('client.app.id');
+            apim.setvariable('message.headers.content-type', 'application/json');
+            var errorConfigURLOptions = {
+                target: errorConfigURL,
+                sslClientProfile: 'api-sslcli-all',
+                headers: {'x-ibm-client-id': clientId, 'content-type': 'application/json' }
+            };
+            //fetch errorName and errorConfig JSON from context variables
+            urlOpen.open(errorConfigURLOptions, function (error, response) {
+                if (error) {
+                    throw error;
+                } else {
+                    response.readAsJSON(function (error, errorConfigJSON) {
+                        if (error) {
+                            throw error;
+                        } else {
+                            var errorName = apim.getvariable('errorName');
+                            if (errorName == null && apim.getvariable('message.status.code') == null) {
+                                //console.log("inside first if");
+                                errorName = 'default';
+                            } else if (errorName == null && apim.getvariable('message.status.reason') != null && apim.getvariable('message.status.reason').startsWith('APIC:') ) {
+                                errorName = 'default';
+                                apim.setvariable('message.status.code', apim.getvariable('message.status.code'));
+                                apim.setvariable('message.status.reason', apim.getvariable('message.status.reason'));
+                                apim.setvariable('message.body', apim.getvariable('message.body'));
+                            } else {
+                                if (errorName == 'BackendError') {
+                                    var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];
+                                    apim.setvariable('message.status.reason', errorDetails.reasonPhrase);
+                                    var errorMessage = errorDetails.errorMessage;
+                                    errorMessage.error.message = apim.getvariable('error-message');
+                                    apim.setvariable('message.body', errorMessage);
+                                }
+                                //fetch specific block from error config JSON
+                                else if (! isJSONEmpty(errorConfigJSON)) {
+                                    var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];
+                                    var statusCode = errorDetails.statusCode;
+                                    var reasonPhrase = errorDetails.reasonPhrase;
+                                    var errorMessage = errorDetails.errorMessage;
+                                    apim.setvariable('message.status.code', statusCode);
+                                    apim.setvariable('message.status.reason', reasonPhrase);
+                                    apim.setvariable('message.body', errorMessage);
+                                }
+                                //else block executes in case error config file is not loaded. it will set a default error message
+                                else {
+                                    apim.setvariable('message.status.code', 500);
+                                    apim.setvariable('message.status.reason', 'Internal Error');
+                                    var errorMessage = {};
+                                    errorMessage.httpCode = 400;
+                                    errorMessage.httpMessage = "Internal Error";
+                                    errorMessage.moreInformation = "Something's wrong. Please try again later.";
+                                    apim.setvariable('message.body', errorMessage);
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            //below function checks if json object is null or not
+            function isJSONEmpty(jsonObject) {
+                var member;
+                var result = true;
+                for (member in jsonObject) {
+                    if (jsonObject[member] != null) {
+                        result = false;
+                    }
+                }
+                return result;
+            }
+      - gatewayscript:
+          title: GS-ExtractErrorLoggingDataThis GW Script will extract error metadata
+            for logging
+          version: 1.0.0
+          source: "/* *************************************************************************************************************
+            */\n/* *************************************************************************************************************
+            */\n/* FileName                      Version    Created By                  Modified
+            By               Date           */\n/* ExtractErrorLoggingData.js    1.0
+            \       Dinesh Tomar                                          06-July-2018
+            \  */\n/*                                                                                                               */\n/*
+            *************************************************************************************************************
+            */\n/* Purpose: This GW Script will extract error metadata for logging
+            \                                              */\n/*                                                                                                               */\n/*
+            Required params:                                                                                              */\n/*
+            ***************************************************************************************************************/\n//Extract
+            general metadata from system variables\nvar systemDateTime = apim.getvariable('system.datetime');\nvar
+            apicTxId = apim.getvariable('apic-transaction-id');\nvar xGlobalTxId =
+            apim.getvariable('request.headers.x-global-transaction-id');\nvar requestURI
+            = apim.getvariable('request.uri');\n\n//Extract response metadata from
+            system variables\nvar responseHeaders = apim.getvariable('message.headers');\n\ndelete
+            responseHeaders['Accept-Encoding'];\ndelete responseHeaders['X-Global-Transaction-ID'];\ndelete
+            responseHeaders['User-Agent'];\ndelete responseHeaders['Via'];\ndelete
+            responseHeaders['x-authcode'];\ndelete responseHeaders['authorization'];\ndelete
+            responseHeaders['Authorization'];\ndelete responseHeaders['Access-Control-Allow-Methods'];\ndelete
+            responseHeaders['Access-Control-Allow-Origin'];\ndelete responseHeaders['Access-Control-Allow-Headers'];\ndelete
+            responseHeaders['Access-Control-Expose-Headers'];\n\nvar responseHeadersString
+            = JSON.stringify(responseHeaders);\nvar responseStatusCode = apim.getvariable('message.status.code');\nvar
+            responseStatusReason = apim.getvariable('message.status.reason');\nvar
+            errorName = apim.getvariable('errorName');\n//calculate time elapsed\nvar
+            apiStartTimeMS = apim.getvariable('apiStartTimeMS');\nvar apiEndTimeMS
+            = (new Date()).getTime();\nvar totalTimeElapsed = (apiEndTimeMS - apiStartTimeMS)
+            + \" ms\";\n\nvar logString = \"type:=error\"\n                + \" |
+            system-datetime:=\" +        systemDateTime\n                + \" | apic-transaction-id:=\"
+            +    apicTxId\n                + \" | global-transaction-id:=\" +  xGlobalTxId\n
+            \               + \" | request-uri:=\" +            requestURI\n                +
+            apim.getvariable('logString')\n                + \" | response-http-headers:=\"
+            +  responseHeadersString\n                + \" | response-status-code:=\"
+            +   responseStatusCode\n                + \" | response-status-reason:=\"
+            + responseStatusReason\n                + \" | error-name:=\" +             errorName\n
+            \               + \" | total-time-elapsed:=\" +     totalTimeElapsed;\n
+            \               \nconsole.log(logString);\n\n"
+  gateway: datapower-gateway
+  type: rest
+tags: []
+definitions:
+  BillProfileResponse:
+    type: object
+    properties:
+      billAmount:
+        type: string
+      billDate:
+        type: string
+        format: date-time
+      paymentDate:
+        type: string
+        format: date-time
+      amountDue:
+        type: string
+      paymentStatus:
+        type: string
+        enum:
+        - PAID
+        - UNPAID
+        - GRACE
+        - LATE
+        - NEUTRAL
+        - UNKNOWN
+        - NOBILL
+      totalBeforeVAT:
+        type: string
+      taxCharges:
+        type: string
+      otherChargesAndCredits:
+        type: string
+      orderCharges:
+        type: string
+      billPeriod:
+        type: object
+        properties:
+          billDateFrom:
+            type: string
+            format: date-time
+          billDateTo:
+            type: string
+            format: date-time
+      nextBillDate:
+        type: string
+        format: date-time
+      balanceBroughtForward:
+        type: string
+      billDiscounts:
+        type: string
+      latePaymentDetails:
+        $ref: '#/definitions/LatePaymentDetails'
+      latePaymentChargeDetailsList:
+        type: array
+        items:
+          $ref: '#/definitions/OneTimeCharge'
+      recycleCredit:
+        type: string
+      recycleChange:
+        type: string
+      extraChargesRecommendation:
+        type: string
+      defaultLPFCharge:
+        type: string
+      multiMsisdn:
+        type: boolean
+      lpfaddedToBill:
+        type: boolean
+      billedLPFAmount:
+        type: string
+      msisdnBillDetails:
+        type: array
+        items:
+          $ref: '#/definitions/MsisdnBillDetails'
+  LatePaymentDetails:
+    type: object
+    properties:
+      showBannerMessage:
+        type: boolean
+      latePaymentFeeStatus:
+        type: string
+        enum:
+        - NONE
+        - ELIGIBLE
+        - APPLIED
+      billPaymentStatus:
+        type: string
+        enum:
+        - PAID
+        - UNPAID
+        - GRACE
+        - LATE
+        - NEUTRAL
+        - UNKNOWN
+        - NOBILL
+      latePaymentFeeScheduledDate:
+        type: string
+      latePaymentFee:
+        type: string
+  MsisdnBillDetails:
+    type: object
+    properties:
+      msisdn:
+        type: string
+      billTotalWithoutVAT:
+        type: string
+  OneTimeCharge:
+    type: object
+    properties:
+      appliedDate:
+        type: string
+      charge:
+        type: string
+      billNumber:
+        type: string
+      productName:
+        type: string
+paths:
+  /{msisdn}/postpay/bill/profile:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            $ref: '#/definitions/BillProfileResponse'
+      parameters:
+      - name: msisdn
+        format: int32
+        type: integer
+        in: path
+        required: true
+      - name: billnumber
+        type: string
+        in: query
+      - name: x-device
+        type: string
+        in: header
+        required: true
+      - name: x-user-id
+        type: string
+        in: header
+        required: true
+      - name: x-correlator
+        type: string
+        in: header
+        required: true
+      - name: x-authcode
+        type: string
+        in: header
+        required: true
+      - name: x-client-id
+        type: string
+        in: header
+        required: true
+      consumes: []
+      produces: []
+    parameters: []

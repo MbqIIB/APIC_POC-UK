@@ -1,0 +1,1370 @@
+swagger: "2.0"
+info:
+  title: o2apic-novum-upgradesandpromotions
+  x-ibm-name: o2apic-novum-upgradesandpromotions
+  version: 1.0.0
+host: $(catalog.host)
+schemes:
+- https
+basePath: /apic
+produces:
+- application/json
+consumes:
+- application/json
+security:
+- clientIdHeader: []
+securityDefinitions:
+  clientIdHeader:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+x-ibm-configuration:
+  phase: realized
+  testable: true
+  enforced: true
+  properties:
+    target-url:
+      value: ""
+      description: The URL of the target service
+      encoded: false
+    auth-400:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    auth-401:
+      value: That PIN isn't the one you've used before. Please try again or change
+        your PIN.
+      description: That PIN isn't the one you've used before. Please try again or
+        change your PIN.
+    auth-500:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    auth-404:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    phoneservice-error:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    other-backend-error:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+  cors:
+    enabled: true
+  application-authentication:
+    certificate: false
+  assembly:
+    execute:
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ExtractInputLoggingData
+        source: "/* *************************************************************************************************************
+          */\n/* *************************************************************************************************************
+          */\n/* FileName                      Version    Created By                  Modified
+          By               Date           */\n/* ExtractInputLoggingData.js    1.0
+          \       Dinesh Tomar                                          06-July-2018
+          \  */\n/*                                                                                                               */\n/*
+          *************************************************************************************************************
+          */\n/* Purpose: This GW Script will extract input metadata for logging                                               */\n/*
+          \                                                                                                              */\n/*
+          Required params:                                                                                              */\n/*
+          ***************************************************************************************************************/\n//Extract
+          general metadata from system variables\nvar apiStartTimeMS = (new Date()).getTime();\napim.setvariable('apiStartTimeMS',
+          apiStartTimeMS);\nvar systemDateTime = apim.getvariable('system.datetime');\nvar
+          apicTxId = \"\";\nif (apim.getvariable('request.headers.apic-transaction-id')){\n
+          \   apicTxId = apim.getvariable('request.headers.apic-transaction-id');\n}\nelse
+          {\n    apicTxId = uuidv4();\n}\napim.setvariable('apic-transaction-id',
+          apicTxId);\napim.setvariable('message.headers.apic-transaction-id', apicTxId);\n\nvar
+          xGlobalTxId = apim.getvariable('request.headers.x-global-transaction-id');\n\n//Extract
+          client metadata from system variables\nvar clientIPAddress = apim.getvariable('request.headers.x-client-ip');\nvar
+          clientId = apim.getvariable('client.app.id');\nvar clientAppName = apim.getvariable('client.app.name');\nvar
+          clientAppType = apim.getvariable('client.app.type');\nvar clientOrgName
+          = apim.getvariable('client.org.name');\n\n//Extract api metadata from system
+          variables\nvar apiName = apim.getvariable('api.name');\nvar apiVersion =
+          apim.getvariable('api.version');\nvar providerOrgName = apim.getvariable('api.org.name');\nvar
+          catalogName = apim.getvariable('env.path');\nvar apiBasePath = apim.getvariable('api.root');\nvar
+          operationPath = apim.getvariable('api.operation.path');\n\n\n//Extract product
+          metadata from system variables\n//var productName = apim.getvariable('product.name');\n//var
+          productVersion = apim.getvariable('product.version');\nvar planName = apim.getvariable('plan.name');\nvar
+          planVersion = apim.getvariable('plan.version');\nvar planRateLimit = apim.getvariable('plan.rate-limit');\n\n//Extract
+          request metadata from system variables\nvar requestMethod = apim.getvariable('request.verb');\nvar
+          requestURI = apim.getvariable('request.uri');\nvar requestHeaders = apim.getvariable('request.headers');\n\ndelete
+          requestHeaders['accept-encoding'];\ndelete requestHeaders['x-global-transaction-id'];\ndelete
+          requestHeaders['user-agent'];\ndelete requestHeaders['via'];\n//delete requestHeaders['x-authcode'];\ndelete
+          requestHeaders['authorization'];\n\nvar requestHeadersString = JSON.stringify(requestHeaders);\n\nvar
+          logString = \"type:=request\"\n                + \" | system-datetime:=\"
+          +        systemDateTime\n                + \" | apic-transaction-id:=\"
+          +    apicTxId\n                + \" | global-transaction-id:=\" +  xGlobalTxId\n
+          \               + \" | consumer-ip-address:=\" +    clientIPAddress\n                +
+          \" | x-ibm-client-id:=\" +        clientId\n                + \" | client-app-name:=\"
+          +        clientAppName\n                + \" | client-app-type:=\" +        clientAppType\n
+          \               + \" | client-org-name:=\" +        clientOrgName\n                +
+          \" | api-name:=\" +               apiName\n                + \" | api-version:=\"
+          +            apiVersion\n                + \" | provider-org-name:=\" +
+          \     providerOrgName\n                + \" | catalog-name:=\" +           catalogName\n
+          \               + \" | api-base-path:=\" +          apiBasePath\n                +
+          \" | operation-path:=\" +         operationPath\n                + \" |
+          plan-name:=\" +              planName\n                + \" | plan-version:=\"
+          +           planVersion\n                + \" | plan-rate-limit:=\" +        planRateLimit\n
+          \               + \" | request-http-method:=\" +    requestMethod\n                +
+          \" | request-uri:=\" +            requestURI\n                + \" | request-http-headers:=\"
+          +   requestHeadersString;\n                \nconsole.log(logString);\nlogString
+          = \"\";\napim.setvariable('logString', logString);\n\nfunction uuidv4()
+          {\n    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function
+          (c) {\n        var r = Math.random() * 16 | 0, v = c == 'x' ? r: (r & 0x3
+          | 0x8);\n        return v.toString(16);\n    });\n}"
+        description: This GW Script will extract input metadata for logging
+    - activity-log:
+        title: Log-Payload
+        content: payload
+        error-content: payload
+        version: 1.0.0
+    - gatewayscript:
+        title: GS-FetchValidationConfig
+        version: 1.0.0
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* FetchValidationConfig.js      1.0        Dinesh Tomar                                          04-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will create URL to fetch validation config for all apis                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          var clientId = apim.getvariable('client.app.id');
+          apim.setvariable('message.headers.x-ibm-client-id', clientId);
+          apim.setvariable('message.headers.content-type', 'application/json');
+          //form url for to fetch errorConfig JSON
+          var orgName = apim.getvariable('api.org.name');
+          var catalog = apim.getvariable('env.path');
+          apim.setvariable('apicURLPrefix', 'https://0.0.0.0:9443/'+orgName+'/'+catalog);
+          var validationConfigURL = apim.getvariable('apicURLPrefix')+'/'+'config/validationconfig';
+          apim.setvariable('validationConfigURL', validationConfigURL);
+
+          //record time in ms just before the invoke policy
+          apim.setvariable('startTimeMS', (new Date()).getTime());
+          apim.setvariable('policyName', 'Invoke-ValidationConfig');
+        description: This GW Script will create URL to fetch validation config for
+          all apis
+    - invoke:
+        title: Invoke-ValidationConfig
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        version: 1.0.0
+        description: Load all validation config in context
+        target-url: $(validationConfigURL)
+        output: validationConfig
+        stop-on-error:
+        - ConnectionError
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ValidateParams
+        source: "/* **********************************************************************************************************
+          */\n/* **********************************************************************************************************
+          */\n/* FileName                   Version    Created By                  Modified
+          By               Date           */\n/* ValidateParams.js          1.0        Dinesh
+          Tomar                                          03-July-2018   */\n/*                                                                                                            */\n/*
+          **********************************************************************************************************
+          */\n/* Purpose: This GW Script file will return all API configurations to
+          be used for validating input params     */\n/*                                                                                                            */\n/*
+          Required params:                                                                                           */\n/*
+          ************************************************************************************************************/\n\n//record
+          time in ms just after the invoke policy\nvar endTimeMS = (new Date()).getTime();\nvar
+          timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\nvar
+          logString = apim.getvariable('logString');\n\nvar validationConfig = apim.getvariable('validationConfig.body');\nif
+          (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+          'BackendError');\n    var errorPropertyName = 'other-backend-error';\n    logString
+          += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+          logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\n}\nelse {\n    logString
+          += \" | \" + apim.getvariable('policyName') + \":=\" + timeTakenByPreviousPolicy
+          + \" ms\";\n    apim.setvariable('logString', logString);\n    var apiName
+          = apim.getvariable('api.name');\n    var operationName = apim.getvariable('api.operation.path');\n
+          \   var apiConfig = validationConfig.apisConfig[apiName][operationName];\n
+          \   var paramsConfig = validationConfig.paramsConfig;\n    var requiredPathParams
+          = apiConfig.requiredPathParams;\n    var requiredQueryParams = apiConfig.requiredQueryParams;\n
+          \   var requiredHeaderParams = apiConfig.requiredHeaderParams;\n    validateRequiredParams('headers',
+          requiredHeaderParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredQueryParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredPathParams, paramsConfig);\n    //record time in ms just before
+          the invoke policy\n    apim.setvariable('startTimeMS', (new Date()).getTime());\n
+          \   apim.setvariable('policyName', 'Invoke-PropertiesHandler');\n}\n\nfunction
+          validateRequiredParams(paramType, requiredParams, paramsConfig){\n    if
+          (requiredParams !== \"\"){\n        var reqParams = requiredParams.split('|');\n
+          \       for (var i = 0; i < reqParams.length; i++){\n            var paramConfig
+          = paramsConfig[reqParams[i]];\n            var inputParam = apim.getvariable('request.'+paramType+'.'+reqParams[i]);\n
+          \           var nullValidation = ((inputParam != undefined) || (inputParam
+          != null));\n            if (nullValidation){\n                var dataTypeValidation
+          = true;\n                dataTypeValidation = validateDataType(inputParam,
+          paramConfig);\n                var lengthValidation = true;\n                var
+          allowedValuesValidation = true;\n                if (paramConfig.manLength
+          || paramConfig.maxLength){\n                    lengthValidation = validateLength(inputParam,
+          paramConfig);\n                }\n                if (paramConfig.allowedValues){\n
+          \                   allowedValuesValidation = validateAllowedValues(inputParam,
+          paramConfig);\n                }\n                if (!(dataTypeValidation)
+          || !(lengthValidation) || !(allowedValuesValidation)){\n                    apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                    apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \                   return;\n                }\n                else {\n
+          \                   apim.setvariable('message.headers.'+reqParams[i], inputParam);\n
+          \                   var clientId = apim.getvariable('client.app.id');\n
+          \                   apim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\n                    apim.setvariable('message.headers.content-type',
+          'application/json');\n                    //form url for to fetch properties
+          config JSON\n                    var configPropertiesURL = apim.getvariable('apicURLPrefix')+'/'+'config/properties';\n
+          \                   apim.setvariable('configPropertiesURL', configPropertiesURL);\n
+          \               }\n            }\n            else {\n                apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \               return;\n            }\n            \n        }\n    }\n}\n\nfunction
+          validateDataType(inputParam, paramConfig){\n    if (paramConfig.dataType
+          == 'number'){\n        return !(isNaN(parseInt(inputParam)));\n    }\n    else
+          if (paramConfig.dataType == 'email'){ \n        if (inputParam.includes('.')
+          && inputParam.includes('@') && (! inputParam.includes(' ')))\n            return
+          true;\n        else\n            return false;\n    }\n    else if (paramConfig.dataType
+          == 'string'){\n        if (inputParam != null && inputParam.length != 0)\n
+          \           return true;\n        else\n            return false;\n    }\n
+          \   else if (paramConfig.dataType == 'version'){\n        if (inputParam
+          == null || inputParam.length == 0)\n            return false;\n        else
+          if (inputParam.includes('.')) {\n            var splittedArray = inputParam.split('.');\n
+          \           var result = true;\n            for (var i = 0; i < splittedArray.length;
+          i++){\n                if (isNaN(parseInt(splittedArray[i]))){\n                    result
+          = false;\n                    return result;\n                }\n            }\n
+          \           return result;\n        }\n        else{\n            return
+          !(isNaN(parseInt(inputParam)));\n        }\n    }\n    else\n        return
+          true;\n}\n\nfunction validateLength(inputParam, paramConfig){\n    var minLength
+          = paramConfig.minLength;\n    var maxLength = paramConfig.maxLength;\n    if
+          ((inputParam.length >= minLength) && (inputParam.length <= maxLength))\n
+          \       return true;\n    else\n        return false;\n}\n\nfunction validateAllowedValues(inputParam,
+          paramConfig){\n    var allowedValues = paramConfig.allowedValues;\n    var
+          allowedValuesArray = allowedValues.split('|');\n    var result = false;\n
+          \   for (var i = 0; i < allowedValuesArray.length; i++){\n        if (allowedValuesArray[i]
+          == inputParam){\n            result = true;\n            return result;\n
+          \       }\n    }\n    return result;\n}\n\nfunction isJSONEmpty(jsonObject)
+          {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+          {\n        if (jsonObject[member] != null) {\n            result = false;\n
+          \       }\n    }\n    return result;\n}"
+        description: This GW Script file will return all API configurations to be
+          used for validating input params
+    - invoke:
+        title: Invoke-PropertiesHandler
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        version: 1.0.0
+        target-url: $(configPropertiesURL)
+        output: messages-property
+        description: Load all messages  and properties in context
+        username: prafullk
+        password: Temp12$$
+        stop-on-error:
+        - ConnectionError
+    - gatewayscript:
+        title: GS-CreateTACRequest
+        version: 1.0.0
+        source: "/* *************************************************************************************************************
+          */\n/* *************************************************************************************************************
+          */\n/* FileName                      Version    Created By                  Modified
+          By               Date           */\n/* CreateTACRequest.js           1.0
+          \       Dinesh Tomar                                          20-Apr-2018
+          \   */\n/*                                                                                                               */\n/*
+          *************************************************************************************************************
+          */\n/* Purpose: This GW Script file will create request for transfer auth
+          code                                       */\n/*                                                                                                               */\n/*
+          Required params:                                                                                              */\n/*
+          *************************************************************************************************************
+          */\n//record time in ms just after the invoke policy\nvar endTimeMS = (new
+          Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\nvar
+          logString = apim.getvariable('logString');\n\nif (apim.getvariable('message.status.code')
+          != 200) {\n    apim.setvariable('errorName', 'BackendError');\n    var errorPropertyName
+          = 'other-backend-error';\n    logString += \" | error-scenario:=\" + errorPropertyName;\n
+          \   apim.setvariable('logString', logString);\n    apim.setvariable('error-message',
+          apim.getvariable(errorPropertyName));\n    apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\n}\nelse {\n    logString
+          += \" | \" + apim.getvariable('policyName') + \":=\" + timeTakenByPreviousPolicy
+          + \" ms\";\n    apim.setvariable('logString', logString);\n    \n    var
+          messages = apim.getvariable('messages-property.body');\n    apim.setvariable('message.headers.content-type',
+          'application/json');\n    var generateTransferAuthCodeURL = apim.getvariable('apicURLPrefix')+messages.authserver.generateTransferAuthCode.apicURI;\n
+          \   apim.setvariable('generateTransferAuthCodeURL', generateTransferAuthCodeURL);\n
+          \   \n    //record time in ms just before the invoke policy\n    apim.setvariable('startTimeMS',
+          (new Date()).getTime());\n    apim.setvariable('policyName', 'Invoke-GetTransferAuthCode');\n}\n\nfunction
+          isJSONEmpty(jsonObject) {\n    var member;\n    var result = true;\n    for
+          (member in jsonObject) {\n        if (jsonObject[member] != null) {\n            result
+          = false;\n        }\n    }\n    return result;\n}"
+        description: This GW Script file will create request for transfer auth code
+    - invoke:
+        title: Invoke-GetTransferAuthCode
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        version: 1.0.0
+        target-url: $(generateTransferAuthCodeURL)
+        output: consolidatedAuthResponse
+        username: prafullk
+        password: Temp12$$
+        stop-on-error:
+        - ConnectionError
+    - gatewayscript:
+        title: GS-PreparePhoneServiceCalls
+        version: 1.0.0
+        source: "/* ************************************************************************************************************
+          */\n/* ************************************************************************************************************
+          */\n/* FileName                     Version    Created By                  Modified
+          By               Date           */\n/* PreparePhoneServiceCalls.js  1.0
+          \       Dinesh Tomar                                          20-Apr-2018
+          \   */\n/*                                                                                                              */\n/*
+          ************************************************************************************************************
+          */\n/* Purpose: This GW Script file will validate request parameters                                                */\n/*
+          \                                                                                                             */\n/*
+          Required params:                                                                                             */\n/*
+          ************************************************************************************************************
+          */\n//record time in ms just after the invoke policy\nvar endTimeMS = (new
+          Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\nvar
+          logString = apim.getvariable('logString');\n//load properties configuration
+          from context variable\nvar messages = apim.getvariable('messages-property.body');\n\nif
+          (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+          'BackendError');\n    var errorPropertyName = 'auth-' + apim.getvariable('message.status.code');\n
+          \   logString += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+          logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\n} else {\n    logString
+          += \" | \" + apim.getvariable('policyName') + \":=\" + timeTakenByPreviousPolicy
+          + \" ms\";\n    apim.setvariable('logString', logString);\n    \n    var
+          authResponse = apim.getvariable('consolidatedAuthResponse.body');\n    var
+          accessToken = authResponse.access_token;\n    var disambiguationId = authResponse.disambiguation_id;\n
+          \   var accessToken = authResponse.access_token;\n    var authorizationHeader
+          = \"Bearer \" + accessToken;\n    apim.setvariable('message.headers.authorization',
+          authorizationHeader);\n    apim.setvariable('message.headers.disambiguation-id',
+          disambiguationId);\n    apim.setvariable('phoneDetailsURL', messages.phoneservice.msisdndetails.uri);\n
+          \   apim.setvariable('upgradesAndPromotionsURL', messages.phoneservice.upgradesandpromotions.uri);\n
+          \   console.log(\"TAC:=\");\n    console.log(JSON.stringify(authResponse));\n
+          \   //record time in ms just before the invoke policy\n    apim.setvariable('startTimeMS',
+          (new Date()).getTime());\n    apim.setvariable('policyName', 'Invoke-GetPhoneDetails');\n}\n\nfunction
+          isJSONEmpty(jsonObject) {\n    var member;\n    var result = true;\n    for
+          (member in jsonObject) {\n        if (jsonObject[member] != null) {\n            result
+          = false;\n        }\n    }\n    return result;\n}"
+        description: This GW Script file will prepare headers for phone service calls
+    - invoke:
+        title: Invoke-GetPhoneDetails
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        version: 1.0.0
+        target-url: $(phoneDetailsURL)
+        output: phoneDetails
+        stop-on-error:
+        - ConnectionError
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-RecordTimestamp
+        source: "//record time in ms just after the invoke policy\nvar endTimeMS =
+          (new Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\nvar
+          logString = apim.getvariable('logString');\nconsole.log(\"PhoneDetails:=\");\nconsole.log(JSON.stringify(apim.getvariable('phoneDetails.body')));\nif
+          (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+          'BackendError');\n    var errorPropertyName = 'phoneservice-error';\n    logString
+          += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+          logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\n} else {\n    logString
+          += \" | \" + apim.getvariable('policyName') + \":=\" + timeTakenByPreviousPolicy
+          + \" ms\";\n    apim.setvariable('logString', logString);\n    \n    //record
+          time in ms just before the invoke policy\n    apim.setvariable('startTimeMS',
+          (new Date()).getTime());\n    apim.setvariable('policyName', 'Invoke-GetUpgradesAndPromotions');\n}\n\n"
+    - invoke:
+        title: Invoke-GetUpgradesAndPromotions
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        version: 1.0.0
+        target-url: $(upgradesAndPromotionsURL)
+        output: phoneServiceUpgradesPromotions
+        stop-on-error:
+        - ConnectionError
+    - gatewayscript:
+        title: GS-MergePhoneServiceResponses
+        version: 1.0.0
+        source: |-
+          /* *********************************************************************************************************** */
+          /* *********************************************************************************************************** */
+          /* FileName                        Version    Created By              Modified By               Date           */
+          /* MergePhoneServiceResponses.js   1.0        Dinesh Tomar                                      20-Apr-2018    */
+          /*                                                                                                             */
+          /* *********************************************************************************************************** */
+          /* Purpose: This GW Script file will validate request parameters                                               */
+          /*                                                                                                             */
+          /* Required params:                                                                                            */
+          /* *********************************************************************************************************** */
+          //record time in ms just after the invoke policy
+          var endTimeMS = (new Date()).getTime();
+          var timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');
+          var logString = apim.getvariable('logString');
+
+          if (apim.getvariable('message.status.code') != 200) {
+              if(apim.getvariable('message.status.code') == 404 || apim.getvariable('message.status.code') == 504){
+                  apim.setvariable('message.status.code', 500);
+              }
+              apim.setvariable('errorName', 'BackendError');
+              var errorPropertyName = 'phoneservice-error';
+              logString += " | error-scenario:=" + errorPropertyName;
+              apim.setvariable('logString', logString);
+              apim.setvariable('error-message', apim.getvariable(errorPropertyName));
+              apim.error('BackendError', apim.getvariable('message.status.code'), 'Internal Error', apim.getvariable('error-message'));
+          } else {
+              logString += " | " + apim.getvariable('policyName') + ":=" + timeTakenByPreviousPolicy + " ms";
+              apim.setvariable('logString', logString);
+              var phoneDetails = apim.getvariable('phoneDetails.body');
+              var phoneServiceUpgradesPromotions = apim.getvariable('phoneServiceUpgradesPromotions.body');
+              phoneServiceUpgradesPromotions.isCCA = phoneDetails.isCCA;
+              apim.setvariable('message.body', phoneServiceUpgradesPromotions);
+              console.log("MergedPhoneResponse:=");
+              console.log(JSON.stringify(phoneServiceUpgradesPromotions));
+          }
+
+          function isJSONEmpty(jsonObject) {
+              var member;
+              var result = true;
+              for (member in jsonObject) {
+                  if (jsonObject[member] != null) {
+                      result = false;
+                  }
+              }
+              return result;
+          }
+        description: This GW Script file will validate request parameters
+    - gatewayscript:
+        title: GS-GetUpgradeEligibility
+        version: 1.0.0
+        source: "/* ******************************************************************************************************
+          */\n/* ******************************************************************************************************
+          */\n/* FileName                    Version    Created By                  Modified
+          By          Date           */\n/* GetUpgradeEligibility.js    1.0        Dinesh
+          Tomar                                     20-Apr-2018    */\n/*                                                                                                        */\n/*
+          ******************************************************************************************************
+          */\n/* Purpose: This GW Script to get upgrade eligibility from phone services
+          responses                       */\n/*                                                                                                        */\n/*
+          Required params:                                                                                       */\n/*
+          ******************************************************************************************************
+          */\nvar phoneServiceUpgradesPromotions = apim.getvariable('message.body');\nvar
+          upgradeEligibility = {\n};\nvar upgradeEligibility = getUpgradeEligibility(upgradeEligibility,
+          phoneServiceUpgradesPromotions);\napim.setvariable('upgradeEligibility',
+          upgradeEligibility);\nconsole.log(\"UpgradeEligibility:=\");\nconsole.log(JSON.stringify(apim.getvariable('upgradeEligibility')));\nfunction
+          getUpgradeEligibility(upgradeEligibility, phoneServiceUpgradesPromotions)
+          {\n    if (! isJSONEmpty(phoneServiceUpgradesPromotions)) {\n        upgradeEligibility.tariffClassification
+          = phoneServiceUpgradesPromotions.tariffClassification;\n        upgradeEligibility.tariffFamily
+          = phoneServiceUpgradesPromotions.tariffFamily;\n        upgradeEligibility.isEligibleToday
+          = phoneServiceUpgradesPromotions.isEligibleToday;\n        upgradeEligibility.isCCA
+          = phoneServiceUpgradesPromotions.isCCA;\n        upgradeEligibility.isS2R
+          = false;\n        upgradeEligibility.lastUpgradeOrAcquisitionPartner = phoneServiceUpgradesPromotions.lastUpgradeOrAcquisitionPartner;\n
+          \       upgradeEligibility.eligibilityFailureReasons = phoneServiceUpgradesPromotions.eligibilityFailureReasons;\n
+          \       upgradeEligibility = setEligibilityFailureReasons(upgradeEligibility);\n
+          \       if (phoneServiceUpgradesPromotions.isEligibleToday) {\n            upgradeEligibility
+          = getFreeUpgradeToday(upgradeEligibility, phoneServiceUpgradesPromotions);\n
+          \           if (upgradeEligibility.freeUpgradeToday) {\n                upgradeEligibility.freeUpgradeOption
+          = getUpgradeOption(phoneServiceUpgradesPromotions, 'FREE');\n            }
+          else {\n                upgradeEligibility.freeUpgradeOption = getUpgradeOption(phoneServiceUpgradesPromotions,
+          'FREE');\n                upgradeEligibility.paidUpgradeOption = getUpgradeOption(phoneServiceUpgradesPromotions,
+          'PAID');\n                if (!(isJSONEmpty(phoneServiceUpgradesPromotions.upgradeOptions.CCA))
+          && !(isJSONEmpty(phoneServiceUpgradesPromotions.upgradeOptions.CCA.PAID)))
+          {\n                    var paidUpgrade = phoneServiceUpgradesPromotions.upgradeOptions.CCA.PAID;\n
+          \                   if ((!isJSONEmpty(paidUpgrade)) && (paidUpgrade.upgradeCost
+          != undefined) && (paidUpgrade.upgradeCost == '0.00') && (isJSONEmpty(paidUpgrade.rejectionReasons)
+          || paidUpgrade.rejectionReasons.length == 0)) {\n                        upgradeEligibility.isS2R
+          = true;\n                    }\n                }\n            }\n        }
+          else {\n            upgradeEligibility.freeUpgradeOption = getUpgradeOption(phoneServiceUpgradesPromotions,
+          'FREE');\n        }\n        \n        if (! isJSONEmpty(phoneServiceUpgradesPromotions.buyoutOption))
+          {\n            upgradeEligibility.buyoutOption = phoneServiceUpgradesPromotions.buyoutOption;\n
+          \       }\n        \n        if (! isJSONEmpty(phoneServiceUpgradesPromotions.promotions))
+          {\n            upgradeEligibility.promotions = phoneServiceUpgradesPromotions.promotions;\n
+          \       }\n        if (! isJSONEmpty(phoneServiceUpgradesPromotions.promotionTypes))
+          {\n            upgradeEligibility.promotionTypes = phoneServiceUpgradesPromotions.promotionTypes;\n
+          \       }\n        return upgradeEligibility;\n    }\n}\n\n\n\n\nfunction
+          setEligibilityFailureReasons(upgradeEligibility){\n    var eligibilityFailureReasons
+          = upgradeEligibility.eligibilityFailureReasons;\n    var IN_TREATMENT_ERROR_CODE
+          = \"PS_UpgradeEligibility_Rejection_002\";\n    var SIM_SWAPPED_ERROR_CODE
+          = \"PS_UpgradeEligibility_Rejection_001\";\n    var ORDER_IN_PROGRESS_ERROR_CODE
+          = \"PS_UpgradeEligibility_002\";\n    var SERVICE_BARRED_ERROR_CODE = \"PS_UpgradeEligibility_Rejection_009\";\n
+          \   var TARIFF_DOES_NOT_SUPPORTS_UPGRADE_ERROR_CODE = \"PS_UpgradeEligibility_006\";\n
+          \   var UPGRADE_ENTITLEMENT_SERVICE_NOT_AVAILABLE_ERROR = \"PS_UpgradeEligibility_005\";\n
+          \   \n    if (eligibilityFailureReasons != undefined && eligibilityFailureReasons.length
+          > 0){\n        for (var i = 0; i < eligibilityFailureReasons.length; i++){\n
+          \           if (eligibilityFailureReasons[i].reasonCode == IN_TREATMENT_ERROR_CODE){\n
+          \               upgradeEligibility.inTreatment = true;\n            }\n
+          \           else if (eligibilityFailureReasons[i].reasonCode == SIM_SWAPPED_ERROR_CODE){\n
+          \               upgradeEligibility.simSwapped = true;\n            }\n            else
+          if (eligibilityFailureReasons[i].reasonCode == ORDER_IN_PROGRESS_ERROR_CODE){\n
+          \               upgradeEligibility.orderInProgress = true;\n            }\n
+          \           else if (eligibilityFailureReasons[i].reasonCode == SERVICE_BARRED_ERROR_CODE){\n
+          \               upgradeEligibility.serviceBarred = true;\n            }\n
+          \           else if (eligibilityFailureReasons[i].reasonCode == TARIFF_DOES_NOT_SUPPORTS_UPGRADE_ERROR_CODE){\n
+          \               upgradeEligibility.tariffSupportsUpgrade = true;\n            }\n
+          \           else if (eligibilityFailureReasons[i].reasonCode == UPGRADE_ENTITLEMENT_SERVICE_NOT_AVAILABLE_ERROR){\n
+          \               upgradeEligibility.upgradeEntitlementServiceNotAvailable
+          = true;\n            }\n        }        \n    }\n    return upgradeEligibility;\n}\n\nfunction
+          getFreeUpgradeToday(upgradeEligibility, phoneServiceUpgradesPromotions)
+          {\n    var upgradeToType =[ \"CCA\", \"SIMO\", \"HANDSET\"];\n    var i
+          = 0;\n    for (i; i < upgradeToType.length; i++) {\n        if (! isJSONEmpty(phoneServiceUpgradesPromotions.upgradeOptions[upgradeToType[i]])
+          && ! isJSONEmpty(phoneServiceUpgradesPromotions.upgradeOptions[upgradeToType[i]].FREE)
+          && phoneServiceUpgradesPromotions.upgradeOptions[upgradeToType[i]].FREE.eligibilityTime
+          == 'IMMEDIATE') {\n            upgradeEligibility.freeUpgradeToday = true;\n
+          \           return upgradeEligibility;\n        }\n    }\n    upgradeEligibility.freeUpgradeToday
+          = false;\n    return upgradeEligibility;\n}\n\nfunction getUpgradeOption(phoneServiceUpgradesPromotions,
+          upgradeType) {\n    var upgradeToType =[ \"CCA\", \"SIMO\", \"HANDSET\"];\n
+          \   var i = 0;\n    for (i; i < upgradeToType.length; i++) {\n        var
+          upgradeOptions;\n        if(!(isJSONEmpty(phoneServiceUpgradesPromotions))
+          && !(isJSONEmpty(phoneServiceUpgradesPromotions.upgradeOptions)) && !(isJSONEmpty(phoneServiceUpgradesPromotions.upgradeOptions[upgradeToType[i]]))){\n
+          \           upgradeOptions = phoneServiceUpgradesPromotions.upgradeOptions[upgradeToType[i]];\n
+          \       }        \n        if (! isJSONEmpty(upgradeOptions) && ! isJSONEmpty(upgradeOptions[upgradeType]))
+          {\n            var upgradeOption = upgradeOptions[upgradeType];\n            if
+          (isEligibleForPaidUpgrade(upgradeOption, upgradeType) || isEligibleForFreeUpgradeFuture(upgradeOption,
+          upgradeType) || isEligibleForFreeUpgrade(upgradeOption, upgradeType)) {\n
+          \               upgradeOption.upgradeToType = upgradeToType[i];\n                return
+          upgradeOption;\n            }\n        }\n    }\n    return null;\n}\n\nfunction
+          isEligibleForFreeUpgrade(upgradeOption, upgradeType) {\n    return (upgradeType
+          == 'FREE') && (isJSONEmpty(upgradeOption.rejectionReasons) && (upgradeOption.eligibilityTime
+          != undefined) && (upgradeOption.eligibilityTime != 'NONE'));\n}\n\nfunction
+          isEligibleForFreeUpgradeFuture(upgradeOption, upgradeType) {\n    return
+          (upgradeType == 'FREE') && (upgradeOption.eligibilityTime != undefined)
+          && (upgradeOption.eligibilityTime == 'FUTURE');\n}\n\nfunction isEligibleForPaidUpgrade(upgradeOption,
+          upgradeType) {\n    return (upgradeType == 'PAID') && (isJSONEmpty(upgradeOption.rejectionReasons)
+          || upgradeOption.rejectionReasons.length == 0);\n}\n\nfunction isJSONEmpty(jsonObject)
+          {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+          {\n        if (jsonObject[member] != null) {\n            result = false;\n
+          \       }\n    }\n    return result;\n}"
+        description: GW Script to get upgrade eligibility from phone services responses
+    - gatewayscript:
+        title: GS-GetUpgradeOptions
+        version: 1.0.0
+        source: "/* ******************************************************************************************************
+          */\n/* ******************************************************************************************************
+          */\n/* FileName                 Version    Created By                Modified
+          By               Date           */\n/* GetUpgradeOptions.js     1.0        Dinesh
+          Tomar                                        20-Apr-2018    */\n/*                                                                                                        */\n/*
+          ******************************************************************************************************
+          */\n/* Purpose: This GW Script to get upgrade options from upgrade eligibility
+          \                               */\n/*                                                                                                        */\n/*
+          Required params:                                                                                       */\n/*
+          ******************************************************************************************************
+          */\nvar today = new Date();\nvar IMMEDIATE = {\n    \"duration\": 0,\n    \"timeUnit\":
+          \"days\"\n};\nvar upgradeOptions = {\n};\nvar upgradeOptions = getUpgradesOptions(upgradeOptions,
+          apim.getvariable('message.headers.x-authcode'), apim.getvariable('request.parameters.msisdn'));\napim.setvariable('upgradeOptions',
+          upgradeOptions);\nconsole.log(\"UpgradeOptions:=\");\nconsole.log(JSON.stringify(apim.getvariable('upgradeOptions')));\n\nfunction
+          getUpgradesOptions(upgradeOptions, authcode, msisdn) {\n    upgradeOptions.msisdn
+          = msisdn;\n    upgradeOptions.authCode = authcode;\n    var upgradeEligibility
+          = apim.getvariable('upgradeEligibility');\n    var upgrade = {\n    };\n
+          \   upgrade = getUpgrade(upgrade, upgradeEligibility);\n    upgradeOptions.upgrade
+          = upgrade;\n    console.log(\"Upgrade:=\");\n    console.log(JSON.stringify(upgrade));\n
+          \   var boltOns =[];\n    var promotion = {};\n    var promotions = {};\n
+          \   if (! isJSONEmpty(upgradeEligibility.promotions)) {\n        promotions
+          = upgradeEligibility.promotions;\n    }\n    if (! isJSONEmpty(promotions))
+          {\n        var promotionDetails = getPromotionDetailsWithBoltOns(upgrade,
+          promotions);\n        if (! isJSONEmpty(promotionDetails)) {\n            var
+          tradinPromotion = getPromotion(promotionDetails.tradeIn, apim.getvariable('isStaffTariff'));\n
+          \           var buyoutPromotion = getPromotion(promotionDetails.buyOut,
+          apim.getvariable('isStaffTariff'));\n            var boltOnPromotions =
+          promotionDetails.boltOns;\n            if (! isJSONEmpty(tradinPromotion)
+          && ! isJSONEmpty(buyoutPromotion)) {\n                if (getJSDateFormat(tradinPromotion.startDate)
+          < getJSDateFormat(buyoutPromotion.startDate)) {\n                    promotion
+          = tradinPromotion;\n                    promotion.type = 'TRADEIN';\n                }
+          else {\n                    promotion = buyoutPromotion;\n                    promotion.type
+          = 'BUYOUT';\n                }\n            } else if (! isJSONEmpty(tradinPromotion))
+          {\n                promotion = tradinPromotion;\n                promotion.type
+          = 'TRADEIN';\n            } else if (! isJSONEmpty(buyoutPromotion)) {\n
+          \               promotion = buyoutPromotion;\n                promotion.type
+          = 'BUYOUT';\n            }\n            if (! isJSONEmpty(boltOnPromotions))
+          {\n                for (var i = 0; i < boltOnPromotions.length; i++) {\n
+          \                   if (! isJSONEmpty(boltOnPromotions[i]) && (getJSDateFormat(boltOnPromotions[i].startDate)
+          < today) && (getJSDateFormat(boltOnPromotions[i].endDate) > today)) {\n
+          \                       var promo = {\n                        };\n                        promo.type
+          = 'BOLTON';\n                        promo.description = boltOnPromotions[i].promotionDescription;\n
+          \                       promo.id = boltOnPromotions[i].promotionId;\n                        boltOns.push(promo);\n
+          \                   }\n                }\n            }\n        }\n        upgradeOptions.promotion
+          = promotion;\n        upgradeOptions.boltonPromotions = boltOns;\n        \n
+          \       console.log(\"promotion:=\");\n        console.log(JSON.stringify(promotion));\n
+          \   \n        console.log(\"boltOns:=\");\n        console.log(JSON.stringify(boltOns));\n
+          \   }\n    if (upgrade.eligibilityStatus == 'FREE') {\n        upgradeOptions.timeUntilUpgradeOrPromotion
+          = IMMEDIATE;\n    } else if (! isJSONEmpty(promotion)) {\n        if (promotion.eligibilityStatus
+          == 'ELIGIBLE') {\n            upgradeOptions.timeUntilUpgradeOrPromotion
+          = IMMEDIATE;\n        } else {\n            upgradeOptions.timeUntilUpgradeOrPromotion
+          = getTimeUntil(getJSDateFormat(promotion.startDate));\n        }\n    }
+          else {\n        if (upgradeEligibility.isS2R) {\n            upgradeOptions.timeUntilUpgradeOrPromotion
+          = IMMEDIATE;\n        } else {\n            if (upgrade.freeUpgradeDate
+          != null){\n                upgradeOptions.timeUntilUpgradeOrPromotion =
+          getTimeUntil(getJSDateFormat(upgrade.freeUpgradeDate));\n            }\n
+          \       }\n    }\n    upgradeOptions.lastUpgradeOrAcquisitionPartner = upgradeEligibility.lastUpgradeOrAcquisitionPartner;\n
+          \   upgradeOptions.promotionTypes = upgradeEligibility.promotionTypes;\n
+          \   return upgradeOptions;\n}\n\nfunction getUpgrade(upgrade, upgradeEligibility)
+          {\n    var isStaffTariff = ((upgradeEligibility.tariffClassification !=
+          null && upgradeEligibility.tariffClassification.toLowerCase().includes('staff'))
+          || (upgradeEligibility.tariffFamily != null && upgradeEligibility.tariffFamily.toLowerCase().includes('staff')));\n
+          \   apim.setvariable('isStaffTariff', isStaffTariff);\n    if (upgradeEligibility.lastUpgradeOrAcquisitionPartner
+          != null && upgradeEligibility.lastUpgradeOrAcquisitionPartner.toLowerCase()
+          == 'cpw') {\n        upgrade.partner = 'NON_O2';\n    } else {\n        upgrade.partner
+          = 'O2';\n    }\n    var isMBBUser = ((upgradeEligibility.tariffClassification
+          != null && upgradeEligibility.tariffClassification.includes('MBB')) || (upgradeEligibility.tariffFamily
+          != null && upgradeEligibility.tariffFamily.includes('MBB')));\n    if (isMBBUser)
+          {\n        upgrade.eligibilityStatus = 'NONE';\n        upgrade.noUpgradeReason
+          = 'MBB';\n    } else if (upgradeEligibility.isEligibleToday) {\n        var
+          isDeviceLeasingTariff = (upgradeEligibility.tariffClassification != null
+          && upgradeEligibility.tariffClassification.toLowerCase().includes('leasing'));\n
+          \       var isCCA = upgradeEligibility.isCCA;\n        if (isDeviceLeasingTariff)
+          {\n            upgrade.tariff = \"DEVICE_LEASING\";\n        } else if (isCCA)
+          {\n            if (isStaffTariff) {\n                upgrade.tariff = \"CCA_STAFF\";\n
+          \           } else {\n                upgrade.tariff = \"CCA\";\n            }\n
+          \       } else {\n            if (isStaffTariff) {\n                upgrade.tariff
+          = \"SIMO_STAFF\";\n            } else {\n                upgrade.tariff
+          = \"SIMO\";\n            }\n        }\n        if (upgradeEligibility.freeUpgradeToday)
+          {\n            upgrade.eligibilityStatus = 'FREE';\n            if (!(isStaffTariff
+          || isDeviceLeasingTariff || (upgrade.partner == 'NON_O2' && !(upgradeEligibility.isS2R))))
+          {\n                upgrade.showUpgradeLink = true;\n            }\n            upgrade.upgradeToType
+          = upgradeEligibility.freeUpgradeOption.upgradeToType;\n        } else if
+          (! isJSONEmpty(upgradeEligibility.freeUpgradeOption) && ! isJSONEmpty(upgradeEligibility.paidUpgradeOption))
+          {\n            upgrade.eligibilityStatus = 'PAID';\n            upgrade.upgradeToType
+          = upgradeEligibility.paidUpgradeOption.upgradeToType;\n            if (upgradeEligibility.paidUpgradeOption.upgradeCost
+          != null){\n                upgrade.upgradeCost = formatNumber(parseFloat(upgradeEligibility.paidUpgradeOption.upgradeCost));\n
+          \           }            \n            if (upgradeEligibility.freeUpgradeOption.eligibilityDate
+          != null) {\n                upgrade.freeUpgradeDate = upgradeEligibility.freeUpgradeOption.eligibilityDate;\n
+          \           }\n            if (!(isStaffTariff || isDeviceLeasingTariff
+          || (upgrade.partner == 'NON_O2' && !(upgradeEligibility.isS2R)))) {\n                upgrade.showUpgradeLink
+          = true;\n            }\n            upgrade.isS2R = upgradeEligibility.isS2R;\n
+          \       } else {\n            upgrade.eligibilityStatus = 'NONE';\n            upgrade.noUpgradeReason
+          = 'DEFAULT';\n        }\n    } else {\n        upgrade.eligibilityStatus
+          = 'NONE';\n        if (! isJSONEmpty(upgradeEligibility.freeUpgradeOption)
+          && upgradeEligibility.freeUpgradeOption.eligibilityTime == 'FUTURE') {\n
+          \           upgrade.noUpgradeReason = 'FREE_IN_FUTURE';\n            if
+          (upgradeEligibility.freeUpgradeOption.eligibilityDate != null) {\n                upgrade.freeUpgradeDate
+          = upgradeEligibility.freeUpgradeOption.eligibilityDate;\n                upgrade.upgradeToType
+          = upgradeEligibility.freeUpgradeOption.upgradeToType;\n            }\n        }
+          else if (upgradeEligibility.inTreatment) {\n            upgrade.noUpgradeReason
+          = 'IN_TREATMENT';\n        } else if (upgradeEligibility.simSwapped) {\n
+          \           upgrade.noUpgradeReason = 'SIM_SWAPPED';\n        } else if
+          (upgradeEligibility.orderInProgress) {\n            upgrade.noUpgradeReason
+          = 'ORDER_IN_PROGRESS';\n        } else if (upgradeEligibility.serviceBarred)
+          {\n            upgrade.noUpgradeReason = 'SERVICE_BARRED';\n        } else
+          if (upgradeEligibility.tariffSupportsUpgrade) {\n            upgrade.noUpgradeReason
+          = 'NON_SUPPORTING_TARIFF';\n        } else if (upgradeEligibility.upgradeEntitlementServiceNotAvailable)
+          {\n            upgrade.noUpgradeReason = 'ENTITLEMENT_SERVICE_UNAVAILABLE';\n
+          \       } else {\n            upgrade.noUpgradeReason = 'DEFAULT';\n        }\n
+          \   }\n    return upgrade;\n}\n\nfunction getPromotionDetailsWithBoltOns(upgrade,
+          promotions) {\n    var promotionDetails;\n    if (upgrade.eligibilityStatus
+          != 'NONE' || (upgrade.eligibilityStatus == 'NONE' && upgrade.noUpgradeReason
+          == 'FREE_IN_FUTURE')) {\n        //if ((! isJSONEmpty(promotions.CCA)) &&
+          (! isJSONEmpty(getActiveBoltOns(promotions.CCA)))) {\n        if (! isJSONEmpty(promotions.CCA))
+          {\n            promotionDetails = promotions.CCA;\n            promotionDetails.boltOns
+          = getActiveBoltOns(promotions.CCA);\n            /////// start of work-around
+          fix\n            var boltOns = [];            \n            if (promotions.CCA.tradeIn
+          != null){\n                boltOns.push(promotions.CCA.tradeIn);\n            }\n
+          \           if (promotions.CCA.buyOut != null){\n                boltOns.push(promotions.CCA.buyOut);\n
+          \           }\n            if (promotionDetails.boltOns == null){\n                promotionDetails.boltOns
+          = getActiveBoltOns(boltOns);\n            }\n            /////// end of
+          work-around fix\n        //} else if ((! isJSONEmpty(promotions.SIMO)) &&
+          (! isJSONEmpty(getActiveBoltOns(promotions.SIMO)))) {\n        } else if
+          (! isJSONEmpty(promotions.SIMO)) {\n            promotionDetails = promotions.SIMO;\n
+          \           promotionDetails.boltOns = getActiveBoltOns(promotions.SIMO);\n
+          \           /////// start of work-around fix\n            var boltOns =
+          [];            \n            if (promotions.SIMO.tradeIn != null){\n                boltOns.push(promotions.SIMO.tradeIn);\n
+          \           }\n            if (promotions.SIMO.buyOut != null){\n                boltOns.push(promotions.SIMO.buyOut);\n
+          \           }\n            if (promotionDetails.boltOns == null){\n                promotionDetails.boltOns
+          = getActiveBoltOns(boltOns);\n            }\n            /////// end of
+          work-around fix\n        //} else if ((! isJSONEmpty(promotions.HANDSET))
+          && (! isJSONEmpty(getActiveBoltOns(promotions.HANDSET)))) {\n        } else
+          if (! isJSONEmpty(promotions.HANDSET)){\n            promotionDetails =
+          promotions.HANDSET;\n            promotionDetails.boltOns = getActiveBoltOns(promotions.HANDSET);\n
+          \           /////// start of work-around fix\n            var boltOns =
+          [];            \n            if (promotions.HANDSET.tradeIn != null){\n
+          \               boltOns.push(promotions.HANDSET.tradeIn);\n            }\n
+          \           if (promotions.HANDSET.buyOut != null){\n                boltOns.push(promotions.HANDSET.buyOut);\n
+          \           }\n            if (promotionDetails.boltOns == null){\n                promotionDetails.boltOns
+          = getActiveBoltOns(boltOns);\n            }\n            /////// end of
+          work-around fix\n        }\n    }\n    return promotionDetails;\n}\n\nfunction
+          getActiveBoltOns(promotionDetails) {\n    if (!(isJSONEmpty(promotionDetails)))
+          {\n        var boltOns = promotionDetails.boltOns;\n        var activeBoltOns
+          =[];\n        var i;\n        for (i = 0; i < boltOns.length; i++) {\n            var
+          startDate = getJSDateFormat(boltOns[i].startDate);\n            var endDate
+          = getJSDateFormat(boltOns[i].endDate);\n            if ((boltOns[i] != null)
+          && (startDate <= today) && (endDate >= today)) {\n                activeBoltOns.push(boltOns[i]);\n
+          \               //return activeBoltons with first entry only\n                return
+          activeBoltOns;\n            }\n        }\n        return activeBoltOns;\n
+          \   }\n}\n\nfunction getPromotion(promotionInfo, isStaffTariff) {\n    var
+          promotion = {};\n    if (isJSONEmpty(promotionInfo)) {\n        promotion
+          = null;\n    } else if (getJSDateFormat(promotionInfo.startDate) > today)
+          {\n        promotion.eligibilityStatus = 'NOT_YET_ELIGIBLE';\n        promotion.startDate
+          = promotionInfo.startDate;\n        promotion.endDate = promotionInfo.endDate;\n
+          \       promotion.promotionDescription = promotionInfo.promotionDescription;\n
+          \       promotion.promotionId = promotionInfo.promotionId;\n        promotion.showPromotionLink
+          = !(isStaffTariff);\n    } else if ((getJSDateFormat(promotionInfo.startDate)
+          < today) && (getJSDateFormat(promotionInfo.endDate) > today)) {\n        promotion.eligibilityStatus
+          = 'ELIGIBLE';\n        promotion.startDate = promotionInfo.startDate;\n
+          \       promotion.endDate = promotionInfo.endDate;\n        promotion.promotionDescription
+          = promotionInfo.promotionDescription;\n        promotion.promotionId = promotionInfo.promotionId;\n
+          \       promotion.showPromotionLink = true;\n    } else {\n        promotion
+          = null;\n    }\n    return promotion;\n}\n\nfunction getJSDateFormat(inputDate)
+          {\n    var date = inputDate.substr(0, 2);\n    var month = inputDate.substr(3,
+          2);\n    var year = inputDate.substr(6, 4);\n    return new Date(month +
+          \"-\" + date + \"-\" + year);\n}\n\nfunction formatNumber(inputNumber){\n\tvar
+          number = inputNumber;\n\tif (inputNumber < 0){\n\t\tnumber = inputNumber
+          * (-1);\n\t}\n\tvar intPart = parseInt(number);\n\tvar decimalPart = (number
+          - intPart).toFixed(2);\n\tvar formattedInt = formatMiBiTr(intPart);\n\tvar
+          formattedNumber = \"£\"+formattedInt.toString() + decimalPart.toString().substr(1,3);\n\tif
+          (inputNumber < 0){\n\t\treturn \"-\"+formattedNumber;\n\t}\n\telse{\n\t\treturn
+          formattedNumber;\n\t}\n}\n\nfunction formatMiBiTr(inputNumber){\n\tvar integerPartStr
+          = inputNumber.toString();\n\tvar integerPartStrLength = integerPartStr.length;\n\tif
+          (integerPartStrLength > 3){\n\t\tvar suffixPart = integerPartStr.substr(integerPartStrLength-3,
+          3);\n\t\tvar prefixPart = integerPartStr.substr(0, integerPartStrLength-3);\n\t\tif
+          (prefixPart.length > 3){\n\t\t\treturn formatMiBiTr(prefixPart)+\",\"+suffixPart;\n\t\t}\n\t\telse{\n\t\t\treturn
+          prefixPart+\",\"+suffixPart;\n\t\t}\n\t}\n\telse{\n\t\treturn inputNumber;\n\t}\n}\n\nfunction
+          getTimeUntil(inputDate) {\n    var today = new Date();\n    var currentDate
+          = today.getDate();\n    var currentMonth = today.getMonth() + 1;\n    var
+          currentYear = today.getFullYear();    \n    var timeUntilUpgradeOrBuyout
+          = {\n    };\n    if (today == inputDate) {\n        return IMMEDIATE;\n
+          \   } else {\n        var daysDiff = Math.floor((inputDate - today) / 86400000)
+          + 1;\n        var monthsDiff = Math.floor(daysDiff / 30);\n        var surplusDays
+          = parseInt((daysDiff % 30));\n        console.log(\"**** \"+ today +\" ***
+          \"+ currentDate +\" *** \"+ currentMonth +\" *** \"+ currentYear +\" ***
+          \"+ daysDiff +\" *** \");\n        if (monthsDiff > 0 && daysDiff != 30)
+          {\n            if (surplusDays > 15) {\n                monthsDiff++;\n
+          \           }\n            timeUntilUpgradeOrBuyout.duration = monthsDiff;\n
+          \           if (monthsDiff > 1){\n                timeUntilUpgradeOrBuyout.timeUnit
+          = \"months\";\n            }\n            else{\n                timeUntilUpgradeOrBuyout.timeUnit
+          = \"month\";\n            }            \n            return timeUntilUpgradeOrBuyout;\n
+          \       }\n        else{            \n            timeUntilUpgradeOrBuyout.duration
+          = daysDiff;\n            timeUntilUpgradeOrBuyout.timeUnit = \"days\";\n
+          \           /*if (daysDiff > 1){\n                  timeUntilUpgradeOrBuyout.timeUnit
+          = \"days\";  \n            }\n            else{\n                 timeUntilUpgradeOrBuyout.timeUnit
+          = \"day\";   \n            }*/            \n            return timeUntilUpgradeOrBuyout;\n
+          \       }\n    }\n}\n\nfunction isJSONEmpty(jsonObject) {\n    var member;\n
+          \   var result = true;\n    for (member in jsonObject) {\n        if (jsonObject[member]
+          != null) {\n            result = false;\n        }\n    }\n    return result;\n}"
+        description: GW Script to get upgrade options from upgrade eligibility
+    - gatewayscript:
+        title: GS-GetUpgradesAndPromotions
+        version: 1.0.0
+        source: "/* *****************************************************************************************************
+          */\n/* *****************************************************************************************************
+          */\n/* FileName                         Version    Created By             Modified
+          By         Date           */\n/* GetUpgradesAndPromotions.js      1.0        Dinesh
+          Tomar                               20-Apr-2018    */\n/*                                                                                                       */\n/*
+          *****************************************************************************************************
+          */\n/* Purpose: This GW Script to get upgrade and promotions from upgrade
+          options                            */\n/*                                                                                                       */\n/*
+          Required params:                                                                                      */\n/*
+          *****************************************************************************************************
+          */\nvar today = new Date();\nvar messages = apim.getvariable('messages-property.body');\nvar
+          ssoLink = apim.getvariable('consolidatedAuthResponse.body').ssoLink;\nvar
+          upgradeOptions = apim.getvariable('upgradeOptions');\nvar upgradeEligibility
+          = apim.getvariable('upgradeEligibility');\nvar replacingParamsJSON = populateReplacingParams(upgradeOptions,
+          ssoLink);\nconsole.log(\"populateReplacingParams done\");\nconsole.log(JSON.stringify(replacingParamsJSON));\nvar
+          upgradesAndPromotionsJSON = {\n};\nupgradesAndPromotionsJSON = getUpgradesAndPromotionsResponse(upgradesAndPromotionsJSON,
+          upgradeOptions, messages, replacingParamsJSON);\napim.setvariable('message.body',
+          upgradesAndPromotionsJSON);\nconsole.log(\"UpgradesAndPromotionsJSON:=\");\nconsole.log(JSON.stringify(upgradesAndPromotionsJSON));\n\nfunction
+          getUpgradesAndPromotionsResponse(upgradesAndPromotionsJSON, upgradeOptions,
+          messages, replacingParamsJSON) {\n    upgradesAndPromotionsJSON.shortMessage
+          = buildShortMessage(upgradeOptions, messages, replacingParamsJSON);\n    console.log(\"buildShortMessage
+          done\");\n    var upgradePromotion = upgradeOptions.promotion;\n    if (!(isJSONEmpty(upgradePromotion))
+          && hasBuyOutOrTradinPromotion(upgradeOptions.promotionTypes)) {\n        var
+          upgrade = {\n        };\n        upgrade.header = {\n            \"1\":
+          null,\n            \"2\": null\n        };\n        upgradesAndPromotionsJSON.upgrade
+          = upgrade;\n    } else {\n        upgradesAndPromotionsJSON = getUpgradeResponse(upgradesAndPromotionsJSON,
+          upgradeOptions, messages, replacingParamsJSON);\n    }\n    console.log(\"getUpgradeResponse
+          done\");\n    var promotion = getPromotion(upgradeOptions, messages, replacingParamsJSON);\n
+          \   console.log(\"getPromotion done\");\n    var boltonPromotions = getBoltonPromotionsResponse(upgradeOptions.boltonPromotions);\n
+          \   if (! isJSONEmpty(boltonPromotions)) {\n        upgradesAndPromotionsJSON.boltonPromotions
+          = boltonPromotions;\n    }    \n    console.log(\"getBoltonPromotionsResponse
+          done\");\n    if (!(isJSONEmpty(promotion)) && !(isJSONEmpty(upgradePromotion))
+          && (upgradePromotion.type != null)){\n        upgradesAndPromotionsJSON.promotion
+          = promotion;\n    }\n    \n    var timeUntilUpgradeOrPromotion;\n    if
+          (! isJSONEmpty(upgradeOptions.timeUntilUpgradeOrPromotion)) {\n        timeUntilUpgradeOrPromotion
+          = upgradeOptions.timeUntilUpgradeOrPromotion;\n    }\n    var alert = getAlert(messages,
+          upgradeOptions, upgradeOptions.promotion, replacingParamsJSON, timeUntilUpgradeOrPromotion);\n
+          \   upgradesAndPromotionsJSON.alert = alert;\n    upgradesAndPromotionsJSON.timeUntilUpgradeOrPromotion
+          = timeUntilUpgradeOrPromotion;\n    /*var showOffers = !(hasBuyOutTradinS2RBolton(upgradeOptions.promotionTypes)
+          || (!(isJSONEmpty(upgradeOptions.upgrade))  && (upgradeOptions.upgrade.noUpgradeReason
+          != null)));\n    upgradesAndPromotionsJSON.showVisionOffers = showOffers;\n
+          \   upgradesAndPromotionsJSON.showRecycleOffers = showOffers;\n    upgradesAndPromotionsJSON.immediateUpgrade
+          = (upgradeOptions.upgrade.partner == 'O2') && ((((isJSONEmpty(upgradeOptions.promotionTypes)
+          || JSON.stringify(upgradeOptions.promotionTypes).includes('BOLTON')) &&
+          upgradeOptions.upgrade.eligibilityStatus == 'FREE')) || hasBuyOutTradinS2R(upgradeOptions.promotionTypes));*/\n
+          \   var showOffers = hasNoBuyOutTradinS2RBolton(upgradeOptions.promotionTypes);\n
+          \   upgradesAndPromotionsJSON.showVisionOffers = showOffers;\n    upgradesAndPromotionsJSON.showRecycleOffers
+          = showOffers;\n    return upgradesAndPromotionsJSON;\n}\n\nfunction buildShortMessage(upgradeOptions,
+          messages, replacingParamsJSON) {\n    var shortMessage;\n    var upgradeOption
+          = upgradeOptions.upgrade;\n    var promotion = upgradeOptions.promotion;\n
+          \   var upgradeEligibility = upgradeOption.eligibilityStatus.toLowerCase();\n
+          \   if (upgradeOption.partner == 'NON_O2') {\n        if (upgradeOption.isS2R)
+          {\n            shortMessage = messages.upgrade.non_o2[upgradeEligibility].s2r['short'];\n
+          \       } else {\n            shortMessage = messages.upgrade.non_o2[upgradeEligibility]['short'];\n
+          \       }\n    } else {\n        if (upgradeOption.eligibilityStatus ==
+          'NONE') {\n            var noUpgradeReason = upgradeOption.noUpgradeReason.toString();\n
+          \           noUpgradeReason = noUpgradeReason.toLowerCase();\n            console.log(noUpgradeReason);\n
+          \           shortMessage = messages.upgrade.none[noUpgradeReason]['short'];\n
+          \       } else if (! isJSONEmpty(promotion) && upgradeOption.eligibilityStatus
+          != 'FREE') {\n            shortMessage = messages.upgrade[promotion.type.toLowerCase()][promotion.eligibilityStatus.toLowerCase()]['short'];\n
+          \       } else {\n            if (upgradeOption.isS2R) {\n                shortMessage
+          = messages.upgrade.o2[upgradeEligibility][upgradeOption.tariff.toLowerCase()].s2r['short'];\n
+          \           } else {\n                shortMessage = messages.upgrade.o2[upgradeEligibility][upgradeOption.tariff.toLowerCase()]['short'];\n
+          \           }\n        }\n    }\n    return evaluateStringWithJSONPath(shortMessage,
+          replacingParamsJSON, '#');\n}\n\nfunction getUpgradeResponse(upgradesAndPromotionsJSON,
+          upgradeOptions, messages, replacingParamsJSON) {\n    var upgradeOption
+          = upgradeOptions.upgrade;\n    var eligibilityStatus = upgradeOption.eligibilityStatus.toLowerCase();\n
+          \   var eligibilityStatusJSON = getEligibilityStatusJSON(upgradeOption,
+          messages);\n    var noUpgradeReason;\n    if (upgradeOption.noUpgradeReason
+          != null) {\n        noUpgradeReason = upgradeOption.noUpgradeReason.toLowerCase();\n
+          \   }\n    var partner = upgradeOption.partner.toLowerCase();\n    var tariff;\n
+          \   if (upgradeOption.tariff != null) {\n        tariff = upgradeOption.tariff.toLowerCase();\n
+          \   }\n    var upgrade = {\n    };\n    upgrade.eligibilityStatus = upgradeOption.eligibilityStatus;\n
+          \   console.log(\"before build header\");\n    upgrade.header = buildUpgradeHeader(eligibilityStatusJSON,
+          replacingParamsJSON);\n    console.log(\"after build header\");\n    if
+          (!(((upgradeOption.tariff == 'CCA') || (upgradeOption.tariff == 'CCA_STAFF')
+          || (upgradeOption.partner == 'NON_O2')) && (upgradeOption.eligibilityStatus
+          == 'PAID'))) {\n        /*if (upgradeOption.tariff != null && upgradeOption.tariff
+          == 'CCA') {\n            upgrade.subheader = evaluateStringWithJSONPath(messages.upgrade[eligibilityStatus].cca.subheader,
+          replacingParamsJSON, '#');\n        } else if (upgradeOption.tariff != null
+          && upgradeOption.tariff == 'CCA_STAFF') {\n            upgrade.subheader
+          = evaluateStringWithJSONPath(messages.upgrade[eligibilityStatus].cca_staff.subheader,
+          replacingParamsJSON, '#');\n        } else if (upgradeOption.isS2R != null
+          && upgradeOption.isS2R) {\n            upgrade.subheader = evaluateStringWithJSONPath(messages.upgrade[eligibilityStatus].s2r.subheader,
+          replacingParamsJSON, '#');\n        } else if (upgradeOption.partner !=
+          null && upgradeOption.partner == 'NON_O2') {\n            upgrade.subheader
+          = evaluateStringWithJSONPath(messages.upgrade.non_o2[eligibilityStatus].subheader,
+          replacingParamsJSON, '#');\n        } else {\n            upgrade.subheader
+          = evaluateStringWithJSONPath(messages.upgrade[eligibilityStatus].subheader,
+          replacingParamsJSON, '#');\n        }*/\n        upgrade.subheader = evaluateStringWithJSONPath(eligibilityStatusJSON.subheader,
+          replacingParamsJSON, '#');\n    }\n    var longMessageString;\n    if (upgradeOption.eligibilityStatus
+          == 'NONE') {\n        /*var links = {\n        };\n        links.payment
+          = ssoLink;\n        upgradesAndPromotionsJSON.links = links;*/\n        console.log(\"long
+          message : NONE\");\n        longMessageString = messages.upgrade[eligibilityStatus][noUpgradeReason]['long'];\n
+          \   } else {\n        if (partner == 'o2') {\n            if (upgradeOption.isS2R)
+          {\n                console.log(\"long message : o2 s2r\");\n                longMessageString
+          = messages.upgrade.o2[eligibilityStatus][tariff].s2r['long'];\n            }
+          else {\n                console.log(\"long message : o2 not s2r\");\n                longMessageString
+          = messages.upgrade.o2[eligibilityStatus][tariff]['long'];\n            }\n
+          \       } else {\n            if (upgradeOption.isS2R) {\n                console.log(\"long
+          message : non o2 s2r\");\n                longMessageString = messages.upgrade.non_o2[eligibilityStatus].s2r['long'];\n
+          \           } else {\n                console.log(\"long message : non o2
+          not s2r\");\n                longMessageString = messages.upgrade.non_o2[eligibilityStatus]['long'];\n
+          \           }\n        }\n    }\n    longMessageString = evaluateStringWithJSONPath(longMessageString,
+          replacingParamsJSON, '#');\n    console.log(\"long msg string \"+longMessageString);\n
+          \   var longMessages;\n    if (longMessageString.toString().length > 0)
+          {\n        longMessages = longMessageString.split(\"|\");\n    }\n    console.log(\"long
+          msgs \"+longMessages);\n    upgrade.longMessages = longMessages;\n    if
+          (upgradeOption.showUpgradeLink) {\n        upgrade.link = ssoLink;\n        upgrade.button
+          = eligibilityStatusJSON.button;\n        /*if (upgradeOption.tariff == 'CCA')
+          {\n            upgrade.button = messages.upgrade[eligibilityStatus].cca.button;\n
+          \       } else {\n            upgrade.button = messages.upgrade[eligibilityStatus].button;\n
+          \       }*/\n    }\n    if (upgradeOption.eligibilityStatus == 'NONE') {\n
+          \       var links = {\n        };\n        links.payment = ssoLink;\n        upgradesAndPromotionsJSON.links
+          = links;\n    } \n    upgrade.cost = upgradeOption.upgradeCost;\n    upgrade.freeUpgradeDate
+          = formatDate(upgradeOption.freeUpgradeDate);\n    upgradesAndPromotionsJSON.upgrade
+          = upgrade;\n    return upgradesAndPromotionsJSON;\n}\n\nfunction buildUpgradeHeader(eligibilityStatusJSON,
+          replacingParamsJSON) {\n    console.log(\"inside build header\");\n    var
+          header = {\n        \"1\": null,\n        \"2\": null\n    };\n    console.log(JSON.stringify(header));\n
+          \   header['1'] = evaluateStringWithJSONPath(eligibilityStatusJSON.header.one,
+          replacingParamsJSON, '#');\n    header['2'] = evaluateStringWithJSONPath(eligibilityStatusJSON.header.two,
+          replacingParamsJSON, '#');\n    console.log(JSON.stringify(header));\n    return
+          header;\n}\n\nfunction buildPromotionHeader(messages, eligibilityStatus,
+          promotionType, replacingParamsJSON) {\n    console.log(\"after promotional
+          build header\");\n    var header = {\n        \"1\": null,\n        \"2\":
+          null\n    };\n    header['1'] = evaluateStringWithJSONPath(messages['promotion'][promotionType][eligibilityStatus].header.one,
+          replacingParamsJSON, '#');\n    header['2'] = evaluateStringWithJSONPath(messages['promotion'][promotionType][eligibilityStatus].header.two,
+          replacingParamsJSON, '#');\n    return header;\n}\n\nfunction getPromotion(upgradeOptions,
+          messages, replacingParamsJSON) {\n    console.log(\"***inside getPromotion
+          function\");\n    var upgradeOption = upgradeOptions.upgrade;\n    var upgradePromotion
+          = upgradeOptions.promotion;\n    if (! isJSONEmpty(upgradePromotion) &&
+          upgradeOption.eligibilityStatus != 'FREE') {\n        console.log(\"***inside
+          getPromotion function *** first if\");\n        var promotionEligibility
+          = upgradePromotion.eligibilityStatus.toLowerCase();\n        var promotionType
+          = upgradePromotion.type.toLowerCase();\n        var promotion = {\n        };\n
+          \       promotion.eligibilityStatus = upgradePromotion.eligibilityStatus;\n
+          \       promotion.header = buildPromotionHeader(messages, promotionEligibility,
+          promotionType, replacingParamsJSON);\n        console.log(\"***inside getPromotion
+          function *** first if continued\");\n        if (promotion.eligibilityStatus
+          != 'ELIGIBLE'){\n            promotion.subheader = evaluateStringWithJSONPath(messages.promotion[promotionType][promotionEligibility].subheader,
+          replacingParamsJSON, '#');\n        }        \n        var longMessageString
+          = evaluateStringWithJSONPath(messages.promotion[promotionType][promotionEligibility].
+          long, replacingParamsJSON, '#');\n        console.log(\"***inside getPromotion
+          function *** first if still continued\");\n        var longMessages =[];\n
+          \       longMessages = longMessageString.split(\"|\");\n        var isRedirectTradeinCustomersToStore
+          = messages.redirectTradeinCustomersToStore;\n        var sendCustomersToStore
+          = (isRedirectTradeinCustomersToStore && upgradePromotion.type == 'TRADEIN');\n
+          \       if (sendCustomersToStore) {\n            console.log(\"***inside
+          getPromotion function *** nested first if\");\n            longMessages
+          = ((evaluateStringWithJSONPath(messages.promotion[promotionType][promotionEligibility].instore,
+          replacingParamsJSON, '#')).split(\"|\"));\n            if (upgradePromotion.eligibilityStatus
+          == 'ELIGIBLE') {\n                promotion.button = messages.label.storelocator;\n
+          \           }\n        } else {\n            console.log(\"***inside getPromotion
+          function *** nested first else\");\n            promotion.button = evaluateStringWithJSONPath(messages.promotion[promotionType][promotionEligibility].button,
+          replacingParamsJSON, '#');\n        }\n        if (upgradePromotion.showPromotionLink)
+          {\n            console.log(\"***inside getPromotion function *** nested
+          second if\");\n            if (sendCustomersToStore) {\n                promotion.link
+          = messages.storelocator.url;\n            } else {\n                promotion.link
+          = ssoLink;\n            }\n        }\n        console.log(\"***inside getPromotion
+          function *** again inside first if\");\n        promotion.longMessages =
+          longMessages;\n        promotion.startDate = upgradePromotion.startDate;\n
+          \       promotion.endDate = upgradePromotion.endDate;\n        return promotion;\n
+          \   }\n    return null;\n}\n\nfunction getBoltonPromotionsResponse(boltonPromotions)
+          {\n    console.log(JSON.stringify(boltonPromotions));\n    var promotions
+          =[];\n    if (! isJSONEmpty(boltonPromotions)) {\n        var i;\n        for
+          (i = 0; i < boltonPromotions.length; i++) {\n            var promo = {\n
+          \           };\n            promo.description = boltonPromotions[i].description;\n
+          \           promotions.push(promo);\n        }\n    }\n    console.log(JSON.stringify(promotions));\n
+          \   return promotions;\n}\n\nfunction populateReplacingParams(upgradeOptions,
+          ssoLink) {\n    var replacingParamsJSON = {\n    };\n    replacingParamsJSON.upgradeCost
+          = upgradeOptions.upgrade.upgradeCost;\n    replacingParamsJSON.paymentLink
+          = ssoLink;\n    replacingParamsJSON.freeUpgradeDate = upgradeOptions.upgrade.freeUpgradeDate;\n
+          \   if (! isJSONEmpty(upgradeOptions.timeUntilUpgradeOrPromotion)) {\n        replacingParamsJSON.duration
+          = upgradeOptions.timeUntilUpgradeOrPromotion.duration;\n        replacingParamsJSON.timeUnit
+          = upgradeOptions.timeUntilUpgradeOrPromotion.timeUnit;\n    }\n    return
+          replacingParamsJSON;\n}\n\nfunction evaluateStringWithJSONPath(inputString,
+          JSONSource, delimiter) {\n    var nullVar = null;\n    if (inputString !=
+          null){\n        var strArray = inputString.split(delimiter);\n        var
+          i;\n        var evaluatedString = \"\";\n        for (i = 0; i < strArray.length;
+          i++) {\n            if (strArray[i].startsWith('$')) {\n                evaluatedString
+          += JSONSource[strArray[i].substr(1)];\n            } else {\n                evaluatedString
+          += strArray[i];\n            }\n        }\n        return evaluatedString;\n
+          \   }\n    else {\n        return nullVar;\n    }\n}\n\nfunction formatDate(inputDate)
+          {\n    if (inputDate != null) {\n        var day = inputDate.substr(0, 2);\n
+          \       var month = inputDate.substr(3, 2);\n        var year = inputDate.substr(6,
+          4);\n        var monthMap = {\n            \"01\": \"January\",\n            \"02\":
+          \"February\",\n            \"03\": \"March\",\n            \"04\": \"April\",\n
+          \           \"05\": \"May\",\n            \"06\": \"June\",\n            \"07\":
+          \"July\",\n            \"08\": \"August\",\n            \"09\": \"September\",\n
+          \           \"10\": \"October\",\n            \"11\": \"November\",\n            \"12\":
+          \"December\"\n        };\n        var formattedDate = day + \" \" + monthMap[month]
+          + \" \" + year;\n        return formattedDate;\n    }\n}\n\nfunction isJSONEmpty(jsonObject)
+          {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+          {\n        if (jsonObject[member] != null) {\n            result = false;\n
+          \       }\n    }\n    return result;\n}\n\nfunction getEligibilityStatusJSON(upgradeOption,
+          messages) {\n    var eligibilityStatus = upgradeOption.eligibilityStatus.toLowerCase();\n
+          \   if (upgradeOption.tariff != null && upgradeOption.tariff == 'CCA') {\n
+          \       console.log(\"messages.upgrade.\"+eligibilityStatus+\".cca\");\n
+          \       return messages.upgrade[eligibilityStatus].cca;\n    } else if (upgradeOption.tariff
+          != null && upgradeOption.tariff == 'CCA_STAFF') {\n        console.log(\"messages.upgrade.\"+eligibilityStatus+\".cca_staff\");\n
+          \       return messages.upgrade[eligibilityStatus].cca_staff;\n    } else
+          if (upgradeOption.isS2R != null && upgradeOption.isS2R) {\n        console.log(\"messages.upgrade.\"+eligibilityStatus+\".s2r\");\n
+          \       return messages.upgrade[eligibilityStatus].s2r;\n    } else if (upgradeOption.partner
+          != null && upgradeOption.partner == 'NON_O2') {\n        console.log(\"messages.upgrade.non_o2.\"+eligibilityStatus);\n
+          \       return messages.upgrade.non_o2[eligibilityStatus];\n    } else {\n
+          \       console.log(\"messages.upgrade.\"+eligibilityStatus);\n        return
+          messages.upgrade[eligibilityStatus];\n    }\n}\n\nfunction getAlert(messages,
+          upgradeOptions, promotion, replacingParamsJSON, timeUntilUpgradeOrPromotion){\n
+          \   var thirdPartyUpgradeAcquisitionPartners = messages.thirdPartyUpgradeAcquisitionPartners;\n
+          \   var isUpgradeAllowedWithLastPartner = false;\n    if (upgradeOptions
+          != null && upgradeOptions.lastUpgradeOrAcquisitionPartner != null && thirdPartyUpgradeAcquisitionPartners.includes(upgradeOptions.lastUpgradeOrAcquisitionPartner))
+          {\n        isUpgradeAllowedWithLastPartner = true;\n    }\n    var promoBannerNotificationDuration
+          = messages.promoBannerNotificationDuration;\n    var upgradeBannerNotificationDuration
+          = messages.upgradeBannerNotificationDuration;\n    var alert = {\n    };\n
+          \   if (isUpgradeAllowedWithLastPartner) {\n    } else if (upgradeOptions.upgrade.eligibilityStatus
+          == 'FREE') {\n        alert.text = evaluateStringWithJSONPath(messages.upgrade.free.alert,
+          replacingParamsJSON, '#');\n        alert.id = \"upgrade_free\";\n        alert.type
+          = \"UPGRADE\";\n    } else if (! isJSONEmpty(promotion)) {\n        var
+          promotionType = promotion.type.toLowerCase();\n        if (promotion.eligibilityStatus
+          == 'ELIGIBLE') {\n            alert.text = evaluateStringWithJSONPath(messages.promotion[promotionType].eligible.alert,
+          replacingParamsJSON, '#');\n            alert.id = \"promotion_\" + upgradeOptions.promotion.promotionId
+          + \"_eligible\";\n            alert.type = \"PROMOTION\";\n            alert.expiryDate
+          = promotion.endDate;\n        } else {            \n            if (! isJSONEmpty(timeUntilUpgradeOrPromotion))
+          {\n                // code needs to chenage later for duration in months\n
+          \               var duration = timeUntilUpgradeOrPromotion.duration;\n                var
+          timeUnit = timeUntilUpgradeOrPromotion.timeUnit;\n                var durationInMonths;\n
+          \               if (timeUnit == 'months'){\n                    durationInMonths
+          = duration;\n                }\n                else {\n                    durationInMonths
+          = duration / 30;\n                }\n                if (durationInMonths
+          <= promoBannerNotificationDuration){\n                    alert.text = evaluateStringWithJSONPath(messages.promotion[promotionType].not_yet_eligible.alert,
+          replacingParamsJSON, '#');\n                    alert.id = \"promotion_\"
+          + upgradeOptions.promotion.promotionId + \"_not_yet_eligible\";\n                    alert.type
+          = \"PROMOTION\";\n                    alert.expiryDate = promotion.endDate;\n
+          \               }\n            }\n        }\n    } else if (upgradeOptions.upgrade.eligibilityStatus
+          == 'PAID') {        \n        if (! isJSONEmpty(timeUntilUpgradeOrPromotion))
+          {\n            // code needs to chenage later for duration in months\n            var
+          duration = timeUntilUpgradeOrPromotion.duration;\n            var timeUnit
+          = timeUntilUpgradeOrPromotion.timeUnit;\n            var durationInMonths;\n
+          \           if (timeUnit == 'months'){\n                durationInMonths
+          = duration;\n            }\n            else {\n                durationInMonths
+          = duration / 30;\n            }\n            if (durationInMonths <= upgradeBannerNotificationDuration){\n
+          \               alert.type = \"UPGRADE\";\n                if (upgradeOptions.upgrade.S2R)
+          {\n                    alert.text = evaluateStringWithJSONPath(messages.upgrade.free.alert,
+          replacingParamsJSON, '#');\n                    alert.id = \"upgrade_free\";\n
+          \               } else {\n                    alert.text = evaluateStringWithJSONPath(messages.upgrade.paid.alert,
+          replacingParamsJSON, '#');\n                    alert.id = \"upgrade_paid\";\n
+          \                   alert.expiryDate = upgradeOptions.upgrade.freeUpgradeDate;\n
+          \               }\n            }\n        }\n    } else if (upgradeOptions.upgrade.noUpgradeReason
+          == 'FREE_IN_FUTURE') {\n        // code needs to chenage later for duration
+          in months\n        if (! isJSONEmpty(timeUntilUpgradeOrPromotion) && timeUntilUpgradeOrPromotion.duration
+          <= upgradeBannerNotificationDuration) {\n            alert.text = evaluateStringWithJSONPath(messages.upgrade.paid.alert,
+          replacingParamsJSON, '#');\n            alert.id = \"upgrade_free_in_future\";\n
+          \           alert.type = \"UPGRADE\";\n            alert.expiryDate = upgradeOptions.upgrade.freeUpgradeDate;\n
+          \       }\n    }\n    if (! isJSONEmpty(alert)){\n        return alert;
+          \  \n    }\n}\n\nfunction hasBuyOutOrTradinPromotion(promotionTypes) {\n
+          \   var promotionTypesStr = JSON.stringify(promotionTypes);\n    return
+          promotionTypesStr.includes('TRADEIN_STARTED') || promotionTypesStr.includes('TRADEIN_FUTURE')
+          || promotionTypesStr.includes('BUYOUT_STARTED') || promotionTypesStr.includes('BUYOUT_FUTURE');\n}\n\nfunction
+          hasBuyOutTradinS2RBolton(promotionTypes) {\n    var promotionTypesStr =
+          JSON.stringify(promotionTypes);\n    return promotionTypesStr.includes('TRADEIN_STARTED')
+          || promotionTypesStr.includes('BUYOUT_STARTED') || promotionTypesStr.includes('S2R')
+          || promotionTypesStr.includes('BOLTON');\n}\n\nfunction hasBuyOutTradinS2R(promotionTypes)
+          {\n    var promotionTypesStr = JSON.stringify(promotionTypes);\n    return
+          promotionTypesStr.includes('TRADEIN_STARTED') || promotionTypesStr.includes('BUYOUT_STARTED')
+          || promotionTypesStr.includes('S2R');\n}\n\nfunction hasNoBuyOutTradinS2RBolton(promotionTypes)
+          {\n    var promotionTypesStr = JSON.stringify(promotionTypes);\n    return
+          !promotionTypesStr.includes('TRADEIN_STARTED') && !promotionTypesStr.includes('BUYOUT_STARTED')
+          && !promotionTypesStr.includes('S2R');\n}"
+        description: GW Script to get upgrades and promotions from upgrade options
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ExtractFinalLoggingData
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* ExtractFinalLoggingData.js    1.0        Dinesh Tomar                                          06-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will extract final metadata for logging                                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          //Extract general metadata from system variables
+          var systemDateTime = apim.getvariable('system.datetime');
+          var apicTxId = apim.getvariable('apic-transaction-id');
+          var xGlobalTxId = apim.getvariable('request.headers.x-global-transaction-id');
+          var requestURI = apim.getvariable('request.uri');
+
+          //Extract response metadata from system variables
+          var responseHeaders = apim.getvariable('message.headers');
+
+          delete responseHeaders['Accept-Encoding'];
+          delete responseHeaders['X-Global-Transaction-ID'];
+          delete responseHeaders['User-Agent'];
+          delete responseHeaders['Via'];
+          delete responseHeaders['x-authcode'];
+          delete responseHeaders['authorization'];
+          delete responseHeaders['Authorization'];
+          delete responseHeaders['Access-Control-Allow-Methods'];
+          delete responseHeaders['Access-Control-Allow-Origin'];
+          delete responseHeaders['Access-Control-Allow-Headers'];
+          delete responseHeaders['Access-Control-Expose-Headers'];
+
+          var responseHeadersString = JSON.stringify(responseHeaders);
+          var responseStatusCode = apim.getvariable('message.status.code');
+          var responseStatusReason = apim.getvariable('message.status.reason');
+          //calculate time elapsed
+          var apiStartTimeMS = apim.getvariable('apiStartTimeMS');
+          var apiEndTimeMS = (new Date()).getTime();
+          var totalTimeElapsed = (apiEndTimeMS - apiStartTimeMS) + " ms";
+          var logString = "type:=response"
+                          + " | system-datetime:=" +        systemDateTime
+                          + " | apic-transaction-id:=" +    apicTxId
+                          + " | global-transaction-id:=" +  xGlobalTxId
+                          + " | request-uri:=" +            requestURI
+                          + apim.getvariable('logString')
+                          + " | response-http-headers:=" +  responseHeadersString
+                          + " | response-status-code:=" +   responseStatusCode
+                          + " | response-status-reason:=" + responseStatusReason
+                          + " | total-time-elapsed:=" +     totalTimeElapsed
+                          + " | Final-response:=" +     JSON.stringify(apim.getvariable('message.body'))
+                          ;
+          console.log(logString);
+        description: This GW Script will extract final metadata for logging
+    catch:
+    - errors:
+      - InvalidMsisdn
+      - InvalidAuthCode
+      - InvalidDeviceType
+      - ConnectionError
+      - OperationError
+      - SOAPError
+      - UnauthorizedError
+      - BackendError
+      execute:
+      - gatewayscript:
+          title: GS-ErrorHandling
+          version: 1.0.0
+          source: "/* ******************************************************************************************************************
+            */\n/* ******************************************************************************************************************
+            */\n/* FileName                           Version    Created By                  Modified
+            By               Date           */\n/* Errorhandling.js                   1.0
+            \       Dinesh Tomar                                          07-May-2018
+            \   */\n/*                                                                                                                    */\n/*
+            ******************************************************************************************************************
+            */\n/* Purpose: This GW Script file will read error config for the catch
+            block error name and will set the necessary      */\n/*          params
+            like status code, reason phrase and will return the error json                                     */\n/*
+            Required params: errorName                                                                                         */\n/*
+            ******************************************************************************************************************
+            */\nvar urlOpen = require('urlopen');\n//form url for to fetch errorConfig
+            JSON\nvar orgName = apim.getvariable('api.org.name');\nvar catalog = apim.getvariable('env.path');\napim.setvariable('apicURLPrefix',
+            'https://0.0.0.0:9443/'+orgName+'/'+catalog);\nvar errorConfigURL = apim.getvariable('apicURLPrefix')
+            +'/config/errorconfig';\nvar clientId = apim.getvariable('client.app.id');\napim.setvariable('message.headers.content-type',
+            'application/json');\nvar errorConfigURLOptions = {\n    target: errorConfigURL,\n
+            \   sslClientProfile: 'api-sslcli-all',\n    headers: {'x-ibm-client-id':
+            clientId, 'content-type': 'application/json' }\n};\n//fetch errorName
+            and errorConfig JSON from context variables\nurlOpen.open(errorConfigURLOptions,
+            function (error, response) {\n    if (error) {\n        throw error;\n
+            \   } else {\n        response.readAsJSON(function (error, errorConfigJSON)
+            {\n            if (error) {\n                throw error;\n            }
+            else {\n                var errorName = apim.getvariable('errorName');\n
+            \               if (errorName == null) {\n                    errorName
+            = 'default';\n                } \n                if (apim.getvariable('message.status.reason')
+            != null && apim.getvariable('message.status.reason').startsWith('APIC:')
+            ) {\n                    errorName = 'default';\n                    apim.setvariable('message.status.code',
+            apim.getvariable('message.status.code'));\n                    apim.setvariable('message.status.reason',
+            apim.getvariable('message.status.reason'));\n                    apim.setvariable('message.body',
+            apim.getvariable('message.body'));\n                } else {\n                    if
+            (errorName == 'BackendError') {\n                        var errorDetails
+            = errorConfigJSON.errorConfig.errorTypes[errorName];\n                        apim.setvariable('message.status.reason',
+            errorDetails.reasonPhrase);\n                        var errorMessage
+            = errorDetails.errorMessage;\n                        errorMessage.error.message
+            = apim.getvariable('error-message');\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                    //fetch specific
+            block from error config JSON\n                    else if (! isJSONEmpty(errorConfigJSON))
+            {\n                        var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];\n
+            \                       var statusCode = errorDetails.statusCode;\n                        var
+            reasonPhrase = errorDetails.reasonPhrase;\n                        var
+            errorMessage = errorDetails.errorMessage;\n                        apim.setvariable('message.status.code',
+            statusCode);\n                        apim.setvariable('message.status.reason',
+            reasonPhrase);\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                    //else block
+            executes in case error config file is not loaded. it will set a default
+            error message\n                    else {\n                        apim.setvariable('message.status.code',
+            500);\n                        apim.setvariable('message.status.reason',
+            'Internal Error');\n                        var errorMessage = {};\n                        errorMessage.httpCode
+            = 500;\n                        errorMessage.httpMessage = \"Internal
+            Error\";\n                        errorMessage.moreInformation = \"Something's
+            wrong. Please try again later.\";\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                }\n            }\n
+            \       });\n    }\n});\n\n//below function checks if json object is null
+            or not\nfunction isJSONEmpty(jsonObject) {\n    var member;\n    var result
+            = true;\n    for (member in jsonObject) {\n        if (jsonObject[member]
+            != null) {\n            result = false;\n        }\n    }\n    return
+            result;\n}"
+          description: This GW Script file will read error config for the catch block
+            error name and will set the necessary params like status code, reason
+            phrase and will return the error json
+      - gatewayscript:
+          version: 1.0.0
+          title: GS-ExtractErrorLoggingData
+          source: "/* *************************************************************************************************************
+            */\n/* *************************************************************************************************************
+            */\n/* FileName                      Version    Created By                  Modified
+            By               Date           */\n/* ExtractErrorLoggingData.js    1.0
+            \       Dinesh Tomar                                          06-July-2018
+            \  */\n/*                                                                                                               */\n/*
+            *************************************************************************************************************
+            */\n/* Purpose: This GW Script will extract error metadata for logging
+            \                                              */\n/*                                                                                                               */\n/*
+            Required params:                                                                                              */\n/*
+            ***************************************************************************************************************/\n//Extract
+            general metadata from system variables\nvar systemDateTime = apim.getvariable('system.datetime');\nvar
+            apicTxId = apim.getvariable('apic-transaction-id');\nvar xGlobalTxId =
+            apim.getvariable('request.headers.x-global-transaction-id');\nvar requestURI
+            = apim.getvariable('request.uri');\n\n//Extract response metadata from
+            system variables\nvar responseHeaders = apim.getvariable('message.headers');\n\ndelete
+            responseHeaders['Accept-Encoding'];\ndelete responseHeaders['X-Global-Transaction-ID'];\ndelete
+            responseHeaders['User-Agent'];\ndelete responseHeaders['Via'];\ndelete
+            responseHeaders['x-authcode'];\ndelete responseHeaders['authorization'];\ndelete
+            responseHeaders['Authorization'];\ndelete responseHeaders['Access-Control-Allow-Methods'];\ndelete
+            responseHeaders['Access-Control-Allow-Origin'];\ndelete responseHeaders['Access-Control-Allow-Headers'];\ndelete
+            responseHeaders['Access-Control-Expose-Headers'];\n\nvar responseHeadersString
+            = JSON.stringify(responseHeaders);\nvar responseStatusCode = apim.getvariable('message.status.code');\nvar
+            responseStatusReason = apim.getvariable('message.status.reason');\nvar
+            errorName = apim.getvariable('errorName');\n//calculate time elapsed\nvar
+            apiStartTimeMS = apim.getvariable('apiStartTimeMS');\nvar apiEndTimeMS
+            = (new Date()).getTime();\nvar totalTimeElapsed = (apiEndTimeMS - apiStartTimeMS)
+            + \" ms\";\n\nvar logString = \"type:=error\"\n                + \" |
+            system-datetime:=\" +        systemDateTime\n                + \" | apic-transaction-id:=\"
+            +    apicTxId\n                + \" | global-transaction-id:=\" +  xGlobalTxId\n
+            \               + \" | request-uri:=\" +            requestURI\n                +
+            apim.getvariable('logString')\n                + \" | response-http-headers:=\"
+            +  responseHeadersString\n                + \" | response-status-code:=\"
+            +   responseStatusCode\n                + \" | response-status-reason:=\"
+            + responseStatusReason\n                + \" | error-name:=\" +             errorName\n
+            \               + \" | total-time-elapsed:=\" +     totalTimeElapsed;\n
+            \               \nconsole.log(logString);\n\n"
+          description: This GW Script will extract error metadata for logging
+  gateway: datapower-gateway
+  type: rest
+parameters:
+  msisdn:
+    name: msisdn
+    type: integer
+    in: path
+    required: true
+  x-authcode:
+    name: x-authcode
+    type: string
+    in: header
+  x-device:
+    name: x-device
+    type: string
+    in: header
+  x-user-id:
+    name: x-user-id
+    type: string
+    in: header
+  x-client-id:
+    name: x-client-id
+    type: string
+    in: header
+  x-correlator:
+    name: x-correlator
+    type: string
+    in: header
+tags: []
+definitions:
+  Alert:
+    type: object
+    properties:
+      text:
+        type: string
+      id:
+        type: string
+      type:
+        type: string
+        enum:
+        - UPGRADE
+        - PROMOTION
+        - EARLYUPGRADE
+      expiryDate:
+        type: string
+        format: date-time
+    additionalProperties: false
+  TimeUntilUpgradeOrPromotion:
+    properties:
+      duration:
+        type: integer
+        format: int32
+      timeUnit:
+        type: string
+    additionalProperties: false
+  TimeUntilUpgradeOrBuyout:
+    properties:
+      duration:
+        type: integer
+        format: int32
+      timeUnit:
+        type: string
+    additionalProperties: false
+  Header:
+    properties:
+      get1:
+        type: string
+      get2:
+        type: string
+  Buyout:
+    properties:
+      eligibilityStatus:
+        type: string
+        enum:
+        - ELIGIBLE
+        - NOT_YET_ELIGIBLE
+      header:
+        $ref: '#/definitions/Header'
+      subheader:
+        type: string
+      longMessages:
+        type: array
+        items:
+        - type: string
+      button:
+        type: string
+      link:
+        type: string
+      buyoutDate:
+        type: string
+    additionalProperties: false
+  Promotion:
+    properties:
+      eligibilityStatus:
+        type: string
+        enum:
+        - ELIGIBLE
+        - NOT_YET_ELIGIBLE
+      header:
+        $ref: '#/definitions/Header'
+      subheader:
+        type: string
+      longMessages:
+        type: array
+        items:
+        - type: string
+      button:
+        type: string
+      link:
+        type: string
+      startDate:
+        type: string
+      endDate:
+        type: string
+        format: date-time
+    additionalProperties: false
+  Upgrade:
+    properties:
+      eligibilityStatus:
+        type: string
+        enum:
+        - NONE
+        - FREE
+        - PAID
+      header:
+        $ref: '#/definitions/Header'
+      subheader:
+        type: string
+      longMessages:
+        type: array
+        items:
+        - type: string
+      button:
+        type: string
+      link:
+        type: string
+      cost:
+        type: string
+      freeUpgradeDate:
+        type: string
+    additionalProperties: false
+  PromotionResponse:
+    properties:
+      description:
+        type: string
+    additionalProperties: false
+  UpgradeResponse:
+    properties:
+      shortMessage:
+        type: string
+      buyout:
+        $ref: '#/definitions/Buyout'
+      promotion:
+        $ref: '#/definitions/Promotion'
+      boltonPromotions:
+        $ref: '#/definitions/PromotionResponse'
+      upgrade:
+        $ref: '#/definitions/Upgrade'
+      timeUntilUpgradeOrBuyout:
+        $ref: '#/definitions/TimeUntilUpgradeOrBuyout'
+      timeUntilUpgradeOrPromotion:
+        $ref: '#/definitions/TimeUntilUpgradeOrPromotion'
+      alert:
+        $ref: '#/definitions/Alert'
+      links:
+        type: object
+    additionalProperties: false
+paths:
+  /{msisdn}/postpay/upgradesandpromotions:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            $ref: '#/definitions/UpgradeResponse'
+    parameters:
+    - $ref: '#/parameters/msisdn'
+    - $ref: '#/parameters/x-authcode'
+    - $ref: '#/parameters/x-device'
+    - $ref: '#/parameters/x-user-id'
+    - $ref: '#/parameters/x-client-id'
+    - $ref: '#/parameters/x-correlator'

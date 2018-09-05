@@ -1,0 +1,581 @@
+swagger: "2.0"
+info:
+  title: o2apic-cachinglayer
+  x-ibm-name: o2apic-cachinglayer
+  version: 1.0.0
+host: $(catalog.host)
+schemes:
+- https
+basePath: /apic
+produces:
+- application/xml
+- application/json
+consumes:
+- application/json
+security:
+- clientIdHeader: []
+securityDefinitions:
+  clientIdHeader:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+x-ibm-configuration:
+  phase: realized
+  testable: true
+  enforced: true
+  cors:
+    enabled: true
+  application-authentication:
+    certificate: false
+  targets:
+    LoanInfoRetriever_Service:
+      swagger: "2.0"
+      info:
+        title: LoanInfoRetriever_Service
+        description: WSDL File for LoanInfoRetriever
+        x-ibm-name: loaninforetrieverservice-1
+        version: 1.0.0
+      schemes:
+      - https
+      basePath: /LoanInfoRetriever_Service
+      produces:
+      - application/xml
+      consumes:
+      - text/xml
+      securityDefinitions:
+        clientID:
+          type: apiKey
+          name: X-IBM-Client-Id
+          in: header
+          description: ""
+      security:
+      - clientID: []
+      x-ibm-configuration:
+        type: wsdl
+        wsdl-definition:
+          wsdl: 5abb63850cf2c55e48f993e4
+          service: LoanInfoRetriever_Service
+          port: LoanInfoRetriever_Port
+          soap-version: "1.1"
+        assembly:
+          execute:
+          - proxy:
+              title: proxy
+              target-url: http://www.examples.com/getLoanInfo/
+        gateway: datapower-gateway
+        enforced: true
+        testable: true
+        phase: realized
+        cors:
+          enabled: true
+      paths:
+        /getLoanInfo:
+          post:
+            summary: Operation getLoanInfo
+            description: ""
+            operationId: getLoanInfo
+            x-ibm-soap:
+              soap-action: getLoanInfo
+              soap-operation: '{http://www.examples.com/wsdl/LoanInfoRetriever.wsdl}getLoanInfo'
+            parameters:
+            - in: body
+              name: body
+              required: true
+              schema:
+                $ref: '#/x-ibm-configuration/targets/LoanInfoRetriever_Service/definitions/getLoanInfoInput'
+            responses:
+              default:
+                description: ""
+                schema:
+                  $ref: '#/x-ibm-configuration/targets/LoanInfoRetriever_Service/definitions/getLoanInfoOutput'
+      definitions:
+        Security:
+          xml:
+            namespace: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+            prefix: wsse
+          type: object
+          properties:
+            UsernameToken:
+              xml:
+                namespace: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+                prefix: wsse
+              type: object
+              properties:
+                Username:
+                  xml:
+                    namespace: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+                    prefix: wsse
+                  type: string
+                Password:
+                  xml:
+                    namespace: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+                    prefix: wsse
+                  type: string
+                Nonce:
+                  xml:
+                    namespace: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+                    prefix: wsse
+                  type: string
+                  properties:
+                    EncodingType:
+                      xml:
+                        namespace: ""
+                        attribute: true
+                      type: string
+                Created:
+                  xml:
+                    namespace: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+                    prefix: wsu
+                  type: string
+            Timestamp:
+              xml:
+                namespace: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+                prefix: wsu
+              type: object
+              properties:
+                Created:
+                  xml:
+                    namespace: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+                    prefix: wsu
+                  type: string
+                Expires:
+                  xml:
+                    namespace: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+                    prefix: wsu
+                  type: string
+                Id:
+                  xml:
+                    namespace: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd
+                    prefix: wsu
+                    attribute: true
+                  type: string
+        getLoanInfoInput:
+          type: object
+          properties:
+            Envelope:
+              xml:
+                prefix: soapenv
+                namespace: http://schemas.xmlsoap.org/soap/envelope/
+              type: object
+              properties:
+                Header:
+                  $ref: '#/x-ibm-configuration/targets/LoanInfoRetriever_Service/definitions/getLoanInfoHeader'
+                Body:
+                  type: object
+                  properties:
+                    getLoanInfo:
+                      $ref: '#/x-ibm-configuration/targets/LoanInfoRetriever_Service/definitions/getLoanInfoRequest_tns'
+                  required:
+                  - getLoanInfo
+              required:
+              - Body
+          required:
+          - Envelope
+          example: |2-
+
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+             <soapenv:Header>
+              <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+               <wsse:UsernameToken>
+                <wsse:Username>string</wsse:Username>
+                <wsse:Password>string</wsse:Password>
+                <wsse:Nonce EncodingType="string">string</wsse:Nonce>
+                <wsu:Created>string</wsu:Created>
+               </wsse:UsernameToken>
+               <wsu:Timestamp wsu:Id="string">
+                <wsu:Created>string</wsu:Created>
+                <wsu:Expires>string</wsu:Expires>
+               </wsu:Timestamp>
+              </wsse:Security>
+             </soapenv:Header>
+             <soapenv:Body>
+              <tns:getLoanInfo xmlns:tns="http://www.examples.com/wsdl/LoanInfoRetriever.wsdl"><!-- mandatory -->
+               <customerId>string</customerId>
+              </tns:getLoanInfo>
+             </soapenv:Body>
+            </soapenv:Envelope>
+        getLoanInfoHeader:
+          type: object
+          properties:
+            Security:
+              $ref: '#/x-ibm-configuration/targets/LoanInfoRetriever_Service/definitions/Security'
+        getLoanInfoOutput:
+          type: object
+          properties:
+            Envelope:
+              xml:
+                prefix: soapenv
+                namespace: http://schemas.xmlsoap.org/soap/envelope/
+              type: object
+              properties:
+                Body:
+                  type: object
+                  properties:
+                    getLoanInfoResponse:
+                      $ref: '#/x-ibm-configuration/targets/LoanInfoRetriever_Service/definitions/getLoanInfoResponse_tns'
+              required:
+              - Body
+          required:
+          - Envelope
+          example: |2-
+
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+             <soapenv:Body>
+              <tns:getLoanInfoResponse xmlns:tns="http://www.examples.com/wsdl/LoanInfoRetriever.wsdl">
+               <bankCode>string</bankCode>
+               <loanAmount>3.14</loanAmount>
+              </tns:getLoanInfoResponse>
+             </soapenv:Body>
+            </soapenv:Envelope>
+        getLoanInfoRequest_tns:
+          xml:
+            namespace: http://www.examples.com/wsdl/LoanInfoRetriever.wsdl
+            prefix: tns
+          type: object
+          properties:
+            customerId:
+              type: string
+          example: |2-
+
+            <tns:getLoanInfo xmlns:tns="http://www.examples.com/wsdl/LoanInfoRetriever.wsdl">
+             <customerId>string</customerId>
+            </tns:getLoanInfo>
+        getLoanInfoResponse_tns:
+          xml:
+            namespace: http://www.examples.com/wsdl/LoanInfoRetriever.wsdl
+            prefix: tns
+          type: object
+          properties:
+            bankCode:
+              type: string
+            loanAmount:
+              type: number
+              format: double
+          example: |2-
+
+            <tns:getLoanInfoResponse xmlns:tns="http://www.examples.com/wsdl/LoanInfoRetriever.wsdl">
+             <bankCode>string</bankCode>
+             <loanAmount>3.14</loanAmount>
+            </tns:getLoanInfoResponse>
+  assembly:
+    execute:
+    - activity-log:
+        title: Log-Payload
+        content: payload
+        error-content: payload
+        version: 1.0.0
+    - gatewayscript:
+        title: GS-CreateBackendProxyURL
+        version: 1.0.0
+        source: "/* ******************************************************************************************************************
+          */\n/* ******************************************************************************************************************
+          */\n/* FileName                           Version    Created By                  Modified
+          By               Date           */\n/* CreateBackendProxyURL.js           1.0
+          \       Dinesh Tomar                                          07-May-2018
+          \   */\n/*                                                                                                                    */\n/*
+          ******************************************************************************************************************
+          */\n/* Purpose: This GW Script file will validate the query paraams, decide
+          the backend type and then create the next     */\n/*          call URL                                                                                                  */\n/*
+          Required params: x-servicetype, x-service, x-operation                                                             */\n/*
+          ******************************************************************************************************************
+          */\nvar serviceType = apim.getvariable('request.parameters.x-servicetype');\nvar
+          service = apim.getvariable('request.parameters.x-service');\nvar operation
+          = apim.getvariable('request.parameters.x-operation');\n\nif (serviceType
+          == null || serviceType == undefined || (serviceType != 'soap' & serviceType
+          != 'rest')) {\n    apim.setvariable('errorName', 'InvalidServiceType');\n
+          \   apim.error('InvalidServiceType', 500, 'Internal Error', 'Missing or
+          invalid service type');\n} else if (service == null || service == undefined
+          || operation == null || operation == undefined) {\n    apim.setvariable('errorName',
+          'InvalidServiceOrOperation');\n    apim.error('InvalidServiceOrOperation',
+          500, 'Internal Error', 'Service or operation name is either missing or invalid');\n}
+          else {\n    var inputRequestParams = apim.getvariable('request.parameters');\n
+          \   var paramsKeys = Object.keys(inputRequestParams);\n    var paramsCount
+          = paramsKeys.length;\n    var cacheKey = inputRequestParams[paramsKeys[0]]
+          + \"-\";\n    var requestURI = \"\";\n    for (var i = 1; i < paramsCount;
+          i++) {\n        if (inputRequestParams[paramsKeys[i]] != null ) {\n            requestURI
+          += paramsKeys[i] + \"=\" + inputRequestParams[paramsKeys[i]];\n            cacheKey
+          += inputRequestParams[paramsKeys[i]];\n            if (i != paramsCount
+          -1) {\n                requestURI += \"&\";\n                cacheKey +=
+          '-';\n            }\n        }\n    }\n    \n    var soapBackendEndpoint
+          = \"\";\n    var restBackendEndpoint = \"\";\n    var orgName = apim.getvariable('api.org.name');\n
+          \   var catalog = apim.getvariable('env.path');\n    apim.setvariable('apicURLPrefix',
+          'https://0.0.0.0:9443/'+orgName+'/'+catalog);\n    if (serviceType == 'soap')
+          {\n        soapBackendEndpoint = apim.getvariable('apicURLPrefix')+\"/backendproxy/getsoapresponse?\"
+          + requestURI;\n        apim.setvariable('message.headers.content-type',
+          'application/xml');\n        apim.setvariable('soapBackendEndpoint', soapBackendEndpoint);\n
+          \   } else {\n        restBackendEndpoint = apim.getvariable('apicURLPrefix')+\"/backendproxy/getrestresponse?\"
+          + requestURI;\n        apim.setvariable('message.headers.content-type',
+          'application/json');\n        apim.setvariable('restBackendEndpoint', restBackendEndpoint);\n
+          \   }\n    apim.setvariable('message.headers.x-ibm-client-id', apim.getvariable('client.app.id'));\n
+          \   apim.setvariable('message.headers.cacheKey', cacheKey);\n    apim.setvariable('cacheKey',
+          cacheKey);\n}"
+        description: This GW Script file will validate the query paraams, decide the
+          backend type and then create the next call URL
+    - switch:
+        title: SwitchCase-CallServiceType
+        case:
+        - condition: apim.getvariable('soapBackendEndpoint') != null
+          execute:
+          - invoke:
+              title: Invoke-SOAPBackendProxy
+              timeout: 60
+              verb: GET
+              cache-response: time-to-live
+              stop-on-error:
+              - ConnectionError
+              - OperationError
+              - SOAPError
+              version: 1.0.0
+              target-url: $(soapBackendEndpoint)
+              cache-ttl: 60
+              cache-key: $(cacheKey)
+        - condition: apim.getvariable('restBackendEndpoint') != null
+          execute:
+          - invoke:
+              title: Invoke-RESTBackendProxy
+              timeout: 60
+              verb: GET
+              cache-response: time-to-live
+              stop-on-error:
+              - ConnectionError
+              - OperationError
+              - SOAPError
+              version: 1.0.0
+              target-url: $(restBackendEndpoint)
+              cache-ttl: 30
+              cache-key: $(cacheKey)
+        version: 1.0.0
+    catch:
+    - errors:
+      - InvalidServiceType
+      - InvalidServiceOrOperation
+      - InvalidService
+      - InvalidOperation
+      - MissingPathParam
+      - MissingQueryParam
+      - MissingHeadersParam
+      - ConnectionError
+      - OperationError
+      - SOAPError
+      - UnauthorizedError
+      execute:
+      - gatewayscript:
+          title: GS-ErrorHandling
+          version: 1.0.0
+          source: "/* ******************************************************************************************************************
+            */\n/* ******************************************************************************************************************
+            */\n/* FileName                           Version    Created By                  Modified
+            By               Date           */\n/* Errorhandling.js                   1.0
+            \       Dinesh Tomar                                          07-May-2018
+            \   */\n/*                                                                                                                    */\n/*
+            ******************************************************************************************************************
+            */\n/* Purpose: This GW Script file will read error config for the catch
+            block error name and will set the necessary      */\n/*          params
+            like status code, reason phrase and will return the error json                                     */\n/*
+            Required params: errorName                                                                                         */\n/*
+            ******************************************************************************************************************
+            */\nvar urlOpen = require('urlopen');\n//form url for to fetch errorConfig
+            JSON\nvar orgName = apim.getvariable('api.org.name');\nvar catalog = apim.getvariable('env.path');\napim.setvariable('apicURLPrefix',
+            'https://0.0.0.0:9443/'+orgName+'/'+catalog);\nvar errorConfigURL = apim.getvariable('apicURLPrefix')
+            +'/config/errorconfig';\nvar clientId = apim.getvariable('client.app.id');\napim.setvariable('message.headers.content-type',
+            'application/json');\nvar errorConfigURLOptions = {\n    target: errorConfigURL,\n
+            \   sslClientProfile: 'api-sslcli-all',\n    headers: {'x-ibm-client-id':
+            clientId, 'content-type': 'application/json' }\n};\n//fetch errorName
+            and errorConfig JSON from context variables\nurlOpen.open(errorConfigURLOptions,
+            function (error, response) {\n    if (error) {\n        throw error;\n
+            \   } else {\n        response.readAsJSON(function (error, errorConfigJSON)
+            {\n            if (error) {\n                throw error;\n            }
+            else {\n                var errorName = apim.getvariable('errorName');\n
+            \               if (errorName == null) {\n                    errorName
+            = 'default';\n                } \n                if (apim.getvariable('message.status.reason')
+            != null && apim.getvariable('message.status.reason').startsWith('APIC:')
+            ) {\n                    errorName = 'default';\n                    apim.setvariable('message.status.code',
+            apim.getvariable('message.status.code'));\n                    apim.setvariable('message.status.reason',
+            apim.getvariable('message.status.reason'));\n                    apim.setvariable('message.body',
+            apim.getvariable('message.body'));\n                } else {\n                    if
+            (errorName == 'BackendError') {\n                        var errorDetails
+            = errorConfigJSON.errorConfig.errorTypes[errorName];\n                        apim.setvariable('message.status.reason',
+            errorDetails.reasonPhrase);\n                        var errorMessage
+            = errorDetails.errorMessage;\n                        errorMessage.error.message
+            = apim.getvariable('error-message');\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                    //fetch specific
+            block from error config JSON\n                    else if (! isJSONEmpty(errorConfigJSON))
+            {\n                        var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];\n
+            \                       var statusCode = errorDetails.statusCode;\n                        var
+            reasonPhrase = errorDetails.reasonPhrase;\n                        var
+            errorMessage = errorDetails.errorMessage;\n                        apim.setvariable('message.status.code',
+            statusCode);\n                        apim.setvariable('message.status.reason',
+            reasonPhrase);\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                    //else block
+            executes in case error config file is not loaded. it will set a default
+            error message\n                    else {\n                        apim.setvariable('message.status.code',
+            500);\n                        apim.setvariable('message.status.reason',
+            'Internal Error');\n                        var errorMessage = {};\n                        errorMessage.httpCode
+            = 500;\n                        errorMessage.httpMessage = \"Internal
+            Error\";\n                        errorMessage.moreInformation = \"Something's
+            wrong. Please try again later.\";\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                }\n            }\n
+            \       });\n    }\n});\n\n//below function checks if json object is null
+            or not\nfunction isJSONEmpty(jsonObject) {\n    var member;\n    var result
+            = true;\n    for (member in jsonObject) {\n        if (jsonObject[member]
+            != null) {\n            result = false;\n        }\n    }\n    return
+            result;\n}"
+          description: This GW Script file will read error config for the catch block
+            error name and will set the necessary params like status code, reason
+            phrase and will return the error json
+  gateway: datapower-gateway
+  type: rest
+parameters:
+  x-servicetype:
+    name: x-servicetype
+    type: string
+    in: query
+    required: false
+  x-service:
+    name: x-service
+    type: string
+    in: query
+    required: false
+  x-operation:
+    name: x-operation
+    type: string
+    in: query
+    required: false
+  x-msisdn:
+    name: x-msisdn
+    type: string
+    in: query
+    required: false
+  x-number1:
+    name: x-number1
+    type: string
+    in: query
+    required: false
+  x-number2:
+    name: x-number2
+    type: string
+    in: query
+    required: false
+  x-customerid:
+    name: x-customerid
+    type: string
+    in: query
+    required: false
+  x-bankcode:
+    name: x-bankcode
+    type: string
+    in: query
+    required: false
+  x-loanamount:
+    name: x-loanamount
+    type: string
+    in: query
+    required: false
+  x-interestrate:
+    name: x-interestrate
+    type: string
+    in: query
+    required: false
+  x-durationmonths:
+    name: x-durationmonths
+    type: string
+    in: query
+    required: false
+  x-authcode:
+    name: x-authcode
+    type: string
+    in: query
+    required: false
+  authorization:
+    name: authorization
+    type: string
+    in: query
+    required: false
+  x-firstname:
+    name: x-firstname
+    type: string
+    in: query
+    required: false
+  x-lastname:
+    name: x-lastname
+    type: string
+    in: query
+    required: false
+  x-dateofbirth:
+    name: x-dateofbirth
+    type: string
+    in: query
+    required: false
+  x-addressline1:
+    name: x-addressline1
+    type: string
+    in: query
+    required: false
+  x-addressline2:
+    name: x-addressline2
+    type: string
+    in: query
+    required: false
+  x-addressline3:
+    name: x-addressline3
+    type: string
+    in: query
+    required: false
+  x-city:
+    name: x-city
+    type: string
+    in: query
+    required: false
+  x-state:
+    name: x-state
+    type: string
+    in: query
+    required: false
+  x-country:
+    name: x-country
+    type: string
+    in: query
+    required: false
+  x-pincode:
+    name: x-pincode
+    type: string
+    in: query
+    required: false
+  x-accountnumber:
+    name: x-accountnumber
+    type: string
+    in: query
+    required: false
+tags: []
+definitions: {}
+paths:
+  /callbackendproxyapi:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+    parameters:
+    - $ref: '#/parameters/x-servicetype'
+    - $ref: '#/parameters/x-service'
+    - $ref: '#/parameters/x-operation'
+    - $ref: '#/parameters/x-msisdn'
+    - $ref: '#/parameters/x-authcode'
+    - $ref: '#/parameters/authorization'
+    - $ref: '#/parameters/x-number1'
+    - $ref: '#/parameters/x-number2'
+    - $ref: '#/parameters/x-customerid'
+    - $ref: '#/parameters/x-bankcode'
+    - $ref: '#/parameters/x-loanamount'
+    - $ref: '#/parameters/x-interestrate'
+    - $ref: '#/parameters/x-durationmonths'
+    - $ref: '#/parameters/x-firstname'
+    - $ref: '#/parameters/x-lastname'
+    - $ref: '#/parameters/x-dateofbirth'
+    - $ref: '#/parameters/x-addressline1'
+    - $ref: '#/parameters/x-addressline2'
+    - $ref: '#/parameters/x-addressline3'
+    - $ref: '#/parameters/x-city'
+    - $ref: '#/parameters/x-state'
+    - $ref: '#/parameters/x-country'
+    - $ref: '#/parameters/x-pincode'
+    - $ref: '#/parameters/x-accountnumber'

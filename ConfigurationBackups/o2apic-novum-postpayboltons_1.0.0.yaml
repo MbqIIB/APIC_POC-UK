@@ -1,0 +1,816 @@
+swagger: "2.0"
+info:
+  title: o2apic-novum-postpayboltons
+  x-ibm-name: o2apic-novum-postpayboltons
+  version: 1.0.0
+host: $(catalog.host)
+schemes:
+- https
+basePath: /apic
+produces:
+- application/json
+consumes:
+- application/json
+security:
+- clientIdHeader: []
+  clientSecretHeader: []
+securityDefinitions:
+  clientSecretHeader:
+    type: apiKey
+    description: clientSecretHeader
+    name: X-IBM-Client-Secret
+    in: header
+  clientIdHeader:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+x-ibm-configuration:
+  phase: realized
+  testable: true
+  enforced: true
+  properties:
+    target-url:
+      value: ""
+      description: The URL of the target service
+      encoded: false
+    auth-400:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    auth-401:
+      value: That PIN isn't the one you've used before. Please try again or change
+        your PIN.
+      description: That PIN isn't the one you've used before. Please try again or
+        change your PIN.
+    auth-500:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    auth-404:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    phoneservice-error:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    other-backend-error:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+  cors:
+    enabled: true
+  application-authentication:
+    certificate: false
+  assembly:
+    execute:
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ExtractInputLoggingData
+        source: "/* *************************************************************************************************************
+          */\n/* *************************************************************************************************************
+          */\n/* FileName                      Version    Created By                  Modified
+          By               Date           */\n/* ExtractInputLoggingData.js    1.0
+          \       Dinesh Tomar                                          06-July-2018
+          \  */\n/*                                                                                                               */\n/*
+          *************************************************************************************************************
+          */\n/* Purpose: This GW Script will extract input metadata for logging                                               */\n/*
+          \                                                                                                              */\n/*
+          Required params:                                                                                              */\n/*
+          ***************************************************************************************************************/\n//Extract
+          general metadata from system variables\nvar apiStartTimeMS = (new Date()).getTime();\napim.setvariable('apiStartTimeMS',
+          apiStartTimeMS);\nvar systemDateTime = apim.getvariable('system.datetime');\nvar
+          apicTxId = \"\";\nif (apim.getvariable('request.headers.apic-transaction-id')){\n
+          \   apicTxId = apim.getvariable('request.headers.apic-transaction-id');\n}\nelse
+          {\n    apicTxId = uuidv4();\n}\napim.setvariable('apic-transaction-id',
+          apicTxId);\napim.setvariable('message.headers.apic-transaction-id', apicTxId);\n\nvar
+          xGlobalTxId = apim.getvariable('request.headers.x-global-transaction-id');\n\n//Extract
+          client metadata from system variables\nvar clientIPAddress = apim.getvariable('request.headers.x-client-ip');\nvar
+          clientId = apim.getvariable('client.app.id');\nvar clientAppName = apim.getvariable('client.app.name');\nvar
+          clientAppType = apim.getvariable('client.app.type');\nvar clientOrgName
+          = apim.getvariable('client.org.name');\n\n//Extract api metadata from system
+          variables\nvar apiName = apim.getvariable('api.name');\nvar apiVersion =
+          apim.getvariable('api.version');\nvar providerOrgName = apim.getvariable('api.org.name');\nvar
+          catalogName = apim.getvariable('env.path');\nvar apiBasePath = apim.getvariable('api.root');\nvar
+          operationPath = apim.getvariable('api.operation.path');\n\n\n//Extract product
+          metadata from system variables\n//var productName = apim.getvariable('product.name');\n//var
+          productVersion = apim.getvariable('product.version');\nvar planName = apim.getvariable('plan.name');\nvar
+          planVersion = apim.getvariable('plan.version');\nvar planRateLimit = apim.getvariable('plan.rate-limit');\n\n//Extract
+          request metadata from system variables\nvar requestMethod = apim.getvariable('request.verb');\nvar
+          requestURI = apim.getvariable('request.uri');\nvar requestHeaders = apim.getvariable('request.headers');\n\ndelete
+          requestHeaders['accept-encoding'];\ndelete requestHeaders['x-global-transaction-id'];\ndelete
+          requestHeaders['user-agent'];\ndelete requestHeaders['via'];\n//delete requestHeaders['x-authcode'];\ndelete
+          requestHeaders['authorization'];\n\nvar requestHeadersString = JSON.stringify(requestHeaders);\n\nvar
+          logString = \"type:=request\"\n                + \" | system-datetime:=\"
+          +        systemDateTime\n                + \" | apic-transaction-id:=\"
+          +    apicTxId\n                + \" | global-transaction-id:=\" +  xGlobalTxId\n
+          \               + \" | consumer-ip-address:=\" +    clientIPAddress\n                +
+          \" | x-ibm-client-id:=\" +        clientId\n                + \" | client-app-name:=\"
+          +        clientAppName\n                + \" | client-app-type:=\" +        clientAppType\n
+          \               + \" | client-org-name:=\" +        clientOrgName\n                +
+          \" | api-name:=\" +               apiName\n                + \" | api-version:=\"
+          +            apiVersion\n                + \" | provider-org-name:=\" +
+          \     providerOrgName\n                + \" | catalog-name:=\" +           catalogName\n
+          \               + \" | api-base-path:=\" +          apiBasePath\n                +
+          \" | operation-path:=\" +         operationPath\n                + \" |
+          plan-name:=\" +              planName\n                + \" | plan-version:=\"
+          +           planVersion\n                + \" | plan-rate-limit:=\" +        planRateLimit\n
+          \               + \" | request-http-method:=\" +    requestMethod\n                +
+          \" | request-uri:=\" +            requestURI\n                + \" | request-http-headers:=\"
+          +   requestHeadersString;\n                \nconsole.log(logString);\nlogString
+          = \"\";\napim.setvariable('logString', logString);\n\nfunction uuidv4()
+          {\n    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function
+          (c) {\n        var r = Math.random() * 16 | 0, v = c == 'x' ? r: (r & 0x3
+          | 0x8);\n        return v.toString(16);\n    });\n}"
+        description: This GW Script will extract input metadata for logging
+    - activity-log:
+        title: Log-Payload
+        content: payload
+        error-content: payload
+        version: 1.0.0
+    - gatewayscript:
+        title: GS-FetchValidationConfig
+        version: 1.0.0
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* FetchValidationConfig.js      1.0        Dinesh Tomar                                          04-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will create URL to fetch validation config for all apis                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          var clientId = apim.getvariable('client.app.id');
+          apim.setvariable('message.headers.x-ibm-client-id', clientId);
+          apim.setvariable('message.headers.content-type', 'application/json');
+          //form url for to fetch errorConfig JSON
+          var orgName = apim.getvariable('api.org.name');
+          var catalog = apim.getvariable('env.path');
+          apim.setvariable('apicURLPrefix', 'https://0.0.0.0:9443/'+orgName+'/'+catalog);
+          var validationConfigURL = apim.getvariable('apicURLPrefix')+'/'+'config/validationconfig';
+          apim.setvariable('validationConfigURL', validationConfigURL);
+
+          //record time in ms just before the invoke policy
+          apim.setvariable('startTimeMS', (new Date()).getTime());
+          apim.setvariable('policyName', 'Invoke-ValidationConfig');
+        description: This GW Script will create URL to fetch validation config for
+          all apis
+    - invoke:
+        title: Invoke-ValidationConfig
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        version: 1.0.0
+        description: Load all validation config in context
+        target-url: $(validationConfigURL)
+        output: validationConfig
+        stop-on-error:
+        - ConnectionError
+        tls-profile: o2apic-internal-tls-client-profile:1.0.0
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ValidateParams
+        source: "/* **********************************************************************************************************
+          */\n/* **********************************************************************************************************
+          */\n/* FileName                   Version    Created By                  Modified
+          By               Date           */\n/* ValidateParams.js          1.0        Dinesh
+          Tomar                                          03-July-2018   */\n/*                                                                                                            */\n/*
+          **********************************************************************************************************
+          */\n/* Purpose: This GW Script file will return all API configurations to
+          be used for validating input params     */\n/*                                                                                                            */\n/*
+          Required params:                                                                                           */\n/*
+          ************************************************************************************************************/\n\n//record
+          time in ms just after the invoke policy\nvar endTimeMS = (new Date()).getTime();\nvar
+          timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\nvar
+          logString = apim.getvariable('logString');\n\nvar validationConfig = apim.getvariable('validationConfig.body');\nif
+          (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+          'BackendError');\n    var errorPropertyName = 'other-backend-error';\n    logString
+          += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+          logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\n}\nelse {\n    logString
+          += \" | \" + apim.getvariable('policyName') + \":=\" + timeTakenByPreviousPolicy
+          + \" ms\";\n    apim.setvariable('logString', logString);\n    var apiName
+          = apim.getvariable('api.name');\n    var operationName = apim.getvariable('api.operation.path');\n
+          \   var apiConfig = validationConfig.apisConfig[apiName][operationName];\n
+          \   var paramsConfig = validationConfig.paramsConfig;\n    var requiredPathParams
+          = apiConfig.requiredPathParams;\n    var requiredQueryParams = apiConfig.requiredQueryParams;\n
+          \   var requiredHeaderParams = apiConfig.requiredHeaderParams;\n    validateRequiredParams('headers',
+          requiredHeaderParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredQueryParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredPathParams, paramsConfig);\n    //record time in ms just before
+          the invoke policy\n    apim.setvariable('startTimeMS', (new Date()).getTime());\n
+          \   apim.setvariable('policyName', 'Invoke-PropertiesHandler');\n}\n\nfunction
+          validateRequiredParams(paramType, requiredParams, paramsConfig){\n    if
+          (requiredParams !== \"\"){\n        var reqParams = requiredParams.split('|');\n
+          \       for (var i = 0; i < reqParams.length; i++){\n            var paramConfig
+          = paramsConfig[reqParams[i]];\n            var inputParam = apim.getvariable('request.'+paramType+'.'+reqParams[i]);\n
+          \           var nullValidation = ((inputParam != undefined) || (inputParam
+          != null));\n            if (nullValidation){\n                var dataTypeValidation
+          = true;\n                dataTypeValidation = validateDataType(inputParam,
+          paramConfig);\n                var lengthValidation = true;\n                var
+          allowedValuesValidation = true;\n                if (paramConfig.manLength
+          || paramConfig.maxLength){\n                    lengthValidation = validateLength(inputParam,
+          paramConfig);\n                }\n                if (paramConfig.allowedValues){\n
+          \                   allowedValuesValidation = validateAllowedValues(inputParam,
+          paramConfig);\n                }\n                if (!(dataTypeValidation)
+          || !(lengthValidation) || !(allowedValuesValidation)){\n                    apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                    apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \                   return;\n                }\n                else {\n
+          \                   apim.setvariable('message.headers.'+reqParams[i], inputParam);\n
+          \                   var clientId = apim.getvariable('client.app.id');\n
+          \                   apim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\n                    apim.setvariable('message.headers.content-type',
+          'application/json');\n                    //form url for to fetch properties
+          config JSON\n                    var configPropertiesURL = apim.getvariable('apicURLPrefix')+'/'+'config/properties';\n
+          \                   apim.setvariable('configPropertiesURL', configPropertiesURL);\n
+          \               }\n            }\n            else {\n                apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \               return;\n            }\n            \n        }\n    }\n}\n\nfunction
+          validateDataType(inputParam, paramConfig){\n    if (paramConfig.dataType
+          == 'number'){\n        return !(isNaN(parseInt(inputParam)));\n    }\n    else
+          if (paramConfig.dataType == 'email'){ \n        if (inputParam.includes('.')
+          && inputParam.includes('@') && (! inputParam.includes(' ')))\n            return
+          true;\n        else\n            return false;\n    }\n    else if (paramConfig.dataType
+          == 'string'){\n        if (inputParam != null && inputParam.length != 0)\n
+          \           return true;\n        else\n            return false;\n    }\n
+          \   else if (paramConfig.dataType == 'version'){\n        if (inputParam
+          == null || inputParam.length == 0)\n            return false;\n        else
+          if (inputParam.includes('.')) {\n            var splittedArray = inputParam.split('.');\n
+          \           var result = true;\n            for (var i = 0; i < splittedArray.length;
+          i++){\n                if (isNaN(parseInt(splittedArray[i]))){\n                    result
+          = false;\n                    return result;\n                }\n            }\n
+          \           return result;\n        }\n        else{\n            return
+          !(isNaN(parseInt(inputParam)));\n        }\n    }\n    else\n        return
+          true;\n}\n\nfunction validateLength(inputParam, paramConfig){\n    var minLength
+          = paramConfig.minLength;\n    var maxLength = paramConfig.maxLength;\n    if
+          ((inputParam.length >= minLength) && (inputParam.length <= maxLength))\n
+          \       return true;\n    else\n        return false;\n}\n\nfunction validateAllowedValues(inputParam,
+          paramConfig){\n    var allowedValues = paramConfig.allowedValues;\n    var
+          allowedValuesArray = allowedValues.split('|');\n    var result = false;\n
+          \   for (var i = 0; i < allowedValuesArray.length; i++){\n        if (allowedValuesArray[i]
+          == inputParam){\n            result = true;\n            return result;\n
+          \       }\n    }\n    return result;\n}\n\nfunction isJSONEmpty(jsonObject)
+          {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+          {\n        if (jsonObject[member] != null) {\n            result = false;\n
+          \       }\n    }\n    return result;\n}"
+        description: This GW Script file will return all API configurations to be
+          used for validating input params
+    - invoke:
+        target-url: $(configPropertiesURL)
+        title: Invoke-PropertiesHandler
+        description: Load all messages  and properties in context
+        output: messages-property
+        cache-response: time-to-live
+        cache-ttl: 60
+        stop-on-error:
+        - ConnectionError
+        tls-profile: o2apic-internal-tls-client-profile:1.0.0
+    - gatewayscript:
+        title: GS-SetSOAEndpoint
+        version: 1.0.0
+        source: "/* ******************************************************************************************************************
+          */\n/* ******************************************************************************************************************
+          */\n/* FileName                           Version    Created By                  Modified
+          By               Date           */\n/* SetSOAEndpoint.js                  1.0
+          \       Dinesh Tomar                                          25-Apr-2018
+          \   */\n/*                                                                                                                    */\n/*
+          ******************************************************************************************************************
+          */\n/* Purpose: This GW Script file will set SOA endpoint                                                                 */\n/*
+          \                                                                                                                   */\n/*
+          Required params:                                                                                                   */\n/*
+          ******************************************************************************************************************
+          */\n//record time in ms just after the invoke policy\nvar endTimeMS = (new
+          Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\nvar
+          logString = apim.getvariable('logString');\n\nif (apim.getvariable('message.status.code')
+          != 200) {\n    apim.setvariable('errorName', 'BackendError');\n    var errorPropertyName
+          = 'other-backend-error';\n    logString += \" | error-scenario:=\" + errorPropertyName;\n
+          \   apim.setvariable('logString', logString);\n    apim.setvariable('error-message',
+          apim.getvariable(errorPropertyName));\n    apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\n}\nelse {\n    logString
+          += \" | \" + apim.getvariable('policyName') + \":=\" + timeTakenByPreviousPolicy
+          + \" ms\";\n    apim.setvariable('logString', logString);\n    \n    var
+          messages = apim.getvariable('messages-property.body');\n    //get all input
+          parameters\n    var clientId = apim.getvariable('client.app.id');\n    var
+          msisdn = apim.getvariable('request.parameters.msisdn');\n    apim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\n    apim.setvariable('message.headers.msisdn', msisdn);\n    apim.setvariable('soaGetCurrentAndPendingBoltonsEndpoint',
+          messages.soa.getCurrentAndPendingBoltons.uri);\n}\n\nfunction isJSONEmpty(jsonObject)
+          {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+          {\n        if (jsonObject[member] != null) {\n            result = false;\n
+          \       }\n    }\n    return result;\n}"
+        description: This GW Script file will set SOA endpoint
+    - xslt:
+        title: XSLT-CurrentAndPendingBoltons-SOARequest
+        input: false
+        version: 1.0.0
+        source: "<!-- ***************************************************************************************************************
+          -->\r\n<!-- ***************************************************************************************************************
+          -->\r\n<!-- FileName                                 Version    Created
+          By             Modified By           Date           -->\r\n<!-- CurrentAndPendingBoltons-SOARequest.xsl
+          \ 1.0        Dinesh Tomar                                 25-Apr-2018    -->\r\n<!--
+          \                                                                                                                -->\r\n<!--
+          ***************************************************************************************************************
+          -->\r\n<!-- Purpose: This XSLT code will create SOAP request for getCurrentAndPendingBoltons
+          operation of                   -->\r\n<!--          managepostpayboltons
+          SOA service                                                                       -->\r\n<!--
+          Required params:                                                                                                -->\r\n<!--
+          ***************************************************************************************************************
+          -->\r\n<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"
+          xmlns:dp=\"http://www.datapower.com/extensions\" xmlns:func=\"http://exslt.org/functions\"
+          xmlns:apim=\"http://www.ibm.com/apimanagement\" extension-element-prefixes=\"dp
+          func apim\">\r\n    <xsl:import href=\"local:///isp/policy/apim.custom.xsl\"
+          />\r\n    <xsl:output method=\"xml\" omit-xml-declaration=\"yes\" indent=\"yes\"/>\r\n
+          \   <xsl:strip-space elements=\"*\"/>\r\n    <xsl:template match=\"/\">\r\n
+          \       <xsl:call-template name=\"apim:setVariable\">\r\n            <xsl:with-param
+          name=\"varName\" select=\"'message.headers.content-type'\" />\r\n            <xsl:with-param
+          name=\"value\" select=\"'application/xml'\" />\r\n        </xsl:call-template>\r\n
+          \       <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\r\n
+          \           <soap:Header xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\r\n\t\t\t\t<wsse:Security
+          xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">\r\n\t\t\t\t
+          \   <wsse:UsernameToken>\r\n\t\t\t\t\t\t<wsse:Username>apic_123</wsse:Username>\r\n\t\t\t\t\t\t<wsse:Password>t3st1ng</wsse:Password>\r\n\t\t\t\t\t</wsse:UsernameToken>\r\n\t\t\t\t</wsse:Security>\r\n
+          \           </soap:Header>\r\n            <soapenv:Body>\r\n                <ns2:getCurrentAndPendingBoltons
+          xmlns:ns2=\"http://soa.o2.co.uk/managepostpayboltonsdata_2\" xmlns:ns3=\"http://soa.o2.co.uk/coredata_1\"
+          xmlns=\"http://soa.o2.co.uk/pscommonpostpaydata_2\" xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\r\n
+          \                   <ns2:customerId>\r\n                        <ns3:msisdn><xsl:value-of
+          select=\"apim:getContext('request.parameters.msisdn')\"/></ns3:msisdn>\r\n
+          \                   </ns2:customerId>\r\n                    <ns2:returnSharedDataTopups>true</ns2:returnSharedDataTopups>\r\n
+          \                   <ns2:retrieveAdditionalInfo>\r\n                        <ns2:parameterName>BundleSize</ns2:parameterName>\r\n
+          \                   </ns2:retrieveAdditionalInfo>\r\n                </ns2:getCurrentAndPendingBoltons>\r\n
+          \           </soapenv:Body>\r\n        </soapenv:Envelope>\r\n        <!--record
+          time in ms just before the invoke policy-->\r\n        <xsl:call-template
+          name=\"apim:setVariable\">\r\n            <xsl:with-param name=\"varName\"
+          select=\"'startTimeMS'\"/>\r\n            <xsl:with-param name=\"value\"
+          select=\"dp:time-value()\"/>\r\n        </xsl:call-template>\r\n        <xsl:call-template
+          name=\"apim:setVariable\">\r\n            <xsl:with-param name=\"varName\"
+          select=\"'policyName'\"/>\r\n            <xsl:with-param name=\"value\"
+          select=\"'Invoke-GetCurrentAndPendingBoltons'\"/>\r\n        </xsl:call-template>\r\n
+          \   </xsl:template>\r\n</xsl:stylesheet>\r\n"
+        description: Extract msisdn from path and prepare request for SOA call
+    - invoke:
+        title: Invoke-GetCurrentAndPendingBoltons
+        target-url: $(soaGetCurrentAndPendingBoltonsEndpoint)
+        timeout: 60
+        verb: POST
+        cache-response: no-cache
+        cache-ttl: 60
+        tls-profile: apic-tls-client-profile:1.0.0
+        stop-on-error:
+        - ConnectionError
+        - OperationError
+        - SOAPError
+    - xslt:
+        title: XSLT-ConvertSOAPToXML
+        input: true
+        version: 1.0.0
+        source: |
+          <!-- *************************************************************************************************************** -->
+          <!-- *************************************************************************************************************** -->
+          <!-- FileName                             Version    Created By             Modified By               Date           -->
+          <!-- ConvertSOAPToXML.xsl                 1.0        Dinesh Tomar                                     25-Apr-2018    -->
+          <!--                                                                                                                 -->
+          <!-- *************************************************************************************************************** -->
+          <!-- Purpose: This XSLT code will create XML from SOAP message                                                       -->
+          <!--                                                                                                                 -->
+          <!-- Required params:                                                                                                -->
+          <!-- *************************************************************************************************************** -->
+          <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp">
+              <xsl:output method="xml" omit-xml-declaration="yes" indent="yes"/>
+              <xsl:strip-space elements="*"/>
+              <xsl:template match="@* | node()">
+                  <xsl:copy>
+                      <xsl:apply-templates select="@* | node()"/>
+                  </xsl:copy>
+              </xsl:template>
+              <xsl:template match="*">
+                  <xsl:element name="{local-name()}">
+                      <xsl:apply-templates select="child::node()"/>
+                  </xsl:element>
+              </xsl:template>
+          </xsl:stylesheet>
+        description: This XSLT code will create XML from SOAP message
+    - xml-to-json:
+        title: Convert-XML-to-JSON
+        version: 1.0.0
+    - gatewayscript:
+        title: GS-GetPostpayBoltons
+        version: 1.0.0
+        source: "/* *************************************************************************************************************
+          */\n/* *************************************************************************************************************
+          */\n/* FileName                         Version    Created By               Modified
+          By               Date           */\n/* CreatePostpayBoltonResponse.js   1.0
+          \       Dinesh Tomar                                       25-Apr-2018    */\n/*
+          \                                                                                                              */\n/*
+          *************************************************************************************************************
+          */\n/* Purpose: This GW Script file will create postpay boltons response
+          \                                            */\n/*                                                                                                               */\n/*
+          Required params:                                                                                              */\n/*
+          *************************************************************************************************************
+          */\n//record time in ms just after the invoke policy\nvar endTimeMS = (new
+          Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\nvar
+          logString = apim.getvariable('logString');\n\napim.setvariable('message.headers.content-type',
+          'application/json');\nvar messages = apim.getvariable('messages-property.body');\nvar
+          coreDataBoltOnFamilies = messages.coreDataBoltOnFamilies;\nvar internationalCallerStaffBoltonId
+          = messages.internationalCallerStaffBoltonId;\nvar internationalDealSeekerBoltons
+          = messages.intldealseekerBoltonIds;\nvar internationalDealSeekerURL = messages.intldealseekerBoltonUrl;\nvar
+          nonRemovableBoltons = messages.nonRemovableBoltons;\nvar oneOffBolton =
+          messages.oneOffBolton;\nvar tugoBoltonId = messages.tugoBoltonId;\nvar boltonsToBeExcluded
+          = messages.boltonsToBeExcluded;\nvar sortingFieldsArray =[ \"isFree\", \"isOneOff\",
+          \"isMonthly\", \"StartDate\", \"ProductId\"];\n\napim.readInputAsJSON(function
+          (error, soaResponseJSON) {\n    if (error) {\n        apim.setvariable('errorName',
+          'BackendError');\n        var errorPropertyName = 'other-backend-error';\n
+          \       logString += \" | error-scenario:=\" + errorPropertyName;\n        apim.setvariable('logString',
+          logString);\n        apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+          \       apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\n    } else {\n        logString
+          += \" | \" + apim.getvariable('policyName') + \":=\" + timeTakenByPreviousPolicy
+          + \" ms\";\n        apim.setvariable('logString', logString);\n        \n
+          \       var myBoltons =[];\n        var soaBoltons = {};\n        if (!(isJSONEmpty(soaResponseJSON.Envelope.Body.getCurrentAndPendingBoltonsResponse))
+          && !(isJSONEmpty(soaResponseJSON.Envelope.Body.getCurrentAndPendingBoltonsResponse.myBoltons))){\n
+          \           soaBoltons = soaResponseJSON.Envelope.Body.getCurrentAndPendingBoltonsResponse.myBoltons;\n
+          \       }\n        if (!(isJSONEmpty(soaBoltons)) && !(isJSONEmpty(soaBoltons.bolton))
+          && isNaN(parseInt(soaBoltons.bolton.length))) {\n            var bolton
+          =[];\n            myBoltons.bolton = bolton;\n            myBoltons.bolton.push(soaBoltons.bolton);\n
+          \       } else if (!(isJSONEmpty(soaBoltons)) && !(isJSONEmpty(soaBoltons.bolton))
+          && soaBoltons.bolton.length > 0) {\n            myBoltons = soaBoltons;\n
+          \       } else {\n            \n        }\n        if (!(isJSONEmpty(myBoltons))){\n
+          \           myBoltons = setBoltonTypeParams(myBoltons);\n        }\n        var
+          postpayBoltons = {\n        };\n        var boltons =[];\n        var promotional_boltons
+          =[];\n        postpayBoltons.boltons = boltons;\n        postpayBoltons.promotional_boltons
+          = promotional_boltons;\n        var filteredBoltons =[];\n        if (!
+          isJSONEmpty(myBoltons) && ! isJSONEmpty(myBoltons.bolton)) {\n            var
+          filteredAndSortedBoltons = filterAndSortBoltons(myBoltons.bolton);\n            for
+          (var i = 0; i < filteredAndSortedBoltons.length; i++) {\n                var
+          bolton = filteredAndSortedBoltons[i].bolton;\n                if (!(isJSONEmpty(bolton.ProductParameters)))
+          {\n                    var productParameters = bolton.ProductParameters;\n
+          \                   for (var j = 0; j < productParameters.length; j++) {\n
+          \                       if (productParameters[j].paramName.$ == 'promotionId')
+          {                            \n                            for (var k =
+          0; k < productParameters.length; k++) {\n                                if
+          (productParameters[k].paramName.$ == 'promotionDescription') {\n                                    var
+          promotionalBolton = getPostpayBolton(bolton);\n                                    promotionalBolton.promotional
+          = true;\n                                    //promotionalBolton.promotion_description
+          = productParameters[k].paramValue.$;\n                                    promotionalBolton.promotion_description
+          = \"\";\n                                    postpayBoltons.promotional_boltons.push(promotionalBolton);\n
+          \                                   postpayBoltons.boltons.push(promotionalBolton);\n
+          \                                   continue;\n                                }\n
+          \                           }\n                        }\n                    }\n
+          \               } else {\n                    var postpayBolton = getPostpayBolton(bolton);\n
+          \                   postpayBolton.promotional = false;\n                    postpayBoltons.boltons.push(postpayBolton);
+          \                   \n                }\n            }\n        }\n        postpayBoltons.header_message
+          = messages.msg.bolton.postpay.header;\n        apim.setvariable('message.body',
+          postpayBoltons);\n    }\n});\n\nfunction setBoltonTypeParams(myBoltons)
+          {\n    for (var i = 0; i < myBoltons.bolton.length; i++) {\n        var
+          bolton = myBoltons.bolton[i].bolton;\n        var isProductDefault = {\n
+          \           \"$\": 0\n        };\n        var matchesAnyNonRemovable = {\n
+          \           \"$\": 0\n        };\n        var isActive = {\n            \"$\":
+          0\n        };\n        var isOneOff = {\n            \"$\": 0\n        };\n
+          \       var isMonthly = {\n            \"$\": 0\n        };\n        var
+          isTUGo = {\n            \"$\": 0\n        };\n        var isInternationalCallerStaff
+          = {\n            \"$\": 0\n        };\n        var isFree = {\n            \"$\":
+          0\n        };\n        var isCoreBolton = {\n            \"$\": 0\n        };\n
+          \       var hasZeroOrNegativeCost = {\n            \"$\": 0\n        };\n
+          \       var hasFamilySubscriptionClassification = {\n            \"$\":
+          0\n        };\n        var isNGTSBoltOn = {\n            \"$\": 0\n        };\n
+          \       if (bolton.ProductDefault != null && bolton.ProductDefault.$ ==
+          \"true\") {\n            isProductDefault = {\n                \"$\": 1\n
+          \           };\n        }\n        if ((bolton.ProductClassification !=
+          null) && (nonRemovableBoltons.includes(bolton.ProductClassification.$.toLowerCase())))
+          {\n            matchesAnyNonRemovable = {\n                \"$\": 1\n            };\n
+          \       }\n        if (bolton.ProductStatus != null && bolton.ProductStatus.$
+          == \"0\") {\n            isActive = {\n                \"$\": 1\n            };\n
+          \       }\n        if (bolton.ProductFamily != null && oneOffBolton == bolton.ProductFamily.$.toUpperCase())
+          {\n            isOneOff = {\n                \"$\": 1\n            };\n
+          \       }\n        if ((bolton.ProductFamily != null) && !(oneOffBolton
+          == bolton.ProductFamily.$.toUpperCase())) {\n            isMonthly = {\n
+          \               \"$\": 1\n            };\n        }\n        if ((bolton.ProductId
+          != null) && (tugoBoltonId == (bolton.ProductId.$))) {\n            isTUGo
+          = {\n                \"$\": 1\n            };\n        }\n        if ((bolton.ProductId
+          != null) && (internationalCallerStaffBoltonId == (bolton.ProductId.$)))
+          {\n            isInternationalCallerStaff = {\n                \"$\": 1\n
+          \           };\n        }\n        if ((bolton.MonthlyFee != null) && (parseInt(bolton.MonthlyFee.$)
+          == \"0\")) {\n            isFree = {\n                \"$\": 1\n            };\n
+          \       }\n        if (bolton.ProductFamily != null && coreDataBoltOnFamilies.includes(bolton.ProductFamily.$.toUpperCase()))
+          {\n            isCoreBolton = {\n                \"$\": 1\n            };\n
+          \       }\n        if ((bolton.MonthlyFee != null) && (parseInt(bolton.MonthlyFee.$)
+          <= 0)) {\n            hasZeroOrNegativeCost = {\n                \"$\":
+          1\n            };\n        }\n        if ((bolton.ProductClassification
+          != null) && (bolton.ProductClassification.$.toLowerCase() == 'subscription
+          discount')) {\n            hasFamilySubscriptionClassification = {\n                \"$\":
+          1\n            };\n        }\n        if ((bolton.ProductFamily != null)
+          && (bolton.ProductFamily.$.toUpperCase() == 'NGTS')) {\n            isNGTSBoltOn
+          = {\n                \"$\": 1\n            };\n        }\n        myBoltons.bolton[i].bolton.isProductDefault
+          = isProductDefault;\n        myBoltons.bolton[i].bolton.matchesAnyNonRemovable
+          = matchesAnyNonRemovable;\n        myBoltons.bolton[i].bolton.isActive =
+          isActive;\n        myBoltons.bolton[i].bolton.isOneOff = isOneOff;\n        myBoltons.bolton[i].bolton.isMonthly
+          = isMonthly;\n        myBoltons.bolton[i].bolton.isTUGo = isTUGo;\n        myBoltons.bolton[i].bolton.isInternationalCallerStaff
+          = isInternationalCallerStaff;\n        myBoltons.bolton[i].bolton.isFree
+          = isFree;\n        myBoltons.bolton[i].bolton.isCoreBolton = isCoreBolton;\n
+          \       myBoltons.bolton[i].bolton.hasZeroOrNegativeCost = hasZeroOrNegativeCost;\n
+          \       myBoltons.bolton[i].bolton.hasFamilySubscriptionClassification =
+          hasFamilySubscriptionClassification;\n        myBoltons.bolton[i].bolton.isNGTSBoltOn
+          = isNGTSBoltOn;\n    }\n    return myBoltons;\n}\n\nfunction getPostpayBolton(bolton)
+          {\n    var postpayBolton = {\n    };\n    if (bolton.ProductStatus != null)
+          {\n        postpayBolton.status = messages.productStatus[bolton.ProductStatus.$];\n
+          \   }\n    if (bolton.ProductDescription != null) {\n        postpayBolton.description
+          = bolton.ProductDescription.$;\n    }\n    if (bolton.StartDate != null)
+          {\n        postpayBolton.startDate = formatDate(bolton.StartDate.$);\n    }
+          else {\n        postpayBolton.startDate = null;\n    }\n    postpayBolton.id
+          = bolton.ProductId.$;\n    if (bolton.ProductName != null) {\n        postpayBolton.product_name
+          = bolton.ProductName.$;\n    }\n    postpayBolton.charge_type = getChargeType(bolton);\n
+          \   if (bolton.MonthlyFee != null) {\n        if (parseInt(bolton.MonthlyFee.$)
+          < 0){\n            postpayBolton.monthly_charge = \"-£\" +(parseInt(bolton.MonthlyFee.$)
+          / (-100)).toFixed(2);\n        }\n        else{\n            postpayBolton.monthly_charge
+          = \"£\" +(parseInt(bolton.MonthlyFee.$) / 100).toFixed(2);   \n        }
+          \       \n    }\n    if (bolton.ExpiryDate != null) {\n        postpayBolton.expiry_date
+          = formatDate(bolton.ExpiryDate.$);\n    } else {\n        postpayBolton.expiry_date
+          = null;\n    }\n    postpayBolton.can_be_removed = getCanBeRemoved(bolton);\n
+          \   if (bolton.StartDate != null) {\n        postpayBolton.start_date =
+          formatDate(bolton.StartDate.$);\n    } else {\n        postpayBolton.start_date
+          = null;\n    }\n    postpayBolton.custom_links = createCustomLinks(bolton.ProductId.$);\n
+          \   return postpayBolton;\n}\n\nfunction filterAndSortBoltons(boltonsArray)
+          {\n    var filteredBoltons =[];\n    var filteredAndSortedBoltons =[];\n
+          \   for (var i = 0; i < boltonsArray.length; i++) {\n        if (!((boltonsToBeExcluded.includes(boltonsArray[i].bolton.ProductId.$))
+          || (boltonsArray[i].bolton.isCoreBolton.$ == 1))) {\n            filteredBoltons.push(boltonsArray[i]);\n
+          \       }\n    }\n    filteredAndSortedBoltons = sortBoltons(filteredBoltons,
+          sortingFieldsArray);\n    return filteredAndSortedBoltons;\n}\n\nfunction
+          sortBoltons(boltonsArray) {\n    var boltonsArrayLength = boltonsArray.length;\n
+          \   var sortingFieldsArrayLength = sortingFieldsArray.length;\n    for (var
+          i = 0; i < boltonsArrayLength -1; i++) {\n        for (var j = 0; j < boltonsArrayLength
+          - i; j++) {\n            if (j + 1 < boltonsArrayLength) {\n                var
+          currentBolton = boltonsArray[j].bolton;\n                var nextBolton
+          = boltonsArray[j + 1].bolton;\n                for (var k = 0; k < sortingFieldsArrayLength;
+          k++) {\n                    var currentBoltonProperty = currentBolton[sortingFieldsArray[k]];\n
+          \                   var nextBoltonProperty = nextBolton[sortingFieldsArray[k]];\n
+          \                   if ((currentBoltonProperty != null) && (nextBoltonProperty
+          != null)) {\n                        var currentBoltonValue = currentBoltonProperty.$;\n
+          \                       if (currentBoltonValue.toString().includes(\"-\"))
+          {\n                            currentBoltonValue = currentBoltonValue.replace(/-/g,
+          \"\");\n                        }\n                        if (parseInt(currentBoltonValue)
+          != 'NaN') {\n                            currentBoltonValue = parseInt(currentBoltonValue);\n
+          \                       }\n                        var nextBoltonValue =
+          nextBoltonProperty.$;\n                        if (nextBoltonValue.toString().includes(\"-\"))
+          {\n                            nextBoltonValue = nextBoltonValue.replace(/-/g,
+          \"\");\n                        }\n                        if (parseInt(nextBoltonValue)
+          != 'NaN') {\n                            nextBoltonValue = parseInt(nextBoltonValue);\n
+          \                       }\n                        if (currentBoltonValue
+          > nextBoltonValue) {\n                            k = sortingFieldsArrayLength;\n
+          \                       }\n                        if (nextBoltonValue >
+          currentBoltonValue) {\n                            boltonsArray[j].bolton
+          = nextBolton;\n                            boltonsArray[j + 1].bolton =
+          currentBolton;\n                            k = sortingFieldsArrayLength;\n
+          \                       }\n                    }\n                }\n            }\n
+          \       }\n    }\n    return boltonsArray;\n}\n\nfunction getChargeType(bolton)
+          {\n    if (bolton.MonthlyFee == null && bolton.ProductFamily == null) {\n
+          \       return null;\n    }\n    if (bolton.MonthlyFee != null && bolton.MonthlyFee.$
+          == 0) {\n        return messages.msg.bolton.fee.zero;\n    } else {\n        if
+          (bolton.ProductFamily != null && bolton.ProductFamily.$.includes('ONEOFF'))
+          {\n            return messages.msg.bolton.fee.oneoff;\n        } else {\n
+          \           return messages.msg.bolton.fee.monthly;\n        }\n    }\n}\n\nfunction
+          getCanBeRemoved(bolton) {\n    console.log(\"Can be removed:=\");\n    console.log(JSON.stringify(bolton));\n
+          \   var canBeRemoved = (!(bolton.isProductDefault.$) && !(bolton.matchesAnyNonRemovable.$)
+          && !(bolton.isOneOff.$) && !(bolton.isTUGo.$) && !(bolton.isInternationalCallerStaff.$)
+          && (bolton.isActive.$) && ((!(bolton.hasZeroOrNegativeCost.$) && !(bolton.hasFamilySubscriptionClassification.$))
+          || (bolton.isNGTSBoltOn.$)));\n    return Boolean(Number(canBeRemoved));\n}\n\nfunction
+          createCustomLinks(productId) {\n    if (messages.o2TravelBoltonId.includes(productId))
+          {\n        var customLink = {\n        };\n        customLink.link_text
+          = \"Learn more\";\n        customLink.url = messages.learnmore.url;\n        var
+          customLinks =[];\n        customLinks.push(customLink);\n        return
+          customLinks;\n    }\n    if (internationalDealSeekerBoltons.includes(productId))
+          {\n        var customLink = {\n        };\n        customLink.link_text
+          = \"Call prices\";\n        customLink.url = internationalDealSeekerURL;\n
+          \       var customLinks =[];\n        customLinks.push(customLink);\n        return
+          customLinks;\n    }\n}\nfunction isJSONEmpty(jsonObject) {\n    var member;\n
+          \   var result = true;\n    for (member in jsonObject) {\n        if (jsonObject[member]
+          != null) {\n            result = false;\n        }\n    }\n    return result;\n}\n\nfunction
+          ifJsonHasKey(jsonObject, key) {\n    var member;\n    var result = false;\n
+          \   for (member in jsonObject) {\n        if (member.toLowerCase() == key)
+          {\n            result = true;\n        }\n    }\n    return result;\n}\n\nfunction
+          ifJsonHasValue(jsonObject, value) {\n    var member;\n    var result = false;\n
+          \   for (member in jsonObject) {\n        if (jsonObject[member].toLowerCase()
+          == value) {\n            result = true;\n        }\n    }\n    return result;\n}\n\nfunction
+          formatDate(date) {\n    var year = date.substr(0, 4);\n    var month = date.substr(5,
+          2);\n    var day = date.substr(8, 2);\n    return day + \".\" + month +
+          \".\" + year;\n}"
+        description: GW Script to get postpay boltons
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ExtractFinalLoggingData
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* ExtractFinalLoggingData.js    1.0        Dinesh Tomar                                          06-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will extract final metadata for logging                                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          //Extract general metadata from system variables
+          var systemDateTime = apim.getvariable('system.datetime');
+          var apicTxId = apim.getvariable('apic-transaction-id');
+          var xGlobalTxId = apim.getvariable('request.headers.x-global-transaction-id');
+          var requestURI = apim.getvariable('request.uri');
+
+          //Extract response metadata from system variables
+          var responseHeaders = apim.getvariable('message.headers');
+
+          delete responseHeaders['Accept-Encoding'];
+          delete responseHeaders['X-Global-Transaction-ID'];
+          delete responseHeaders['User-Agent'];
+          delete responseHeaders['Via'];
+          delete responseHeaders['x-authcode'];
+          delete responseHeaders['authorization'];
+          delete responseHeaders['Authorization'];
+          delete responseHeaders['Access-Control-Allow-Methods'];
+          delete responseHeaders['Access-Control-Allow-Origin'];
+          delete responseHeaders['Access-Control-Allow-Headers'];
+          delete responseHeaders['Access-Control-Expose-Headers'];
+
+          var responseHeadersString = JSON.stringify(responseHeaders);
+          var responseStatusCode = apim.getvariable('message.status.code');
+          var responseStatusReason = apim.getvariable('message.status.reason');
+          //calculate time elapsed
+          var apiStartTimeMS = apim.getvariable('apiStartTimeMS');
+          var apiEndTimeMS = (new Date()).getTime();
+          var totalTimeElapsed = (apiEndTimeMS - apiStartTimeMS) + " ms";
+          var logString = "type:=response"
+                          + " | system-datetime:=" +        systemDateTime
+                          + " | apic-transaction-id:=" +    apicTxId
+                          + " | global-transaction-id:=" +  xGlobalTxId
+                          + " | request-uri:=" +            requestURI
+                          + apim.getvariable('logString')
+                          + " | response-http-headers:=" +  responseHeadersString
+                          + " | response-status-code:=" +   responseStatusCode
+                          + " | response-status-reason:=" + responseStatusReason
+                          + " | total-time-elapsed:=" +     totalTimeElapsed
+                          + " | Final-response:=" +     JSON.stringify(apim.getvariable('message.body'))
+                          ;
+          console.log(logString);
+        description: This GW Script will extract final metadata for logging
+    catch:
+    - errors:
+      - InvalidMsisdn
+      - ConnectionError
+      - OperationError
+      - SOAPError
+      - UnauthorizedError
+      - BackendError
+      execute:
+      - gatewayscript:
+          title: GS-ErrorHandling
+          version: 1.0.0
+          source: "/* ******************************************************************************************************************
+            */\n/* ******************************************************************************************************************
+            */\n/* FileName                           Version    Created By                  Modified
+            By               Date           */\n/* Errorhandling.js                   1.0
+            \       Dinesh Tomar                                          07-May-2018
+            \   */\n/*                                                                                                                    */\n/*
+            ******************************************************************************************************************
+            */\n/* Purpose: This GW Script file will read error config for the catch
+            block error name and will set the necessary      */\n/*          params
+            like status code, reason phrase and will return the error json                                     */\n/*
+            Required params: errorName                                                                                         */\n/*
+            ******************************************************************************************************************
+            */\nvar urlOpen = require('urlopen');\n//form url for to fetch errorConfig
+            JSON\nvar orgName = apim.getvariable('api.org.name');\nvar catalog = apim.getvariable('env.path');\napim.setvariable('apicURLPrefix',
+            'https://0.0.0.0:9443/'+orgName+'/'+catalog);\nvar errorConfigURL = apim.getvariable('apicURLPrefix')
+            +'/config/errorconfig';\nvar clientId = apim.getvariable('client.app.id');\napim.setvariable('message.headers.content-type',
+            'application/json');\nvar errorConfigURLOptions = {\n    target: errorConfigURL,\n
+            \   sslClientProfile: 'o2apic-o2apic-internal-tls-client-profileV1.0.0',\n
+            \   headers: {'x-ibm-client-id': clientId, 'content-type': 'application/json'
+            }\n};\n//fetch errorName and errorConfig JSON from context variables\nurlOpen.open(errorConfigURLOptions,
+            function (error, response) {\n    if (error) {\n        throw error;\n
+            \   } else {\n        response.readAsJSON(function (error, errorConfigJSON)
+            {\n            if (error) {\n                throw error;\n            }
+            else {\n                var errorName = apim.getvariable('errorName');\n
+            \               if (errorName == null) {\n                    errorName
+            = 'default';\n                } \n                if (apim.getvariable('message.status.reason')
+            != null && apim.getvariable('message.status.reason').startsWith('APIC:')
+            ) {\n                    errorName = 'default';\n                    apim.setvariable('message.status.code',
+            apim.getvariable('message.status.code'));\n                    apim.setvariable('message.status.reason',
+            apim.getvariable('message.status.reason'));\n                    apim.setvariable('message.body',
+            apim.getvariable('message.body'));\n                } else {\n                    if
+            (errorName == 'BackendError') {\n                        var errorDetails
+            = errorConfigJSON.errorConfig.errorTypes[errorName];\n                        apim.setvariable('message.status.reason',
+            errorDetails.reasonPhrase);\n                        var errorMessage
+            = errorDetails.errorMessage;\n                        errorMessage.error.message
+            = apim.getvariable('error-message');\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                    //fetch specific
+            block from error config JSON\n                    else if (! isJSONEmpty(errorConfigJSON))
+            {\n                        var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];\n
+            \                       var statusCode = errorDetails.statusCode;\n                        var
+            reasonPhrase = errorDetails.reasonPhrase;\n                        var
+            errorMessage = errorDetails.errorMessage;\n                        apim.setvariable('message.status.code',
+            statusCode);\n                        apim.setvariable('message.status.reason',
+            reasonPhrase);\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                    //else block
+            executes in case error config file is not loaded. it will set a default
+            error message\n                    else {\n                        apim.setvariable('message.status.code',
+            500);\n                        apim.setvariable('message.status.reason',
+            'Internal Error');\n                        var errorMessage = {};\n                        errorMessage.httpCode
+            = 500;\n                        errorMessage.httpMessage = \"Internal
+            Error\";\n                        errorMessage.moreInformation = \"Something's
+            wrong. Please try again later.\";\n                        apim.setvariable('message.body',
+            errorMessage);\n                    }\n                }\n            }\n
+            \       });\n    }\n});\n\n//below function checks if json object is null
+            or not\nfunction isJSONEmpty(jsonObject) {\n    var member;\n    var result
+            = true;\n    for (member in jsonObject) {\n        if (jsonObject[member]
+            != null) {\n            result = false;\n        }\n    }\n    return
+            result;\n}"
+          description: This GW Script file will read error config for the catch block
+            error name and will set the necessary params like status code, reason
+            phrase and will return the error json
+      - gatewayscript:
+          version: 1.0.0
+          title: GS-ExtractErrorLoggingData
+          source: "/* *************************************************************************************************************
+            */\n/* *************************************************************************************************************
+            */\n/* FileName                      Version    Created By                  Modified
+            By               Date           */\n/* ExtractErrorLoggingData.js    1.0
+            \       Dinesh Tomar                                          06-July-2018
+            \  */\n/*                                                                                                               */\n/*
+            *************************************************************************************************************
+            */\n/* Purpose: This GW Script will extract error metadata for logging
+            \                                              */\n/*                                                                                                               */\n/*
+            Required params:                                                                                              */\n/*
+            ***************************************************************************************************************/\n//Extract
+            general metadata from system variables\nvar systemDateTime = apim.getvariable('system.datetime');\nvar
+            apicTxId = apim.getvariable('apic-transaction-id');\nvar xGlobalTxId =
+            apim.getvariable('request.headers.x-global-transaction-id');\nvar requestURI
+            = apim.getvariable('request.uri');\n\n//Extract response metadata from
+            system variables\nvar responseHeaders = apim.getvariable('message.headers');\n\ndelete
+            responseHeaders['Accept-Encoding'];\ndelete responseHeaders['X-Global-Transaction-ID'];\ndelete
+            responseHeaders['User-Agent'];\ndelete responseHeaders['Via'];\ndelete
+            responseHeaders['x-authcode'];\ndelete responseHeaders['authorization'];\ndelete
+            responseHeaders['Authorization'];\ndelete responseHeaders['Access-Control-Allow-Methods'];\ndelete
+            responseHeaders['Access-Control-Allow-Origin'];\ndelete responseHeaders['Access-Control-Allow-Headers'];\ndelete
+            responseHeaders['Access-Control-Expose-Headers'];\n\nvar responseHeadersString
+            = JSON.stringify(responseHeaders);\nvar responseStatusCode = apim.getvariable('message.status.code');\nvar
+            responseStatusReason = apim.getvariable('message.status.reason');\nvar
+            errorName = apim.getvariable('errorName');\n//calculate time elapsed\nvar
+            apiStartTimeMS = apim.getvariable('apiStartTimeMS');\nvar apiEndTimeMS
+            = (new Date()).getTime();\nvar totalTimeElapsed = (apiEndTimeMS - apiStartTimeMS)
+            + \" ms\";\n\nvar logString = \"type:=error\"\n                + \" |
+            system-datetime:=\" +        systemDateTime\n                + \" | apic-transaction-id:=\"
+            +    apicTxId\n                + \" | global-transaction-id:=\" +  xGlobalTxId\n
+            \               + \" | request-uri:=\" +            requestURI\n                +
+            apim.getvariable('logString')\n                + \" | response-http-headers:=\"
+            +  responseHeadersString\n                + \" | response-status-code:=\"
+            +   responseStatusCode\n                + \" | response-status-reason:=\"
+            + responseStatusReason\n                + \" | error-name:=\" +             errorName\n
+            \               + \" | total-time-elapsed:=\" +     totalTimeElapsed;\n
+            \               \nconsole.log(logString);\n\n"
+          description: This GW Script will extract error metadata for logging
+  gateway: datapower-gateway
+  type: rest
+parameters:
+  msisdn:
+    name: msisdn
+    type: integer
+    in: path
+    required: true
+  x-device:
+    name: x-device
+    type: string
+    in: header
+  x-correlator:
+    name: x-correlator
+    type: string
+    in: header
+tags: []
+definitions:
+  Bolton:
+    properties:
+      productName:
+        type: string
+      status:
+        type: string
+      chargeType:
+        type: string
+      promotional:
+        type: boolean
+  BoltonsResponse:
+    properties:
+      boltons:
+        type: array
+        items:
+        - $ref: '#/definitions/Bolton'
+      promotionalBoltons:
+        type: array
+        items:
+        - $ref: '#/definitions/Bolton'
+paths:
+  /{msisdn}/postpay/boltons:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            $ref: '#/definitions/BoltonsResponse'
+    parameters:
+    - $ref: '#/parameters/msisdn'
+    - $ref: '#/parameters/x-device'
+    - $ref: '#/parameters/x-user-id'
+    - $ref: '#/parameters/x-client-id'
+    - $ref: '#/parameters/x-correlator'

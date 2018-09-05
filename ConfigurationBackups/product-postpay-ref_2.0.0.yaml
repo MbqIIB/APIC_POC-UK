@@ -1,7 +1,7 @@
 info:
-  name: api-assist
-  title: api-assist
-  version: 1.0.0
+  version: 2.0.0
+  title: product-postpay-ref
+  name: product-postpay-ref
 gateways:
 - datapower-gateway
 product: 1.0.0
@@ -26,7 +26,5 @@ plans:
         value: 100/hour
         hard-limit: false
 apis:
-  o2apic-authservice:
-    $ref: 20180730\184557\Products\o2apic-authservice_1.0.0.yaml
-  o2apic-novum-configapi:
-    $ref: 20180730\184557\Products\o2apic-novum-configapi_1.0.0.yaml
+  o2apic-novum-postpayallowanceminutes:
+    $ref: 20180905\151056\o2apic-novum-postpayallowanceminutes_2.0.0.yaml

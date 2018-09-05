@@ -1,0 +1,887 @@
+swagger: "2.0"
+info:
+  title: o2apic-novum-postpaytariffdetails
+  x-ibm-name: o2apic-novum-postpaytariffdetails
+  version: 1.0.0
+host: $(catalog.host)
+schemes:
+- https
+basePath: /apic
+produces:
+- application/json
+consumes:
+- application/json
+security:
+- clientIdHeader: []
+  clientSecretHeader: []
+securityDefinitions:
+  clientSecretHeader:
+    type: apiKey
+    description: clientSecretHeader
+    name: X-IBM-Client-Secret
+    in: header
+  clientIdHeader:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+x-ibm-configuration:
+  phase: realized
+  testable: true
+  enforced: true
+  properties:
+    target-url:
+      value: ""
+      description: The URL of the target service
+      encoded: false
+    auth-400:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    auth-401:
+      value: That PIN isn't the one you've used before. Please try again or change
+        your PIN.
+      description: That PIN isn't the one you've used before. Please try again or
+        change your PIN.
+    auth-500:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    auth-404:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    phoneservice-error:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    other-backend-error:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    tariff-unavailable:
+      value: Tariff detail not available for this mobile number.
+      description: Tariff detail not available for this mobile number.
+  catalogs: {}
+  cors:
+    enabled: true
+  application-authentication:
+    certificate: false
+  assembly:
+    execute:
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ExtractInputLoggingData
+        source: "/* *************************************************************************************************************
+          */\n/* *************************************************************************************************************
+          */\n/* FileName                      Version    Created By                  Modified
+          By               Date           */\n/* ExtractInputLoggingData.js    1.0
+          \       Dinesh Tomar                                          06-July-2018
+          \  */\n/*                                                                                                               */\n/*
+          *************************************************************************************************************
+          */\n/* Purpose: This GW Script will extract input metadata for logging                                               */\n/*
+          \                                                                                                              */\n/*
+          Required params:                                                                                              */\n/*
+          ***************************************************************************************************************/\n//Extract
+          general metadata from system variables\nvar apiStartTimeMS = (new Date()).getTime();\napim.setvariable('apiStartTimeMS',
+          apiStartTimeMS);\nvar systemDateTime = apim.getvariable('system.datetime');\nvar
+          apicTxId = \"\";\nif (apim.getvariable('request.headers.apic-transaction-id')){\n
+          \   apicTxId = apim.getvariable('request.headers.apic-transaction-id');\n}\nelse
+          {\n    apicTxId = uuidv4();\n}\napim.setvariable('apic-transaction-id',
+          apicTxId);\napim.setvariable('message.headers.apic-transaction-id', apicTxId);\n\nvar
+          xGlobalTxId = apim.getvariable('request.headers.x-global-transaction-id');\n\n//Extract
+          client metadata from system variables\nvar clientIPAddress = apim.getvariable('request.headers.x-client-ip');\nvar
+          clientId = apim.getvariable('client.app.id');\nvar clientAppName = apim.getvariable('client.app.name');\nvar
+          clientAppType = apim.getvariable('client.app.type');\nvar clientOrgName
+          = apim.getvariable('client.org.name');\n\n//Extract api metadata from system
+          variables\nvar apiName = apim.getvariable('api.name');\nvar apiVersion =
+          apim.getvariable('api.version');\nvar providerOrgName = apim.getvariable('api.org.name');\nvar
+          catalogName = apim.getvariable('env.path');\nvar apiBasePath = apim.getvariable('api.root');\nvar
+          operationPath = apim.getvariable('api.operation.path');\n\n\n//Extract product
+          metadata from system variables\n//var productName = apim.getvariable('product.name');\n//var
+          productVersion = apim.getvariable('product.version');\nvar planName = apim.getvariable('plan.name');\nvar
+          planVersion = apim.getvariable('plan.version');\nvar planRateLimit = apim.getvariable('plan.rate-limit');\n\n//Extract
+          request metadata from system variables\nvar requestMethod = apim.getvariable('request.verb');\nvar
+          requestURI = apim.getvariable('request.uri');\nvar requestHeaders = apim.getvariable('request.headers');\n\ndelete
+          requestHeaders['accept-encoding'];\ndelete requestHeaders['x-global-transaction-id'];\ndelete
+          requestHeaders['user-agent'];\ndelete requestHeaders['via'];\n//delete requestHeaders['x-authcode'];\ndelete
+          requestHeaders['authorization'];\n\nvar requestHeadersString = JSON.stringify(requestHeaders);\n\nvar
+          logString = \"type:=request\"\n                + \" | system-datetime:=\"
+          +        systemDateTime\n                + \" | apic-transaction-id:=\"
+          +    apicTxId\n                + \" | global-transaction-id:=\" +  xGlobalTxId\n
+          \               + \" | consumer-ip-address:=\" +    clientIPAddress\n                +
+          \" | x-ibm-client-id:=\" +        clientId\n                + \" | client-app-name:=\"
+          +        clientAppName\n                + \" | client-app-type:=\" +        clientAppType\n
+          \               + \" | client-org-name:=\" +        clientOrgName\n                +
+          \" | api-name:=\" +               apiName\n                + \" | api-version:=\"
+          +            apiVersion\n                + \" | provider-org-name:=\" +
+          \     providerOrgName\n                + \" | catalog-name:=\" +           catalogName\n
+          \               + \" | api-base-path:=\" +          apiBasePath\n                +
+          \" | operation-path:=\" +         operationPath\n                + \" |
+          plan-name:=\" +              planName\n                + \" | plan-version:=\"
+          +           planVersion\n                + \" | plan-rate-limit:=\" +        planRateLimit\n
+          \               + \" | request-http-method:=\" +    requestMethod\n                +
+          \" | request-uri:=\" +            requestURI\n                + \" | request-http-headers:=\"
+          +   requestHeadersString;\n                \nconsole.log(logString);\nlogString
+          = \"\";\napim.setvariable('logString', logString);\n\nfunction uuidv4()
+          {\n    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function
+          (c) {\n        var r = Math.random() * 16 | 0, v = c == 'x' ? r: (r & 0x3
+          | 0x8);\n        return v.toString(16);\n    });\n}"
+        description: This GW Script will extract input metadata for logging
+    - activity-log:
+        title: Log-Payload
+        content: payload
+        error-content: payload
+        version: 1.0.0
+    - gatewayscript:
+        title: GS-FetchValidationConfig
+        version: 1.0.0
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* FetchValidationConfig.js      1.0        Dinesh Tomar                                          04-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will create URL to fetch validation config for all apis                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          var clientId = apim.getvariable('client.app.id');
+          apim.setvariable('message.headers.x-ibm-client-id', clientId);
+          apim.setvariable('message.headers.content-type', 'application/json');
+          //form url for to fetch errorConfig JSON
+          var orgName = apim.getvariable('api.org.name');
+          var catalog = apim.getvariable('env.path');
+          apim.setvariable('apicURLPrefix', 'https://0.0.0.0:9443/'+orgName+'/'+catalog);
+          var validationConfigURL = apim.getvariable('apicURLPrefix')+'/'+'config/validationconfig';
+          apim.setvariable('validationConfigURL', validationConfigURL);
+
+          //record time in ms just before the invoke policy
+          apim.setvariable('startTimeMS', (new Date()).getTime());
+          apim.setvariable('policyName', 'Invoke-ValidationConfig');
+        description: This GW Script will create URL to fetch validation config for
+          all apis
+    - invoke:
+        title: Invoke-ValidationConfig
+        timeout: 60
+        verb: GET
+        cache-response: no-cache
+        cache-ttl: 60
+        version: 1.0.0
+        description: Load all validation config in context
+        target-url: $(validationConfigURL)
+        output: validationConfig
+        stop-on-error:
+        - ConnectionError
+        tls-profile: apic-tls-client-profile:1.0.0
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ValidateParams
+        source: "/* **********************************************************************************************************
+          */\n/* **********************************************************************************************************
+          */\n/* FileName                   Version    Created By                  Modified
+          By               Date           */\n/* ValidateParams.js          1.0        Dinesh
+          Tomar                                          03-July-2018   */\n/*                                                                                                            */\n/*
+          **********************************************************************************************************
+          */\n/* Purpose: This GW Script file will return all API configurations to
+          be used for validating input params     */\n/*                                                                                                            */\n/*
+          Required params:                                                                                           */\n/*
+          ************************************************************************************************************/\n\n//record
+          time in ms just after the invoke policy\nvar endTimeMS = (new Date()).getTime();\nvar
+          timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\nvar
+          logString = apim.getvariable('logString');\n\nif (apim.getvariable('message.status.code')
+          != 200) {\n    apim.setvariable('errorName', 'BackendError');\n    var errorPropertyName
+          = 'other-backend-error';\n    logString += \" | error-scenario:=\" + errorPropertyName;\n
+          \   apim.setvariable('logString', logString);\n    apim.setvariable('error-message',
+          apim.getvariable(errorPropertyName));\n    apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\n}\nelse {\n    logString
+          += \" | \" + apim.getvariable('policyName') + \":=\" + timeTakenByPreviousPolicy
+          + \" ms\";\n    apim.setvariable('logString', logString);\n    var validationConfig
+          = apim.getvariable('validationConfig.body');\n    var apiName = apim.getvariable('api.name');\n
+          \   var operationName = apim.getvariable('api.operation.path');\n    var
+          apiConfig = validationConfig.apisConfig[apiName][operationName];\n    var
+          paramsConfig = validationConfig.paramsConfig;\n    var requiredPathParams
+          = apiConfig.requiredPathParams;\n    var requiredQueryParams = apiConfig.requiredQueryParams;\n
+          \   var requiredHeaderParams = apiConfig.requiredHeaderParams;\n    validateRequiredParams('headers',
+          requiredHeaderParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredQueryParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredPathParams, paramsConfig);\n    //record time in ms just before
+          the invoke policy\n    apim.setvariable('startTimeMS', (new Date()).getTime());\n
+          \   apim.setvariable('policyName', 'Invoke-PropertiesHandler');\n}\n\nfunction
+          validateRequiredParams(paramType, requiredParams, paramsConfig){\n    if
+          (requiredParams !== \"\"){\n        var reqParams = requiredParams.split('|');\n
+          \       for (var i = 0; i < reqParams.length; i++){\n            var paramConfig
+          = paramsConfig[reqParams[i]];\n            var inputParam = apim.getvariable('request.'+paramType+'.'+reqParams[i]);\n
+          \           var nullValidation = ((inputParam != undefined) || (inputParam
+          != null));\n            if (nullValidation){\n                var dataTypeValidation
+          = true;\n                dataTypeValidation = validateDataType(inputParam,
+          paramConfig);\n                var lengthValidation = true;\n                var
+          allowedValuesValidation = true;\n                if (paramConfig.manLength
+          || paramConfig.maxLength){\n                    lengthValidation = validateLength(inputParam,
+          paramConfig);\n                }\n                if (paramConfig.allowedValues){\n
+          \                   allowedValuesValidation = validateAllowedValues(inputParam,
+          paramConfig);\n                }\n                if (!(dataTypeValidation)
+          || !(lengthValidation) || !(allowedValuesValidation)){\n                    apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                    apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \                   return;\n                }\n                else {\n
+          \                   apim.setvariable('message.headers.'+reqParams[i], inputParam);\n
+          \                   var clientId = apim.getvariable('client.app.id');\n
+          \                   apim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\n                    apim.setvariable('message.headers.content-type',
+          'application/json');\n                    //form url for to fetch properties
+          config JSON\n                    var configPropertiesURL = apim.getvariable('apicURLPrefix')+'/'+'config/properties';\n
+          \                   apim.setvariable('configPropertiesURL', configPropertiesURL);\n
+          \               }\n            }\n            else {\n                apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \               return;\n            }\n            \n        }\n    }\n}\n\nfunction
+          validateDataType(inputParam, paramConfig){\n    if (paramConfig.dataType
+          == 'number'){\n        return !(isNaN(parseInt(inputParam)));\n    }\n    else
+          if (paramConfig.dataType == 'email'){ \n        if (inputParam.includes('.')
+          && inputParam.includes('@') && (! inputParam.includes(' ')))\n            return
+          true;\n        else\n            return false;\n    }\n    else if (paramConfig.dataType
+          == 'string'){\n        if (inputParam != null && inputParam.length != 0)\n
+          \           return true;\n        else\n            return false;\n    }\n
+          \   else if (paramConfig.dataType == 'version'){\n        if (inputParam
+          == null || inputParam.length == 0)\n            return false;\n        else
+          if (inputParam.includes('.')) {\n            var splittedArray = inputParam.split('.');\n
+          \           var result = true;\n            for (var i = 0; i < splittedArray.length;
+          i++){\n                if (isNaN(parseInt(splittedArray[i]))){\n                    result
+          = false;\n                    return result;\n                }\n            }\n
+          \           return result;\n        }\n        else{\n            return
+          !(isNaN(parseInt(inputParam)));\n        }\n    }\n    else\n        return
+          true;\n}\n\nfunction validateLength(inputParam, paramConfig){\n    var minLength
+          = paramConfig.minLength;\n    var maxLength = paramConfig.maxLength;\n    if
+          ((inputParam.length >= minLength) && (inputParam.length <= maxLength))\n
+          \       return true;\n    else\n        return false;\n}\n\nfunction validateAllowedValues(inputParam,
+          paramConfig){\n    var allowedValues = paramConfig.allowedValues;\n    var
+          allowedValuesArray = allowedValues.split('|');\n    var result = false;\n
+          \   for (var i = 0; i < allowedValuesArray.length; i++){\n        if (allowedValuesArray[i]
+          == inputParam){\n            result = true;\n            return result;\n
+          \       }\n    }\n    return result;\n}\n\nfunction isJSONEmpty(jsonObject)
+          {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+          {\n        if (jsonObject[member] != null) {\n            result = false;\n
+          \       }\n    }\n    return result;\n}"
+        description: This GW Script file will return all API configurations to be
+          used for validating input params
+    - invoke:
+        title: Invoke-PropertiesHandler
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        version: 1.0.0
+        description: Load all messages  and properties in context
+        target-url: $(configPropertiesURL)
+        output: messages-property
+        username: prafullk
+        password: Temp12$$
+        stop-on-error:
+        - ConnectionError
+        tls-profile: apic-tls-client-profile:1.0.0
+    - gatewayscript:
+        title: GS-SetSOAEndpoint
+        version: 1.0.0
+        source: "/* ******************************************************************************************************************
+          */\n/* ******************************************************************************************************************
+          */\n/* FileName                           Version    Created By                  Modified
+          By               Date           */\n/* SetSOAEndpoint.js                  1.0
+          \       Dinesh Tomar                                          20-Apr-2018
+          \   */\n/*                                                                                                                    */\n/*
+          ******************************************************************************************************************
+          */\n/* Purpose: This GW Script file will set SOA endpoint for next call
+          \                                                  */\n/*                                                                                                                    */\n/*
+          Required params:                                                                                                   */\n/*
+          ******************************************************************************************************************
+          */\n//record time in ms just after the invoke policy\nvar endTimeMS = (new
+          Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\nvar
+          logString = apim.getvariable('logString');\n    \nvar clientId = apim.getvariable('client.app.id');\n\nif
+          (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+          'BackendError');\n    var errorPropertyName = 'other-backend-error';\n    logString
+          += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+          logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\n}\nelse {\n    logString
+          += \" | \" + apim.getvariable('policyName') + \":=\" + timeTakenByPreviousPolicy
+          + \" ms\";\n    apim.setvariable('logString', logString);\n    //load properties
+          configuration from context variable\n    var messages = apim.getvariable('messages-property.body');\n
+          \   apim.setvariable('message.headers.x-ibm-client-id', clientId);\n    apim.setvariable('message.headers.content-type',
+          'application/xml');\n    apim.setvariable('message.headers.soapaction',
+          'test');\n    apim.setvariable('soaGetTariffProductEndpoint', messages.soa.getTariffProduct.uri);\n
+          \   console.log(apim.getvariable('soaGetTariffProductEndpoint'));\n    var
+          decodedURI = decodeURI(apim.getvariable('request.uri'));\n    var queryParamsArray
+          = decodedURI.split('&');\n    console.log(decodedURI);\n    //record time
+          in ms just before the invoke policy\n    apim.setvariable('startTimeMS',
+          (new Date()).getTime());\n    apim.setvariable('policyName', 'Invoke-SOAGetTariffProductInfo');\n}\n\nfunction
+          isJSONEmpty(jsonObject) {\n    var member;\n    var result = true;\n    for
+          (member in jsonObject) {\n        if (jsonObject[member] != null) {\n            result
+          = false;\n        }\n    }\n    return result;\n}"
+        description: This GW Script file will set SOA endpoint for next call
+    - map:
+        title: Map-CreateSOARequest
+        inputs:
+          tariffname:
+            schema:
+              type: string
+            variable: request.parameters.tariffname
+          productlabel:
+            schema:
+              type: string
+            variable: request.parameters.productlabel
+        outputs:
+          output:
+            schema:
+              $ref: '#/definitions/getTariffProductInfoRequest'
+            variable: message.body
+            content: application/xml
+        actions:
+        - set: output.Envelope.Header.Security.UsernameToken.Username
+          value: '"apic_123"'
+        - set: output.Envelope.Header.Security.UsernameToken.Password
+          value: '"t3st1ng"'
+        - set: output.Envelope.Body.getTariffProductInfo.tariffName
+          value: decodeURI(apim.getvariable('request.parameters.tariffname'));
+        - set: output.Envelope.Body.getTariffProductInfo.productLabel
+          value: decodeURI(apim.getvariable('request.parameters.productlabel'));
+        version: 1.0.0
+    - invoke:
+        title: Invoke-SOAGetTariffProductInfo
+        timeout: 60
+        verb: POST
+        cache-response: no-cache
+        cache-ttl: 900
+        version: 1.0.0
+        target-url: $(soaGetTariffProductEndpoint)
+        compression: false
+        tls-profile: apic-tls-client-profile:1.0.0
+    - xslt:
+        version: 1.0.0
+        title: XSLT-SOAErrorMapping
+        input: false
+        source: "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"\r\n
+          \   xmlns:dp=\"http://www.datapower.com/extensions\"\r\n    xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\"\r\n
+          \   xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope\"\r\n    xmlns:apim=\"http://www.ibm.com/apimanagement\"
+          extension-element-prefixes=\"dp apim\">\r\n    <xsl:import href=\"local:///isp/policy/apim.custom.xsl\"/>\r\n
+          \   <xsl:output method=\"xml\" omit-xml-declaration=\"yes\" indent=\"yes\"/>\r\n
+          \   <xsl:strip-space elements=\"*\"/>\r\n\r\n    <xsl:template match=\"/\">\r\n
+          \       <xsl:variable name=\"input\" select=\"apim:payloadRead()\"/>\r\n
+          \       <!--record time in ms just after the invoke policy-->\r\n        <xsl:call-template
+          name=\"apim:setVariable\">\r\n            <xsl:with-param name=\"varName\"
+          select=\"'endTimeMS'\"/>\r\n            <xsl:with-param name=\"value\" select=\"dp:time-value()\"/>\r\n
+          \       </xsl:call-template>\r\n        <xsl:call-template name=\"apim:setVariable\">\r\n
+          \           <xsl:with-param name=\"varName\" select=\"'timeTakenByPreviousPolicy'\"/>\r\n
+          \           <xsl:with-param name=\"value\"\r\n                select=\"apim:getVariable('endTimeMS')
+          - apim:getVariable('startTimeMS')\"/>\r\n        </xsl:call-template>\r\n
+          \       <xsl:call-template name=\"apim:setVariable\">\r\n            <xsl:with-param
+          name=\"varName\" select=\"'logString'\"/>\r\n            <xsl:with-param
+          name=\"value\" select=\"apim:getVariable('logString')\"/>\r\n        </xsl:call-template>\r\n
+          \       <xsl:call-template name=\"apim:setVariable\">\r\n            <xsl:with-param
+          name=\"varName\" select=\"'logString'\"/>\r\n            <xsl:with-param
+          name=\"value\"\r\n                select=\"concat(apim:getVariable('logString'),
+          ' | ', apim:getVariable('policyName'), ' := ', apim:getVariable('timeTakenByPreviousPolicy'),
+          ' ms')\"\r\n            />\r\n        </xsl:call-template>\r\n        <xsl:choose>\r\n
+          \           <xsl:when test=\"$input//*[local-name() = 'TariffProductInfoStruct']
+          = ''\">\r\n\r\n                <xsl:call-template name=\"apim:setVariable\">\r\n
+          \                   <xsl:with-param name=\"varName\" select=\"'SOAFaultCode'\"/>\r\n
+          \                   <xsl:with-param name=\"value\" select=\"'null'\"/>\r\n
+          \               </xsl:call-template>\r\n            </xsl:when>\r\n            <xsl:otherwise>\r\n\r\n
+          \               <xsl:call-template name=\"apim:setVariable\">\r\n                    <xsl:with-param
+          name=\"varName\" select=\"'SOAFaultCode'\"/>\r\n                    <xsl:with-param
+          name=\"value\"\r\n                        select=\"$input//*[local-name()
+          = 'faultstring']/text()\"/>\r\n                </xsl:call-template>\r\n\r\n
+          \           </xsl:otherwise>\r\n        </xsl:choose>\r\n\r\n\r\n    </xsl:template>\r\n</xsl:stylesheet>\r\n"
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-SOAErrorMapping
+        source: "/* ***********************************************************************************************************************
+          */\r\n/* ***********************************************************************************************************************
+          */\r\n/* FileName                                Version    Created By                  Modified
+          By               Date           */\r\n/* SOAErrorMapping.js                      1.0
+          \      Shalini Chauhan                                       08-Aug-2018
+          \    */\r\n/*                                                                                                                         */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n/* Purpose: This GW Script file will handle SOA errors.                                                                    */\r\n/*
+          \                                                                                                                        */\r\n/*
+          \                                                                                                                        */\r\n/*
+          ***********************************************************************************************************************
+          */\r\n\r\nvar SOAError = apim.getvariable('SOAFaultCode');\r\nvar errorPropertyName
+          = null;\r\nvar code = null;\r\nvar logString = apim.getvariable('logString');\r\nif
+          (SOAError.length != 0) {\r\n    \r\n    //Check SOA reposne\r\n    \r\n
+          \   apim.setvariable('errorName', 'BackendError');\r\n    if (SOAError.toString().includes(\"DataSourceBrokenException\")
+          || SOAError.toString().includes(\"ParameterException_Exception\") || SOAError.toString().includes(\"DataSourceOfflineException\")
+          || SOAError.toString().includes(\"Internal Error\")) {\r\n        apim.setvariable('message.status.code',
+          500);\r\n        errorPropertyName = 'other-backend-error';\r\n    } else
+          if (SOAError.toString().includes(\"null\")) {\r\n        apim.setvariable('message.status.code',
+          404);\r\n        errorPropertyName = 'tariff-unavailable';\r\n    } else
+          {\r\n        apim.setvariable('message.status.code', 500);\r\n        errorPropertyName
+          = 'other-backend-error';\r\n    }\r\n    logString += \" | error-scenario:=\"
+          + errorPropertyName;\r\n    apim.setvariable('logString', logString);\r\n
+          \   apim.setvariable('error-message', apim.getvariable(errorPropertyName));\r\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\r\n}"
+    - map:
+        title: Map-CreateTariffDetails
+        inputs:
+          SOAResponse:
+            schema:
+              $ref: '#/definitions/getTariffProductInfoResponse'
+            variable: message.body
+            content: application/xml
+        outputs:
+          output:
+            schema:
+              $ref: '#/definitions/tariffDetailsResponse'
+            variable: message.body
+            content: application/json
+          content-type:
+            schema:
+              type: string
+            variable: message.headers.content-type
+            content: application/json
+        actions:
+        - create: output.tariff_details
+          foreach: SOAResponse.Envelope.Body.getTariffProductInfoResponse.TariffProductInfoStruct.InfoBeans
+          from: SOAResponse.Envelope.Body.getTariffProductInfoResponse.TariffProductInfoStruct.InfoBeans
+          actions:
+          - set: item
+            from: Key
+          - set: charge
+            from: Value
+        - set: output.info_message
+          value: '''Charges are per minute unless noted and they include VAT.'''
+        - set: content-type
+          value: '"application/json"'
+        version: 1.0.0
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ExtractFinalLoggingData
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* ExtractFinalLoggingData.js    1.0        Dinesh Tomar                                          06-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will extract final metadata for logging                                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          //Extract general metadata from system variables
+          var systemDateTime = apim.getvariable('system.datetime');
+          var apicTxId = apim.getvariable('apic-transaction-id');
+          var xGlobalTxId = apim.getvariable('request.headers.x-global-transaction-id');
+          var requestURI = apim.getvariable('request.uri');
+
+          //Extract response metadata from system variables
+          var responseHeaders = apim.getvariable('message.headers');
+
+          delete responseHeaders['Accept-Encoding'];
+          delete responseHeaders['X-Global-Transaction-ID'];
+          delete responseHeaders['User-Agent'];
+          delete responseHeaders['Via'];
+          delete responseHeaders['x-authcode'];
+          delete responseHeaders['authorization'];
+          delete responseHeaders['Authorization'];
+          delete responseHeaders['Access-Control-Allow-Methods'];
+          delete responseHeaders['Access-Control-Allow-Origin'];
+          delete responseHeaders['Access-Control-Allow-Headers'];
+          delete responseHeaders['Access-Control-Expose-Headers'];
+
+          var responseHeadersString = JSON.stringify(responseHeaders);
+          var responseStatusCode = apim.getvariable('message.status.code');
+          var responseStatusReason = apim.getvariable('message.status.reason');
+          //calculate time elapsed
+          var apiStartTimeMS = apim.getvariable('apiStartTimeMS');
+          var apiEndTimeMS = (new Date()).getTime();
+          var totalTimeElapsed = (apiEndTimeMS - apiStartTimeMS) + " ms";
+          var logString = "type:=response"
+                          + " | system-datetime:=" +        systemDateTime
+                          + " | apic-transaction-id:=" +    apicTxId
+                          + " | global-transaction-id:=" +  xGlobalTxId
+                          + " | request-uri:=" +            requestURI
+                          + apim.getvariable('logString')
+                          + " | response-http-headers:=" +  responseHeadersString
+                          + " | response-status-code:=" +   responseStatusCode
+                          + " | response-status-reason:=" + responseStatusReason
+                          + " | total-time-elapsed:=" +     totalTimeElapsed
+                          + " | Final-response:=" +     JSON.stringify(apim.getvariable('message.body'))
+                          ;
+          console.log(logString);
+        description: This GW Script will extract final metadata for logging
+    catch:
+    - errors:
+      - InvalidMsisdn
+      - InvalidTariff
+      - InvalidProductLabel
+      - InvalidAuthCode
+      - InvalidDeviceType
+      - InvalidUserId
+      - InvalidCorrelator
+      - ConnectionError
+      - OperationError
+      - SOAPError
+      - BackendError
+      - default
+      execute:
+      - gatewayscript:
+          title: GS-ErrorHandling
+          version: 1.0.0
+          source: "/* ******************************************************************************************************************
+            */\r\n/* ******************************************************************************************************************
+            */\r\n/* FileName                           Version    Created By                  Modified
+            By               Date           */\r\n/* Errorhandling.js                   1.0
+            \       Dinesh Tomar                                          07-May-2018
+            \   */\r\n/*                                                                                                                    */\r\n/*
+            ******************************************************************************************************************
+            */\r\n/* Purpose: This GW Script file will read error config for the catch
+            block error name and will set the necessary      */\r\n/*          params
+            like status code, reason phrase and will return the error json                                     */\r\n/*
+            Required params: errorName                                                                                         */\r\n/*
+            ******************************************************************************************************************
+            */\r\nvar urlOpen = require('urlopen');\r\n//form url for to fetch errorConfig
+            JSON\r\nvar orgName = apim.getvariable('api.org.name');\r\nvar catalog
+            = apim.getvariable('env.path');\r\napim.setvariable('apicURLPrefix', 'https://0.0.0.0:9443/'+orgName+'/'+catalog);\r\nvar
+            errorConfigURL = apim.getvariable('apicURLPrefix') +'/config/errorconfig';\r\nvar
+            clientId = apim.getvariable('client.app.id');\r\napim.setvariable('message.headers.content-type',
+            'application/json');\r\nvar errorConfigURLOptions = {\r\n    target: errorConfigURL,\r\n
+            \   sslClientProfile: 'o2apic-o2apic-internal-tls-client-profileV1.0.0',\r\n
+            \   headers: {'x-ibm-client-id': clientId, 'content-type': 'application/json'
+            }\r\n};\r\n//fetch errorName and errorConfig JSON from context variables\r\nurlOpen.open(errorConfigURLOptions,
+            function (error, response) {\r\n    if (error) {\r\n        throw error;\r\n
+            \   } else {\r\n        response.readAsJSON(function (error, errorConfigJSON)
+            {\r\n            if (error) {\r\n                throw error;\r\n            }
+            else {\r\n                var errorName = apim.getvariable('errorName');\r\n
+            \               if (errorName == null) {\r\n                    errorName
+            = 'default';\r\n                } \r\n                if (apim.getvariable('message.status.reason')
+            != null && apim.getvariable('message.status.reason').startsWith('APIC:')
+            ) {\r\n                    errorName = 'default';\r\n                    console.log(\"inside
+            soap error config\");\r\n                    apim.setvariable('message.status.code',
+            apim.getvariable('message.status.code'));\r\n                    apim.setvariable('message.status.reason',
+            apim.getvariable('message.status.reason'));\r\n                    apim.setvariable('message.body',
+            apim.getvariable('message.body'));\r\n                } else {\r\n                    if
+            (errorName == 'BackendError') {\r\n                        var errorDetails
+            = errorConfigJSON.errorConfig.errorTypes[errorName];\r\n                        apim.setvariable('message.status.reason',
+            errorDetails.reasonPhrase);\r\n                        var errorMessage
+            = errorDetails.errorMessage;\r\n                        errorMessage.error.message
+            = apim.getvariable('error-message');\r\n                        apim.setvariable('message.body',
+            errorMessage);\r\n                    }\r\n                    //fetch
+            specific block from error config JSON\r\n                    else if (!
+            isJSONEmpty(errorConfigJSON)) {\r\n                        var errorDetails
+            = errorConfigJSON.errorConfig.errorTypes[errorName];\r\n                        var
+            statusCode = errorDetails.statusCode;\r\n                        var reasonPhrase
+            = errorDetails.reasonPhrase;\r\n                        var errorMessage
+            = errorDetails.errorMessage;\r\n                        apim.setvariable('message.status.code',
+            statusCode);\r\n                        apim.setvariable('message.status.reason',
+            reasonPhrase);\r\n                        apim.setvariable('message.body',
+            errorMessage);\r\n                    }\r\n                    //else
+            block executes in case error config file is not loaded. it will set a
+            default error message\r\n                    else {\r\n                    \r\n
+            \                       console.log(\"inside default error config\");\r\n
+            \                       apim.setvariable('message.status.code', 500);\r\n
+            \                       apim.setvariable('message.status.reason', 'Internal
+            Error');\r\n                        var errorMessage = {};\r\n                        errorMessage.httpCode
+            = 500;\r\n                        errorMessage.httpMessage = \"Internal
+            Error\";\r\n                        errorMessage.moreInformation = \"Something's
+            wrong. Please try again later.\";\r\n                        apim.setvariable('message.body',
+            errorMessage);\r\n                    }\r\n                }\r\n            }\r\n
+            \       });\r\n    }\r\n});\r\n\r\n//below function checks if json object
+            is null or not\r\nfunction isJSONEmpty(jsonObject) {\r\n    var member;\r\n
+            \   var result = true;\r\n    for (member in jsonObject) {\r\n        if
+            (jsonObject[member] != null) {\r\n            result = false;\r\n        }\r\n
+            \   }\r\n    return result;\r\n}"
+          description: This GW Script file will read error config for the catch block
+            error name and will set the necessary params like status code, reason
+            phrase and will return the error json
+      - gatewayscript:
+          version: 1.0.0
+          title: GS-ExtractErrorLoggingData
+          source: "/* *************************************************************************************************************
+            */\n/* *************************************************************************************************************
+            */\n/* FileName                      Version    Created By                  Modified
+            By               Date           */\n/* ExtractErrorLoggingData.js    1.0
+            \       Dinesh Tomar                                          06-July-2018
+            \  */\n/*                                                                                                               */\n/*
+            *************************************************************************************************************
+            */\n/* Purpose: This GW Script will extract error metadata for logging
+            \                                              */\n/*                                                                                                               */\n/*
+            Required params:                                                                                              */\n/*
+            ***************************************************************************************************************/\n//Extract
+            general metadata from system variables\nvar systemDateTime = apim.getvariable('system.datetime');\nvar
+            apicTxId = apim.getvariable('apic-transaction-id');\nvar xGlobalTxId =
+            apim.getvariable('request.headers.x-global-transaction-id');\nvar requestURI
+            = apim.getvariable('request.uri');\n\n//Extract response metadata from
+            system variables\nvar responseHeaders = apim.getvariable('message.headers');\n\ndelete
+            responseHeaders['Accept-Encoding'];\ndelete responseHeaders['X-Global-Transaction-ID'];\ndelete
+            responseHeaders['User-Agent'];\ndelete responseHeaders['Via'];\ndelete
+            responseHeaders['x-authcode'];\ndelete responseHeaders['authorization'];\ndelete
+            responseHeaders['Authorization'];\ndelete responseHeaders['Access-Control-Allow-Methods'];\ndelete
+            responseHeaders['Access-Control-Allow-Origin'];\ndelete responseHeaders['Access-Control-Allow-Headers'];\ndelete
+            responseHeaders['Access-Control-Expose-Headers'];\n\nvar responseHeadersString
+            = JSON.stringify(responseHeaders);\nvar responseStatusCode = apim.getvariable('message.status.code');\nvar
+            responseStatusReason = apim.getvariable('message.status.reason');\nvar
+            errorName = apim.getvariable('errorName');\n//calculate time elapsed\nvar
+            apiStartTimeMS = apim.getvariable('apiStartTimeMS');\nvar apiEndTimeMS
+            = (new Date()).getTime();\nvar totalTimeElapsed = (apiEndTimeMS - apiStartTimeMS)
+            + \" ms\";\n\nvar logString = \"type:=error\"\n                + \" |
+            system-datetime:=\" +        systemDateTime\n                + \" | apic-transaction-id:=\"
+            +    apicTxId\n                + \" | global-transaction-id:=\" +  xGlobalTxId\n
+            \               + \" | request-uri:=\" +            requestURI\n                +
+            apim.getvariable('logString')\n                + \" | response-http-headers:=\"
+            +  responseHeadersString\n                + \" | response-status-code:=\"
+            +   responseStatusCode\n                + \" | response-status-reason:=\"
+            + responseStatusReason\n                + \" | error-name:=\" +             errorName\n
+            \               + \" | total-time-elapsed:=\" +     totalTimeElapsed;\n
+            \               \nconsole.log(logString);\n\n"
+          description: This GW Script will extract error metadata for logging
+  gateway: datapower-gateway
+  type: rest
+parameters:
+  msisdn:
+    name: msisdn
+    type: integer
+    in: path
+    required: true
+  tariffname:
+    name: tariffname
+    type: string
+    in: query
+  productlabel:
+    name: productlabel
+    type: string
+    in: query
+  x-device:
+    name: x-device
+    type: string
+    in: header
+  x-correlator:
+    name: x-correlator
+    type: string
+    in: header
+definitions:
+  getTariffProductInfoRequest:
+    description: ""
+    type: object
+    properties:
+      Envelope:
+        type: object
+        properties:
+          Header:
+            type: object
+            properties:
+              Security:
+                type: object
+                properties:
+                  UsernameToken:
+                    type: object
+                    properties:
+                      Username:
+                        type: string
+                      Password:
+                        type: string
+                        properties:
+                          Type:
+                            type: string
+                            xml:
+                              attribute: true
+                      Id:
+                        type: string
+                        xml:
+                          attribute: true
+                          prefix: wsu
+                  mustUnderstand:
+                    type: string
+                    xml:
+                      attribute: true
+                      prefix: soapenv
+                xml:
+                  namespace: http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd
+                  prefix: wsse
+          Body:
+            type: object
+            properties:
+              getTariffProductInfo:
+                type: object
+                properties:
+                  tariffName:
+                    type: string
+                  productLabel:
+                    type: string
+                xml:
+                  namespace: http://webservice.o2.com
+                  prefix: web
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+    xml:
+      namespace: ""
+    example: "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"
+      xmlns:web=\"http://webservice.o2.com\">\r\n   <soapenv:Header>\r\n    <wsse:Security
+      soapenv:mustUnderstand=\"1\" xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"
+      xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\r\n
+      \        <wsse:UsernameToken wsu:Id=\"UsernameToken-39110398B3A9B6235314580420508923\">\r\n
+      \           <wsse:Username>testsupport_4321</wsse:Username>\r\n            <wsse:Password
+      Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">t3st1ng</wsse:Password>\r\n
+      \        </wsse:UsernameToken>\r\n      </wsse:Security>\r\n   </soapenv:Header>\r\n
+      \  <soapenv:Body>\r\n      <web:getTariffProductInfo>\r\n         <!--type:
+      string-->\r\n         <web:tariffName>O2 Refresh 500 24M 500MB 4G(CR5911)</web:tariffName>\r\n
+      \        <!--type: string-->\r\n         <web:productLabel>O2 Refresh Unlimited
+      24M 20GB</web:productLabel>\r\n      </web:getTariffProductInfo>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>"
+    required:
+    - Envelope
+  getTariffProductInfoResponse:
+    description: ""
+    type: object
+    properties:
+      Envelope:
+        type: object
+        properties:
+          Header:
+            type: object
+            properties:
+              SOATransactionID:
+                type: string
+                xml:
+                  namespace: http://soa.o2.co.uk/coredata_1
+                  prefix: cor
+          Body:
+            type: object
+            properties:
+              getTariffProductInfoResponse:
+                type: object
+                properties:
+                  TariffProductInfoStruct:
+                    type: object
+                    properties:
+                      InfoBeans:
+                        type: array
+                        items:
+                          properties:
+                            Key:
+                              type: string
+                              xml:
+                                namespace: java:com.o2.webservice
+                                prefix: n1
+                            Value:
+                              type: string
+                              xml:
+                                namespace: java:com.o2.webservice
+                                prefix: n2
+                          type: object
+                          xml:
+                            namespace: java:com.o2.dashboard.data.tariff
+                            prefix: java
+                xml:
+                  namespace: http://webservice.o2.com
+                  prefix: m
+            xml:
+              namespace: http://schemas.xmlsoap.org/soap/envelope/
+              prefix: env
+        xml:
+          namespace: http://schemas.xmlsoap.org/soap/envelope/
+          prefix: soapenv
+    xml:
+      namespace: ""
+    example: "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\r\n
+      \  <soapenv:Header xmlns:web=\"http://webservice.o2.com\">\r\n      <cor:SOATransactionID
+      xmlns:cor=\"http://soa.o2.co.uk/coredata_1\">7278d917-3a42-4f01-90c0-1db8f204b86e</cor:SOATransactionID>\r\n
+      \  </soapenv:Header>\r\n   <env:Body xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\">\r\n
+      \     <m:getTariffProductInfoResponse xmlns:m=\"http://webservice.o2.com\">\r\n
+      \        <m:TariffProductInfoStruct xmlns:java=\"java:com.o2.dashboard.data.tariff\">\r\n
+      \           <java:InfoBeans>\r\n               <n1:Key xmlns:n1=\"java:com.o2.webservice\">Mobile
+      internet over GSM</n1:Key>\r\n               <n2:Value xmlns:n2=\"java:com.o2.webservice\">35p</n2:Value>\r\n
+      \           </java:InfoBeans>\r\n            <java:InfoBeans>\r\n               <n3:Key
+      xmlns:n3=\"java:com.o2.webservice\">MMS (per message)</n3:Key>\r\n               <n4:Value
+      xmlns:n4=\"java:com.o2.webservice\">50p</n4:Value>\r\n            </java:InfoBeans>\r\n
+      \           <java:InfoBeans>\r\n               <n5:Key xmlns:n5=\"java:com.o2.webservice\">Voicemail
+      901 peak</n5:Key>\r\n               <n6:Value xmlns:n6=\"java:com.o2.webservice\">35p</n6:Value>\r\n
+      \           </java:InfoBeans>\r\n            <java:InfoBeans>\r\n               <n7:Key
+      xmlns:n7=\"java:com.o2.webservice\">peak standard calls</n7:Key>\r\n               <n8:Value
+      xmlns:n8=\"java:com.o2.webservice\">55p</n8:Value>\r\n            </java:InfoBeans>\r\n
+      \           <java:InfoBeans>\r\n               <n9:Key xmlns:n9=\"java:com.o2.webservice\">Voicemail
+      901 off peak</n9:Key>\r\n               <n10:Value xmlns:n10=\"java:com.o2.webservice\">35p</n10:Value>\r\n
+      \           </java:InfoBeans>\r\n            <java:InfoBeans>\r\n               <n11:Key
+      xmlns:n11=\"java:com.o2.webservice\">O2 to O2 peak UK</n11:Key>\r\n               <n12:Value
+      xmlns:n12=\"java:com.o2.webservice\">55p</n12:Value>\r\n            </java:InfoBeans>\r\n
+      \           <java:InfoBeans>\r\n               <n13:Key xmlns:n13=\"java:com.o2.webservice\">Off-peak
+      standard calls</n13:Key>\r\n               <n14:Value xmlns:n14=\"java:com.o2.webservice\">55p</n14:Value>\r\n
+      \           </java:InfoBeans>\r\n            <java:InfoBeans>\r\n               <n15:Key
+      xmlns:n15=\"java:com.o2.webservice\">O2 to O2 weekend UK</n15:Key>\r\n               <n16:Value
+      xmlns:n16=\"java:com.o2.webservice\">55p</n16:Value>\r\n            </java:InfoBeans>\r\n
+      \           <java:InfoBeans>\r\n               <n17:Key xmlns:n17=\"java:com.o2.webservice\">Xnet
+      peak calls</n17:Key>\r\n               <n18:Value xmlns:n18=\"java:com.o2.webservice\">55p</n18:Value>\r\n
+      \           </java:InfoBeans>\r\n            <java:InfoBeans>\r\n               <n19:Key
+      xmlns:n19=\"java:com.o2.webservice\">Voicemail 901 weekend</n19:Key>\r\n               <n20:Value
+      xmlns:n20=\"java:com.o2.webservice\">35p</n20:Value>\r\n            </java:InfoBeans>\r\n
+      \           <java:InfoBeans>\r\n               <n21:Key xmlns:n21=\"java:com.o2.webservice\">Access
+      charge for service numbers</n21:Key>\r\n               <n22:Value xmlns:n22=\"java:com.o2.webservice\">55p</n22:Value>\r\n
+      \           </java:InfoBeans>\r\n            <java:InfoBeans>\r\n               <n23:Key
+      xmlns:n23=\"java:com.o2.webservice\">O2 to O2 off-peak UK</n23:Key>\r\n               <n24:Value
+      xmlns:n24=\"java:com.o2.webservice\">55p</n24:Value>\r\n            </java:InfoBeans>\r\n
+      \           <java:InfoBeans>\r\n               <n25:Key xmlns:n25=\"java:com.o2.webservice\">Text
+      (per message)</n25:Key>\r\n               <n26:Value xmlns:n26=\"java:com.o2.webservice\">0p</n26:Value>\r\n
+      \           </java:InfoBeans>\r\n            <java:InfoBeans>\r\n               <n27:Key
+      xmlns:n27=\"java:com.o2.webservice\">Xnet off-peak calls</n27:Key>\r\n               <n28:Value
+      xmlns:n28=\"java:com.o2.webservice\">55p</n28:Value>\r\n            </java:InfoBeans>\r\n
+      \           <java:InfoBeans>\r\n               <n29:Key xmlns:n29=\"java:com.o2.webservice\">Xnet
+      weekend calls</n29:Key>\r\n               <n30:Value xmlns:n30=\"java:com.o2.webservice\">55p</n30:Value>\r\n
+      \           </java:InfoBeans>\r\n            <java:InfoBeans>\r\n               <n31:Key
+      xmlns:n31=\"java:com.o2.webservice\">Weekend standard calls</n31:Key>\r\n               <n32:Value
+      xmlns:n32=\"java:com.o2.webservice\">55p</n32:Value>\r\n            </java:InfoBeans>\r\n
+      \        </m:TariffProductInfoStruct>\r\n      </m:getTariffProductInfoResponse>\r\n
+      \  </env:Body>\r\n</soapenv:Envelope>"
+    required:
+    - Envelope
+  tariffDetailsResponse:
+    description: ""
+    type: object
+    properties:
+      info_message:
+        type: string
+        description: ""
+        example: Charges are per minute unless noted and they include VAT.
+      tariff_details:
+        type: array
+        items:
+          properties:
+            item:
+              type: string
+            charge:
+              type: string
+          type: object
+    example: "{\r\n   \"info_message\": \"Charges are per minute unless noted and
+      they include VAT.\",\r\n   \"tariff_details\":    [\r\n            {\r\n         \"item\":
+      \"Mobile internet over GSM\",\r\n         \"charge\": \"35p\"\r\n      },\r\n
+      \           {\r\n         \"item\": \"MMS (per message)\",\r\n         \"charge\":
+      \"50p\"\r\n      },\r\n            {\r\n         \"item\": \"Voicemail 901 peak\",\r\n
+      \        \"charge\": \"35p\"\r\n      },\r\n            {\r\n         \"item\":
+      \"peak standard calls\",\r\n         \"charge\": \"55p\"\r\n      },\r\n            {\r\n
+      \        \"item\": \"Voicemail 901 off peak\",\r\n         \"charge\": \"35p\"\r\n
+      \     },\r\n            {\r\n         \"item\": \"O2 to O2 peak UK\",\r\n         \"charge\":
+      \"55p\"\r\n      },\r\n            {\r\n         \"item\": \"Off-peak standard
+      calls\",\r\n         \"charge\": \"55p\"\r\n      },\r\n            {\r\n         \"item\":
+      \"O2 to O2 weekend UK\",\r\n         \"charge\": \"55p\"\r\n      },\r\n            {\r\n
+      \        \"item\": \"Xnet peak calls\",\r\n         \"charge\": \"55p\"\r\n
+      \     },\r\n            {\r\n         \"item\": \"Voicemail 901 weekend\",\r\n
+      \        \"charge\": \"35p\"\r\n      },\r\n            {\r\n         \"item\":
+      \"Access charge for service numbers\",\r\n         \"charge\": \"55p\"\r\n      },\r\n
+      \           {\r\n         \"item\": \"O2 to O2 off-peak UK\",\r\n         \"charge\":
+      \"55p\"\r\n      },\r\n            {\r\n         \"item\": \"Text (per message)\",\r\n
+      \        \"charge\": \"0p\"\r\n      },\r\n            {\r\n         \"item\":
+      \"Xnet off-peak calls\",\r\n         \"charge\": \"55p\"\r\n      },\r\n            {\r\n
+      \        \"item\": \"Xnet weekend calls\",\r\n         \"charge\": \"55p\"\r\n
+      \     },\r\n            {\r\n         \"item\": \"Weekend standard calls\",\r\n
+      \        \"charge\": \"55p\"\r\n      }\r\n   ]\r\n}"
+    required:
+    - info_message
+    - tariff_details
+    additionalProperties: false
+paths:
+  /{msisdn}/postpay/tariffdetails:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+    parameters:
+    - $ref: '#/parameters/msisdn'
+    - $ref: '#/parameters/tariffname'
+    - $ref: '#/parameters/productlabel'
+    - $ref: '#/parameters/x-device'
+    - $ref: '#/parameters/x-user-id'
+    - $ref: '#/parameters/x-client-id'
+    - $ref: '#/parameters/x-correlator'

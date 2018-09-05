@@ -1,0 +1,1134 @@
+swagger: "2.0"
+info:
+  title: o2apic-authservice
+  x-ibm-name: o2apic-authservice
+  version: 2.0.0
+host: $(catalog.host)
+schemes:
+- https
+basePath: /authservice
+produces:
+- application/json
+consumes:
+- application/json
+security:
+- clientIdHeader: []
+securityDefinitions:
+  clientIdHeader:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+x-ibm-configuration:
+  phase: realized
+  testable: true
+  enforced: true
+  properties:
+    target-url:
+      value: ""
+      description: The URL of the target service
+      encoded: false
+    auth-400:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    auth-401:
+      value: That PIN isn't the one you've used before. Please try again or change
+        your PIN.
+      description: That PIN isn't the one you've used before. Please try again or
+        change your PIN.
+    auth-500:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    auth-404:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    phoneservice-error:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+    other-backend-error:
+      value: Something's wrong. Please try again later.
+      description: Something's wrong. Please try again later.
+  cors:
+    enabled: true
+  application-authentication:
+    certificate: false
+  assembly:
+    execute:
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ExtractInputLoggingData
+        source: "/* *************************************************************************************************************
+          */\n/* *************************************************************************************************************
+          */\n/* FileName                      Version    Created By                  Modified
+          By               Date           */\n/* ExtractInputLoggingData.js    1.0
+          \       Dinesh Tomar                                          06-July-2018
+          \  */\n/*                                                                                                               */\n/*
+          *************************************************************************************************************
+          */\n/* Purpose: This GW Script will extract input metadata for logging                                               */\n/*
+          \                                                                                                              */\n/*
+          Required params:                                                                                              */\n/*
+          ***************************************************************************************************************/\n//Extract
+          general metadata from system variables\nvar apiStartTimeMS = (new Date()).getTime();\napim.setvariable('apiStartTimeMS',
+          apiStartTimeMS);\nvar systemDateTime = apim.getvariable('system.datetime');\nvar
+          apicTxId = \"\";\nif (apim.getvariable('request.headers.apic-transaction-id')){\n
+          \   apicTxId = apim.getvariable('request.headers.apic-transaction-id');\n}\nelse
+          {\n    apicTxId = uuidv4();\n}\napim.setvariable('apic-transaction-id',
+          apicTxId);\napim.setvariable('message.headers.apic-transaction-id', apicTxId);\n\nvar
+          xGlobalTxId = apim.getvariable('request.headers.x-global-transaction-id');\n\n//Extract
+          client metadata from system variables\nvar clientIPAddress = apim.getvariable('request.headers.x-client-ip');\nvar
+          clientId = apim.getvariable('client.app.id');\nvar clientAppName = apim.getvariable('client.app.name');\nvar
+          clientAppType = apim.getvariable('client.app.type');\nvar clientOrgName
+          = apim.getvariable('client.org.name');\n\n//Extract api metadata from system
+          variables\nvar apiName = apim.getvariable('api.name');\nvar apiVersion =
+          apim.getvariable('api.version');\nvar providerOrgName = apim.getvariable('api.org.name');\nvar
+          catalogName = apim.getvariable('env.path');\nvar apiBasePath = apim.getvariable('api.root');\nvar
+          operationPath = apim.getvariable('api.operation.path');\n\n\n//Extract product
+          metadata from system variables\n//var productName = apim.getvariable('product.name');\n//var
+          productVersion = apim.getvariable('product.version');\nvar planName = apim.getvariable('plan.name');\nvar
+          planVersion = apim.getvariable('plan.version');\nvar planRateLimit = apim.getvariable('plan.rate-limit');\n\n//Extract
+          request metadata from system variables\nvar requestMethod = apim.getvariable('request.verb');\nvar
+          requestURI = apim.getvariable('request.uri');\nvar requestHeaders = apim.getvariable('request.headers');\n\ndelete
+          requestHeaders['accept-encoding'];\ndelete requestHeaders['x-global-transaction-id'];\ndelete
+          requestHeaders['user-agent'];\ndelete requestHeaders['via'];\n//delete requestHeaders['x-authcode'];\ndelete
+          requestHeaders['authorization'];\n\nvar requestHeadersString = JSON.stringify(requestHeaders);\n\nvar
+          logString = \"type:=request\"\n                + \" | system-datetime:=\"
+          +        systemDateTime\n                + \" | apic-transaction-id:=\"
+          +    apicTxId\n                + \" | global-transaction-id:=\" +  xGlobalTxId\n
+          \               + \" | consumer-ip-address:=\" +    clientIPAddress\n                +
+          \" | x-ibm-client-id:=\" +        clientId\n                + \" | client-app-name:=\"
+          +        clientAppName\n                + \" | client-app-type:=\" +        clientAppType\n
+          \               + \" | client-org-name:=\" +        clientOrgName\n                +
+          \" | api-name:=\" +               apiName\n                + \" | api-version:=\"
+          +            apiVersion\n                + \" | provider-org-name:=\" +
+          \     providerOrgName\n                + \" | catalog-name:=\" +           catalogName\n
+          \               + \" | api-base-path:=\" +          apiBasePath\n                +
+          \" | operation-path:=\" +         operationPath\n                + \" |
+          plan-name:=\" +              planName\n                + \" | plan-version:=\"
+          +           planVersion\n                + \" | plan-rate-limit:=\" +        planRateLimit\n
+          \               + \" | request-http-method:=\" +    requestMethod\n                +
+          \" | request-uri:=\" +            requestURI\n                + \" | request-http-headers:=\"
+          +   requestHeadersString;\n                \nconsole.log(logString);\nlogString
+          = \"\";\napim.setvariable('logString', logString);\n\nfunction uuidv4()
+          {\n    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function
+          (c) {\n        var r = Math.random() * 16 | 0, v = c == 'x' ? r: (r & 0x3
+          | 0x8);\n        return v.toString(16);\n    });\n}"
+        description: This GW Script will extract input metadata for logging
+    - activity-log:
+        title: Log-Payload
+        content: payload
+        error-content: payload
+        version: 1.0.0
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-FetchValidationConfig
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* FetchValidationConfig.js      1.0        Dinesh Tomar                                          04-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will create URL to fetch validation config for all apis                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          var clientId = apim.getvariable('client.app.id');
+          apim.setvariable('message.headers.x-ibm-client-id', clientId);
+          apim.setvariable('message.headers.content-type', 'application/json');
+          //form url for to fetch errorConfig JSON
+          var orgName = apim.getvariable('api.org.name');
+          var catalog = apim.getvariable('env.path');
+          apim.setvariable('apicURLPrefix', 'https://0.0.0.0:9443/'+orgName+'/'+catalog);
+          var validationConfigURL = apim.getvariable('apicURLPrefix')+'/'+'config/validationconfig';
+          apim.setvariable('validationConfigURL', validationConfigURL);
+
+          //record time in ms just before the invoke policy
+          apim.setvariable('startTimeMS', (new Date()).getTime());
+          apim.setvariable('policyName', 'Invoke-ValidationConfig');
+        description: This GW Script will create URL to fetch validation config for
+          all apis
+    - invoke:
+        version: 1.0.0
+        title: Invoke-ValidationConfig
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        stop-on-error:
+        - ConnectionError
+        description: Load all validation config in context
+        target-url: $(validationConfigURL)
+        output: validationConfig
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ValidateParams
+        source: "/* **********************************************************************************************************
+          */\n/* **********************************************************************************************************
+          */\n/* FileName                   Version    Created By                  Modified
+          By               Date           */\n/* ValidateParams.js          1.0        Dinesh
+          Tomar                                          03-July-2018   */\n/*                                                                                                            */\n/*
+          **********************************************************************************************************
+          */\n/* Purpose: This GW Script file will return all API configurations to
+          be used for validating input params     */\n/*                                                                                                            */\n/*
+          Required params:                                                                                           */\n/*
+          ************************************************************************************************************/\n\n//record
+          time in ms just after the invoke policy\nvar endTimeMS = (new Date()).getTime();\nvar
+          timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');\nvar
+          logString = apim.getvariable('logString');\n\nvar validationConfig = apim.getvariable('validationConfig.body');\nif
+          (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+          'BackendError');\n    var errorPropertyName = 'other-backend-error';\n    logString
+          += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+          logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+          \   apim.error('BackendError', apim.getvariable('message.status.code'),
+          'Internal Error', apim.getvariable('error-message'));\n}\nelse {\n    logString
+          += \" | \" + apim.getvariable('policyName') + \":=\" + timeTakenByPreviousPolicy
+          + \" ms\";\n    apim.setvariable('logString', logString);\n    var apiName
+          = apim.getvariable('api.name');\n    var operationName = apim.getvariable('api.operation.path');\n
+          \   var apiConfig = validationConfig.apisConfig[apiName][operationName];\n
+          \   var paramsConfig = validationConfig.paramsConfig;\n    var requiredPathParams
+          = apiConfig.requiredPathParams;\n    var requiredQueryParams = apiConfig.requiredQueryParams;\n
+          \   var requiredHeaderParams = apiConfig.requiredHeaderParams;\n    validateRequiredParams('headers',
+          requiredHeaderParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredQueryParams, paramsConfig);\n    validateRequiredParams('parameters',
+          requiredPathParams, paramsConfig);\n    //record time in ms just before
+          the invoke policy\n    apim.setvariable('startTimeMS', (new Date()).getTime());\n
+          \   apim.setvariable('policyName', 'Invoke-PropertiesHandler');\n}\n\nfunction
+          validateRequiredParams(paramType, requiredParams, paramsConfig){\n    if
+          (requiredParams !== \"\"){\n        var reqParams = requiredParams.split('|');\n
+          \       for (var i = 0; i < reqParams.length; i++){\n            var paramConfig
+          = paramsConfig[reqParams[i]];\n            var inputParam = apim.getvariable('request.'+paramType+'.'+reqParams[i]);\n
+          \           var nullValidation = ((inputParam != undefined) || (inputParam
+          != null));\n            if (nullValidation){\n                var dataTypeValidation
+          = true;\n                dataTypeValidation = validateDataType(inputParam,
+          paramConfig);\n                var lengthValidation = true;\n                var
+          allowedValuesValidation = true;\n                if (paramConfig.manLength
+          || paramConfig.maxLength){\n                    lengthValidation = validateLength(inputParam,
+          paramConfig);\n                }\n                if (paramConfig.allowedValues){\n
+          \                   allowedValuesValidation = validateAllowedValues(inputParam,
+          paramConfig);\n                }\n                if (!(dataTypeValidation)
+          || !(lengthValidation) || !(allowedValuesValidation)){\n                    apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                    apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \                   return;\n                }\n                else {\n
+          \                   apim.setvariable('message.headers.'+reqParams[i], inputParam);\n
+          \                   var clientId = apim.getvariable('client.app.id');\n
+          \                   apim.setvariable('message.headers.x-ibm-client-id',
+          clientId);\n                    apim.setvariable('message.headers.content-type',
+          'application/json');\n                    //form url for to fetch properties
+          config JSON\n                    var configPropertiesURL = apim.getvariable('apicURLPrefix')+'/'+'config/properties';\n
+          \                   apim.setvariable('configPropertiesURL', configPropertiesURL);\n
+          \               }\n            }\n            else {\n                apim.setvariable('errorName',
+          paramConfig.validationErrorName);\n                apim.error(paramConfig.validationErrorName,
+          paramConfig.validationErrorCode, 'Internal Error', paramConfig.validationErrorMessage);\n
+          \               return;\n            }\n            \n        }\n    }\n}\n\nfunction
+          validateDataType(inputParam, paramConfig){\n    if (paramConfig.dataType
+          == 'number'){\n        return !(isNaN(parseInt(inputParam)));\n    }\n    else
+          if (paramConfig.dataType == 'email'){ \n        if (inputParam.includes('.')
+          && inputParam.includes('@') && (! inputParam.includes(' ')))\n            return
+          true;\n        else\n            return false;\n    }\n    else if (paramConfig.dataType
+          == 'string'){\n        if (inputParam != null && inputParam.length != 0)\n
+          \           return true;\n        else\n            return false;\n    }\n
+          \   else if (paramConfig.dataType == 'version'){\n        if (inputParam
+          == null || inputParam.length == 0)\n            return false;\n        else
+          if (inputParam.includes('.')) {\n            var splittedArray = inputParam.split('.');\n
+          \           var result = true;\n            for (var i = 0; i < splittedArray.length;
+          i++){\n                if (isNaN(parseInt(splittedArray[i]))){\n                    result
+          = false;\n                    return result;\n                }\n            }\n
+          \           return result;\n        }\n        else{\n            return
+          !(isNaN(parseInt(inputParam)));\n        }\n    }\n    else\n        return
+          true;\n}\n\nfunction validateLength(inputParam, paramConfig){\n    var minLength
+          = paramConfig.minLength;\n    var maxLength = paramConfig.maxLength;\n    if
+          ((inputParam.length >= minLength) && (inputParam.length <= maxLength))\n
+          \       return true;\n    else\n        return false;\n}\n\nfunction validateAllowedValues(inputParam,
+          paramConfig){\n    var allowedValues = paramConfig.allowedValues;\n    var
+          allowedValuesArray = allowedValues.split('|');\n    var result = false;\n
+          \   for (var i = 0; i < allowedValuesArray.length; i++){\n        if (allowedValuesArray[i]
+          == inputParam){\n            result = true;\n            return result;\n
+          \       }\n    }\n    return result;\n}\n\nfunction isJSONEmpty(jsonObject)
+          {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+          {\n        if (jsonObject[member] != null) {\n            result = false;\n
+          \       }\n    }\n    return result;\n}"
+        description: This GW Script file will return all API configurations to be
+          used for validating input params
+    - invoke:
+        version: 1.0.0
+        title: Invoke-PropertiesHandler
+        timeout: 60
+        verb: GET
+        cache-response: time-to-live
+        cache-ttl: 60
+        stop-on-error:
+        - ConnectionError
+        description: Load all messages  and properties in context
+        target-url: $(configPropertiesURL)
+        output: messages-property
+    - operation-switch:
+        title: AuthServiceOperationSwitch
+        case:
+        - operations:
+          - verb: get
+            path: /getaccesstoken
+          execute:
+          - gatewayscript:
+              title: GS-CreateAccessTokenRequest
+              version: 1.0.0
+              source: "/* ************************************************************************************************************
+                */\n/* ************************************************************************************************************
+                */\n/* FileName                     Version    Created By                  Modified
+                By               Date           */\n/* CreateAccessTokenRequest.js
+                \ 1.0        Dinesh Tomar                                          02-May-2018
+                \   */\n/*                                                                                                              */\n/*
+                ************************************************************************************************************
+                */\n/* Purpose: This GW Script file will fetch AuthServer URL for
+                AccessToken, prepare AuthZ header and AccessToken */\n/*           request
+                to be posted in next  call                                                                 */\n/*
+                Required params: x-authcode                                                                                  */\n/*
+                ************************************************************************************************************
+                */\n//record time in ms just after the invoke policy\nvar endTimeMS
+                = (new Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS
+                - apim.getvariable('startTimeMS');\nvar logString = apim.getvariable('logString');\n\nif
+                (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+                'BackendError');\n    var errorPropertyName = 'other-backend-error';\n
+                \   logString += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+                logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+                \   apim.error('BackendError', apim.getvariable('message.status.code'),
+                'Internal Error', apim.getvariable('error-message'));\n} else {\n
+                \   logString += \" | \" + apim.getvariable('policyName') + \":=\"
+                + timeTakenByPreviousPolicy + \" ms\";\n    apim.setvariable('logString',
+                logString);\n    //load properties configuration from context variable\n
+                \   var messages = apim.getvariable('messages-property.body');\n    //extract
+                auth server URL to generate access token and set it in a variable\n
+                \   var authServerAccessTokenURL = messages.authserver.generateAccessToken.uri;\n
+                \   apim.setvariable('authServerAccessTokenURL', authServerAccessTokenURL);\n\n
+                \   //read client id and client secret from config and create AuthZ
+                header for access token call\n    var authServerClientId = messages.authserver.client_id;\n
+                \   var authServerClientSecret = messages.authserver.client_secret;\n
+                \   var buffer = new Buffer(authServerClientId+\":\"+authServerClientSecret);\n
+                \   var authorizationHeader = \"Basic \" + buffer.toString('base64');\n
+                \   apim.setvariable('message.headers.authorization', authorizationHeader);\n\n
+                \   //read all http headers from the input request\n    var authCode
+                = apim.getvariable('message.headers.x-authcode');\n    \n    //get
+                scope and grant type from config xml \n    var scope = messages.authserver.scope;\n
+                \   var grantType = messages.authserver.oauth.grant_type;\n    //var
+                grantType = messages.authserver.grant_type;\n    //create access token
+                JSON request with authcode, scope and grant type\n    var authServerAccessTokenRequest
+                = {};\n    authServerAccessTokenRequest.code = authCode;\n    authServerAccessTokenRequest.scope
+                = scope;\n    authServerAccessTokenRequest.grant_type = grantType;\n\n
+                \   //write access token request in the context for next call\n    apim.setvariable('message.body',
+                authServerAccessTokenRequest);\n    \n    var logString = apim.getvariable('logString');\n
+                \   logString += \" | Invoke-GATAuthService-Body:=\" + JSON.stringify(authServerAccessTokenRequest)
+                + \" | Headers:=\" + JSON.stringify(apim.getvariable('message.headers'));\n
+                \   apim.setvariable('logString', logString);\n    \n    //record
+                time in ms just before the invoke policy\n    apim.setvariable('startTimeMS',
+                (new Date()).getTime());\n    apim.setvariable('policyName', 'Invoke-GATAuthService');\n}\n\nfunction
+                isJSONEmpty(jsonObject) {\n    var member;\n    var result = true;\n
+                \   for (member in jsonObject) {\n        if (jsonObject[member] !=
+                null) {\n            result = false;\n        }\n    }\n    return
+                result;\n}"
+              description: GW Script to create access token request for auth service
+          - invoke:
+              target-url: $(authServerAccessTokenURL)
+              title: Invoke-GATAuthService
+              verb: POST
+          - gatewayscript:
+              version: 1.0.0
+              title: GS-RecordTimeStamp
+              description: Record time in ms taken by the previous invoke policy for
+                logging
+              source: |-
+                //record time in ms just after the invoke policy
+                var endTimeMS = (new Date()).getTime();
+                var timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');
+                var logString = apim.getvariable('logString');
+                logString += " | " + apim.getvariable('policyName') + " := " + timeTakenByPreviousPolicy + " ms";
+                apim.setvariable('logString', logString);
+        - operations:
+          - verb: get
+            path: /getconsolidatedauth
+          execute:
+          - gatewayscript:
+              title: GS-CreateAccessTokenRequest
+              version: 1.0.0
+              source: "/* ************************************************************************************************************
+                */\n/* ************************************************************************************************************
+                */\n/* FileName                     Version    Created By                  Modified
+                By               Date           */\n/* CreateAccessTokenRequest.js
+                \ 1.0        Dinesh Tomar                                          02-May-2018
+                \   */\n/*                                                                                                              */\n/*
+                ************************************************************************************************************
+                */\n/* Purpose: This GW Script file will fetch AuthServer URL for
+                AccessToken, prepare AuthZ header and AccessToken */\n/*           request
+                to be posted in next  call                                                                 */\n/*
+                Required params: x-authcode                                                                                  */\n/*
+                ************************************************************************************************************
+                */\n//record time in ms just after the invoke policy\nvar endTimeMS
+                = (new Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS
+                - apim.getvariable('startTimeMS');\nvar logString = apim.getvariable('logString');\n\nif
+                (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+                'BackendError');\n    var errorPropertyName = 'other-backend-error';\n
+                \   logString += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+                logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+                \   apim.error('BackendError', apim.getvariable('message.status.code'),
+                'Internal Error', apim.getvariable('error-message'));\n} else {\n
+                \   logString += \" | \" + apim.getvariable('policyName') + \":=\"
+                + timeTakenByPreviousPolicy + \" ms\";\n    apim.setvariable('logString',
+                logString);\n    //load properties configuration from context variable\n
+                \   var messages = apim.getvariable('messages-property.body');\n    //extract
+                auth server URL to generate access token and set it in a variable\n
+                \   var authServerAccessTokenURL = messages.authserver.generateAccessToken.uri;\n
+                \   apim.setvariable('authServerAccessTokenURL', authServerAccessTokenURL);\n\n
+                \   //read client id and client secret from config and create AuthZ
+                header for access token call\n    var authServerClientId = messages.authserver.client_id;\n
+                \   var authServerClientSecret = messages.authserver.client_secret;\n
+                \   var buffer = new Buffer(authServerClientId+\":\"+authServerClientSecret);\n
+                \   var authorizationHeader = \"Basic \" + buffer.toString('base64');\n
+                \   apim.setvariable('message.headers.authorization', authorizationHeader);\n\n
+                \   //read all http headers from the input request\n    var authCode
+                = apim.getvariable('message.headers.x-authcode');\n    \n    //get
+                scope and grant type from config xml \n    var scope = messages.authserver.scope;\n
+                \   var grantType = messages.authserver.oauth.grant_type;\n    //var
+                grantType = messages.authserver.grant_type;\n    //create access token
+                JSON request with authcode, scope and grant type\n    var authServerAccessTokenRequest
+                = {};\n    authServerAccessTokenRequest.code = authCode;\n    authServerAccessTokenRequest.scope
+                = scope;\n    authServerAccessTokenRequest.grant_type = grantType;\n\n
+                \   //write access token request in the context for next call\n    apim.setvariable('message.body',
+                authServerAccessTokenRequest);\n    \n    var logString = apim.getvariable('logString');\n
+                \   logString += \" | Invoke-GATAuthService-Body:=\" + JSON.stringify(authServerAccessTokenRequest)
+                + \" | Headers:=\" + JSON.stringify(apim.getvariable('message.headers'));\n
+                \   apim.setvariable('logString', logString);\n    \n    //record
+                time in ms just before the invoke policy\n    apim.setvariable('startTimeMS',
+                (new Date()).getTime());\n    apim.setvariable('policyName', 'Invoke-GATAuthService');\n}\n\nfunction
+                isJSONEmpty(jsonObject) {\n    var member;\n    var result = true;\n
+                \   for (member in jsonObject) {\n        if (jsonObject[member] !=
+                null) {\n            result = false;\n        }\n    }\n    return
+                result;\n}"
+              description: GW Script to create access token request for auth service
+          - invoke:
+              target-url: $(authServerAccessTokenURL)
+              title: Invoke-GATAuthService
+              verb: POST
+              output: accessToken
+          - gatewayscript:
+              title: GS-PrepareAssetTypeCall
+              version: 1.0.0
+              source: "/* ************************************************************************************************************
+                */\n/* ************************************************************************************************************
+                */\n/* FileName                     Version    Created By                  Modified
+                By               Date           */\n/* PrepareAssetTypeCall.js      1.0
+                \       Dinesh Tomar                                          02-May-2018
+                \   */\n/*                                                                                                              */\n/*
+                ************************************************************************************************************
+                */\n/* Purpose: This GW Script file will prepare AssetType call                                                     */\n/*
+                \                                                                                                             */\n/*
+                Required params: msisdn                                                                                      */\n/*
+                ************************************************************************************************************
+                */\n//record time in ms just after the invoke policy\nvar endTimeMS
+                = (new Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS
+                - apim.getvariable('startTimeMS');\nvar logString = apim.getvariable('logString');\n\nif
+                (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+                'BackendError');\n    var errorPropertyName = 'auth-' + apim.getvariable('message.status.code');\n
+                \   logString += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+                logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+                \   apim.error('BackendError', apim.getvariable('message.status.code'),
+                'Internal Error', apim.getvariable('error-message'));\n} else {\n
+                \   logString += \" | \" + apim.getvariable('policyName') + \":=\"
+                + timeTakenByPreviousPolicy + \" ms\";\n    apim.setvariable('logString',
+                logString);\n    \n    //load properties configuration from context
+                variable\n    var messages = apim.getvariable('messages-property.body');\n
+                \   var accessTokenResponse = apim.getvariable('accessToken.body');\n
+                \   //load msisdn from request header in a variable\n    var msisdn
+                = apim.getvariable('message.headers.msisdn');\n    //get access token
+                from previous call and set it as Bearer AuthZ header for next call\n
+                \   var accessToken = accessTokenResponse.access_token;\n    var authorizationHeader
+                = \"Bearer \" + accessToken;\n    apim.setvariable('message.headers.authorization',
+                authorizationHeader);\n    //fetch assets service assetType URL from
+                config file, replace CURRENT with msisdn and set variable for next
+                call\n    var assetTypeCallURL = messages.assetservice.assets.uri;\n
+                \   //assetTypeCallURL = assetTypeCallURL.replace('CURRENT', msisdn);\n
+                \   apim.setvariable('assetTypeCallURL', assetTypeCallURL);\n    \n
+                \   //record time in ms just before the invoke policy\n    apim.setvariable('startTimeMS',
+                (new Date()).getTime());\n    apim.setvariable('policyName', 'Invoke-AssetTypeService');\n}\n\nfunction
+                isJSONEmpty(jsonObject) {\n    var member;\n    var result = true;\n
+                \   for (member in jsonObject) {\n        if (jsonObject[member] !=
+                null) {\n            result = false;\n        }\n    }\n    return
+                result;\n}"
+              description: This GW Script file will prepare AssetType call
+          - invoke:
+              title: Invoke-AssetTypeService
+              timeout: 60
+              verb: GET
+              cache-response: protocol
+              cache-ttl: 900
+              version: 1.0.0
+              description: Fetch all assets from identity
+              target-url: $(assetTypeCallURL)
+              output: assets
+          - gatewayscript:
+              title: GS-CreateDisambiguationIdRequest
+              version: 1.0.0
+              source: "/* ****************************************************************************************************************
+                */\n/* ****************************************************************************************************************
+                */\n/* FileName                         Version    Created By                  Modified
+                By               Date           */\n/* CreateDisambiguationIdRequest.js
+                1.0        Dinesh Tomar                                          02-May-2018
+                \   */\n/*                                                                                                                  */\n/*
+                ****************************************************************************************************************
+                */\n/* Purpose: This GW Script file will process AssetType call response
+                and prepare the request for disambiguationId   */\n/*                                                                                                                  */\n/*
+                Required params: msisdn                                                                                          */\n/*
+                ****************************************************************************************************************
+                */\n//record time in ms just after the invoke policy\nvar endTimeMS
+                = (new Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS
+                - apim.getvariable('startTimeMS');\nvar logString = apim.getvariable('logString');\n\nif
+                (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+                'BackendError');\n    var errorPropertyName = 'auth-' + apim.getvariable('message.status.code');\n
+                \   logString += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+                logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+                \   apim.error('BackendError', apim.getvariable('message.status.code'),
+                'Internal Error', apim.getvariable('error-message'));\n} else {\n
+                \   logString += \" | \" + apim.getvariable('policyName') + \":=\"
+                + timeTakenByPreviousPolicy + \" ms\";\n    apim.setvariable('logString',
+                logString);\n    \n    //load properties configuration from context
+                variable\n    var messages = apim.getvariable('messages-property.body');\n
+                \   //create phone number from msisdn received in request header\n
+                \   var msisdn = apim.getvariable('message.headers.msisdn');\n    var
+                phoneNumber = msisdn;\n    //load assets response in a variable\n
+                \   var assets = apim.getvariable('assets.body');\n    //get all assets\n
+                \   var assetTypes = ['PAYG'];\n    var filteredAssets = getAssets(assets,
+                assetTypes);\n    //evaluate assetType response to check if asset
+                is PAYG or not\n    var isPayg = false;\n    for (var i = 0; i < filteredAssets.length;
+                i++){\n        if (filteredAssets[i].asset_value.includes(msisdn)){\n
+                \           isPayg = true;\n        }\n    }\n    var productIdentifier
+                = \"product_id/PAYM\";\n    if (isPayg) {\n        productIdentifier
+                = \"product_id/PAYG\";\n    }\n    apim.setvariable('isPayg', isPayg);\n
+                \   //create disambiguationIdRequest with productIdentifier\n    var
+                disambiguationIdRequest = {\n    };\n    disambiguationIdRequest.selected_identifier_type
+                = productIdentifier;\n    disambiguationIdRequest.selected_identifier_value
+                = phoneNumber;\n    //read disambiguationId URL from config and set
+                it in a variable for next call\n    apim.setvariable('generateDisambiguationIdURL',
+                messages.authserver.generateDisambiguationId.uri);\n    //write disambiguationId
+                request in the context for next call\n    apim.setvariable('message.body',
+                disambiguationIdRequest);\n    //record time in ms just before the
+                invoke policy\n    apim.setvariable('startTimeMS', (new Date()).getTime());\n
+                \   apim.setvariable('policyName', 'Invoke-DisambiguationIdService');\n}\n\nfunction
+                getAssets(assets, assetTypes){\n    var filteredAssets = [];\n    for
+                (var i = 0; i < assets.length; i++){\n        for (var j = 0; j <
+                assetTypes.length; j++){\n            if (assets[i] != null && assets[i].asset_type
+                != null && assets[i].asset_type == assetTypes[j]){\n                filteredAssets.push(assets[i]);\n
+                \           }\n        }\n    }\n    return filteredAssets;\n}"
+              description: This GW Script file will process AssetType call response
+                and prepare the request for disambiguationId
+          - invoke:
+              title: Invoke-DisambiguationIdService
+              timeout: 60
+              verb: POST
+              cache-response: protocol
+              cache-ttl: 900
+              version: 1.0.0
+              description: Fetch disambiguationid from identity
+              target-url: $(generateDisambiguationIdURL)
+              output: disambiguationId
+          - gatewayscript:
+              title: GS-CreateTransferAuthCodeRequest
+              version: 1.0.0
+              source: |-
+                /* **************************************************************************************************************** */
+                /* **************************************************************************************************************** */
+                /* FileName                         Version    Created By                  Modified By               Date           */
+                /* CreateTransferAuthCodeRequest.js 1.0        Dinesh Tomar                                          02-May-2018    */
+                /*                                                                                                                  */
+                /* **************************************************************************************************************** */
+                /* Purpose: This GW Script file will fetch AuthServer URL for TransferAuthCode, prepare AuthZ header and            */
+                /*          TransferAuthCode request to be posted in next  call                                                     */
+                /* Required params: x-authcode, x-device, clientId                                                                  */
+                /* **************************************************************************************************************** */
+                //record time in ms just after the invoke policy
+                var endTimeMS = (new Date()).getTime();
+                var timeTakenByPreviousPolicy = endTimeMS - apim.getvariable('startTimeMS');
+                var logString = apim.getvariable('logString');
+
+                if (apim.getvariable('message.status.code') != 201) {
+                    apim.setvariable('errorName', 'BackendError');
+                    var errorPropertyName = 'auth-' + apim.getvariable('message.status.code');
+                    logString += " | error-scenario:=" + errorPropertyName;
+                    apim.setvariable('logString', logString);
+                    apim.setvariable('error-message', apim.getvariable(errorPropertyName));
+                    apim.error('BackendError', apim.getvariable('message.status.code'), 'Internal Error', apim.getvariable('error-message'));
+                } else {
+                    logString += " | " + apim.getvariable('policyName') + ":=" + timeTakenByPreviousPolicy + " ms";
+                    apim.setvariable('logString', logString);
+                    //load properties configuration from context variable
+                    var messages = apim.getvariable('messages-property.body');
+                    //extract auth server URL to generate transfer auth code and set it in a variable
+                    var authServerTransferAuthCodeURL = messages.authserver.generateTransferAuthCode.uri;
+                    apim.setvariable('authServerTransferAuthCodeURL', authServerTransferAuthCodeURL);
+                    //get headers values from request
+                    var deviceType = apim.getvariable('message.headers.x-device');
+                    var clientId = apim.getvariable('client.app.id');
+                    //get access token from previous call and set it as Bearer AuthZ header for next call
+                    var accessToken = apim.getvariable('accessToken.body').access_token;
+                    var authorizationHeader = "Bearer " + accessToken;
+                    apim.setvariable('message.headers.authorization', authorizationHeader);
+                    //get disambiguationId from previous call response
+                    var disambiguationId = apim.getvariable('disambiguationId.body').disambiguation_id;
+                    var replacedParam = 'disambiguation_id=';
+                    //load sendTo and failureURL from config and set deviceType, clientId and disambiguationId in the URL
+                    var sendToURL = messages.sso.endpoint.paybill.sendto;
+                    var failureURL = messages.sso.endpoint.paybill.failure;
+                    sendToURL =  sendToURL.replace('#deviceType#', deviceType).replace('#clientId#', clientId).replace('disambiguation_id=%s', replacedParam.concat(disambiguationId));
+                    failureURL = failureURL.replace('#deviceType#', deviceType).replace('#clientId#', clientId).replace('disambiguation_id=%s', replacedParam.concat(disambiguationId));
+                    apim.setvariable('sendToURL', sendToURL);
+                    apim.setvariable('failureURL', failureURL);
+                    var credhandlerRedemptionURL = messages.sso.credhandler_redemption_url;
+                    apim.setvariable('credhandlerRedemptionURL', credhandlerRedemptionURL);
+                    //create transfer auth code request and write it in context variable
+                    var transferAuthCodeRequest = {};
+                    transferAuthCodeRequest.send_to = sendToURL;
+                    apim.setvariable('message.body', transferAuthCodeRequest);
+
+                    //record time in ms just before the invoke policy
+                    apim.setvariable('startTimeMS', (new Date()).getTime());
+                    apim.setvariable('policyName', 'Invoke-TransferAuthCodeService');
+                }
+              description: GW script to process disambiguationid and create transfer
+                authcode request
+          - invoke:
+              title: Invoke-TransferAuthCodeService
+              timeout: 60
+              verb: POST
+              cache-response: protocol
+              cache-ttl: 900
+              version: 1.0.0
+              description: Fetch Transfer Auth Code from identity
+              target-url: $(authServerTransferAuthCodeURL)
+              output: transferAuthCode
+          - gatewayscript:
+              title: GS-ConsolidateAuthResponses
+              version: 1.0.0
+              description: This GW Script file will consolidate all auth responses
+                (authCode, accessToken, disambiguationId and transferAuthCode) together
+                in a single response
+              source: "/* ********************************************************************************************************************
+                */\n/* ********************************************************************************************************************
+                */\n/* FileName                             Version    Created By
+                \                 Modified By               Date           */\n/*
+                ConsolidateAuthResponses.js          1.0        Dinesh Tomar                                          02-May-2018
+                \   */\n/*                                                                                                                      */\n/*
+                ********************************************************************************************************************
+                */\n/* Purpose: This GW Script file will consolidate all auth responses
+                (authCode, accessToken, disambiguationId and        */\n/*          transferAuthCode)
+                together in a single response                                                             */\n/*
+                Required params: x-authcode, x-device, clientId                                                                      */\n/*
+                ********************************************************************************************************************
+                */\n//record time in ms just after the invoke policy\nvar endTimeMS
+                = (new Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS
+                - apim.getvariable('startTimeMS');\nvar logString = apim.getvariable('logString');\n\nif
+                (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+                'BackendError');\n    var errorPropertyName = 'auth-' + apim.getvariable('message.status.code');\n
+                \   logString += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+                logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+                \   apim.error('BackendError', apim.getvariable('message.status.code'),
+                'Internal Error', apim.getvariable('error-message'));\n} else {\n
+                \   logString += \" | \" + apim.getvariable('policyName') + \":=\"
+                + timeTakenByPreviousPolicy + \" ms\";\n    apim.setvariable('logString',
+                logString);\n    \n    //fetch transferAuthCode, sendToURL and failureURL
+                and generate sso link \n    var transferAuthCodeResponse = apim.getvariable('transferAuthCode.body');\n
+                \   var transferAuthCode = transferAuthCodeResponse.transfer_auth_code;\n
+                \   var sendToURL = apim.getvariable('sendToURL');\n    var failureURL
+                = apim.getvariable('failureURL');\n    var credhandlerRedemptionURL
+                = apim.getvariable('credhandlerRedemptionURL');\n    var ssoLink =
+                credhandlerRedemptionURL.replace('#AUTH_CODE#', transferAuthCode).replace('#SEND_TO#',
+                sendToURL).replace('#FAILURE_URL#', failureURL);\n\n    //load all
+                responses configuration from context variables and generate consolidatedAUthResponse\n
+                \   var consolidatedAuthResponse = {};\n    consolidatedAuthResponse.msisdn
+                = apim.getvariable('message.headers.msisdn');\n    consolidatedAuthResponse.isPayg
+                = apim.getvariable('isPayg');\n    consolidatedAuthResponse.authCode
+                = apim.getvariable('message.headers.x-authcode');\n    consolidatedAuthResponse.access_token
+                = apim.getvariable('accessToken.body').access_token;\n    consolidatedAuthResponse.disambiguation_id
+                = apim.getvariable('disambiguationId.body').disambiguation_id;\n    consolidatedAuthResponse.transfer_auth_code
+                = transferAuthCode;\n    consolidatedAuthResponse.ssoLink = ssoLink;\n
+                \   //write consolidated auth response as the final operation response\n
+                \   apim.setvariable('message.body', consolidatedAuthResponse);\n}\n\n//below
+                function checks if json object is null or not\nfunction isJSONEmpty(jsonObject)
+                {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+                {\n        if (jsonObject[member] != null) {\n            result =
+                false;\n        }\n    }\n    return result;\n}"
+        - operations:
+          - verb: get
+            path: /getdisambiguationid
+          execute:
+          - gatewayscript:
+              title: GS-CreateAccessTokenRequest
+              version: 1.0.0
+              source: "/* ************************************************************************************************************
+                */\n/* ************************************************************************************************************
+                */\n/* FileName                     Version    Created By                  Modified
+                By               Date           */\n/* CreateAccessTokenRequest.js
+                \ 1.0        Dinesh Tomar                                          02-May-2018
+                \   */\n/*                                                                                                              */\n/*
+                ************************************************************************************************************
+                */\n/* Purpose: This GW Script file will fetch AuthServer URL for
+                AccessToken, prepare AuthZ header and AccessToken */\n/*           request
+                to be posted in next  call                                                                 */\n/*
+                Required params: x-authcode                                                                                  */\n/*
+                ************************************************************************************************************
+                */\n//record time in ms just after the invoke policy\nvar endTimeMS
+                = (new Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS
+                - apim.getvariable('startTimeMS');\nvar logString = apim.getvariable('logString');\n\nif
+                (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+                'BackendError');\n    var errorPropertyName = 'other-backend-error';\n
+                \   logString += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+                logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+                \   apim.error('BackendError', apim.getvariable('message.status.code'),
+                'Internal Error', apim.getvariable('error-message'));\n} else {\n
+                \   logString += \" | \" + apim.getvariable('policyName') + \":=\"
+                + timeTakenByPreviousPolicy + \" ms\";\n    apim.setvariable('logString',
+                logString);\n    //load properties configuration from context variable\n
+                \   var messages = apim.getvariable('messages-property.body');\n    //extract
+                auth server URL to generate access token and set it in a variable\n
+                \   var authServerAccessTokenURL = messages.authserver.generateAccessToken.uri;\n
+                \   apim.setvariable('authServerAccessTokenURL', authServerAccessTokenURL);\n\n
+                \   //read client id and client secret from config and create AuthZ
+                header for access token call\n    var authServerClientId = messages.authserver.client_id;\n
+                \   var authServerClientSecret = messages.authserver.client_secret;\n
+                \   var buffer = new Buffer(authServerClientId+\":\"+authServerClientSecret);\n
+                \   var authorizationHeader = \"Basic \" + buffer.toString('base64');\n
+                \   apim.setvariable('message.headers.authorization', authorizationHeader);\n\n
+                \   //read all http headers from the input request\n    var authCode
+                = apim.getvariable('message.headers.x-authcode');\n    \n    //get
+                scope and grant type from config xml \n    var scope = messages.authserver.scope;\n
+                \   var grantType = messages.authserver.oauth.grant_type;\n    //var
+                grantType = messages.authserver.grant_type;\n    //create access token
+                JSON request with authcode, scope and grant type\n    var authServerAccessTokenRequest
+                = {};\n    authServerAccessTokenRequest.code = authCode;\n    authServerAccessTokenRequest.scope
+                = scope;\n    authServerAccessTokenRequest.grant_type = grantType;\n\n
+                \   //write access token request in the context for next call\n    apim.setvariable('message.body',
+                authServerAccessTokenRequest);\n    \n    var logString = apim.getvariable('logString');\n
+                \   logString += \" | Invoke-GATAuthService-Body:=\" + JSON.stringify(authServerAccessTokenRequest)
+                + \" | Headers:=\" + JSON.stringify(apim.getvariable('message.headers'));\n
+                \   apim.setvariable('logString', logString);\n    \n    //record
+                time in ms just before the invoke policy\n    apim.setvariable('startTimeMS',
+                (new Date()).getTime());\n    apim.setvariable('policyName', 'Invoke-GATAuthService');\n}\n\nfunction
+                isJSONEmpty(jsonObject) {\n    var member;\n    var result = true;\n
+                \   for (member in jsonObject) {\n        if (jsonObject[member] !=
+                null) {\n            result = false;\n        }\n    }\n    return
+                result;\n}"
+              description: GW Script to create access token request for auth service
+          - invoke:
+              target-url: $(authServerAccessTokenURL)
+              title: Invoke-GATAuthService
+              verb: POST
+              output: accessToken
+          - gatewayscript:
+              title: GS-PrepareAssetTypeCall
+              version: 1.0.0
+              source: "/* ************************************************************************************************************
+                */\n/* ************************************************************************************************************
+                */\n/* FileName                     Version    Created By                  Modified
+                By               Date           */\n/* PrepareAssetTypeCall.js      1.0
+                \       Dinesh Tomar                                          02-May-2018
+                \   */\n/*                                                                                                              */\n/*
+                ************************************************************************************************************
+                */\n/* Purpose: This GW Script file will prepare AssetType call                                                     */\n/*
+                \                                                                                                             */\n/*
+                Required params: msisdn                                                                                      */\n/*
+                ************************************************************************************************************
+                */\n//record time in ms just after the invoke policy\nvar endTimeMS
+                = (new Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS
+                - apim.getvariable('startTimeMS');\nvar logString = apim.getvariable('logString');\n\nif
+                (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+                'BackendError');\n    var errorPropertyName = 'auth-' + apim.getvariable('message.status.code');\n
+                \   logString += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+                logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+                \   apim.error('BackendError', apim.getvariable('message.status.code'),
+                'Internal Error', apim.getvariable('error-message'));\n} else {\n
+                \   logString += \" | \" + apim.getvariable('policyName') + \":=\"
+                + timeTakenByPreviousPolicy + \" ms\";\n    apim.setvariable('logString',
+                logString);\n    \n    //load properties configuration from context
+                variable\n    var messages = apim.getvariable('messages-property.body');\n
+                \   var accessTokenResponse = apim.getvariable('accessToken.body');\n
+                \   //load msisdn from request header in a variable\n    var msisdn
+                = apim.getvariable('message.headers.msisdn');\n    //get access token
+                from previous call and set it as Bearer AuthZ header for next call\n
+                \   var accessToken = accessTokenResponse.access_token;\n    var authorizationHeader
+                = \"Bearer \" + accessToken;\n    apim.setvariable('message.headers.authorization',
+                authorizationHeader);\n    //fetch assets service assetType URL from
+                config file, replace CURRENT with msisdn and set variable for next
+                call\n    var assetTypeCallURL = messages.assetservice.assets.uri;\n
+                \   //assetTypeCallURL = assetTypeCallURL.replace('CURRENT', msisdn);\n
+                \   apim.setvariable('assetTypeCallURL', assetTypeCallURL);\n    \n
+                \   //record time in ms just before the invoke policy\n    apim.setvariable('startTimeMS',
+                (new Date()).getTime());\n    apim.setvariable('policyName', 'Invoke-AssetTypeService');\n}\n\nfunction
+                isJSONEmpty(jsonObject) {\n    var member;\n    var result = true;\n
+                \   for (member in jsonObject) {\n        if (jsonObject[member] !=
+                null) {\n            result = false;\n        }\n    }\n    return
+                result;\n}"
+              description: This GW Script file will prepare AssetType call
+          - invoke:
+              title: Invoke-AssetTypeService
+              timeout: 60
+              verb: GET
+              cache-response: protocol
+              cache-ttl: 900
+              version: 1.0.0
+              description: Fetch all assets from identity
+              target-url: $(assetTypeCallURL)
+              output: assets
+          - gatewayscript:
+              title: GS-CreateDisambiguationIdRequest
+              version: 1.0.0
+              source: "/* ****************************************************************************************************************
+                */\n/* ****************************************************************************************************************
+                */\n/* FileName                         Version    Created By                  Modified
+                By               Date           */\n/* CreateDisambiguationIdRequest.js
+                1.0        Dinesh Tomar                                          02-May-2018
+                \   */\n/*                                                                                                                  */\n/*
+                ****************************************************************************************************************
+                */\n/* Purpose: This GW Script file will process AssetType call response
+                and prepare the request for disambiguationId   */\n/*                                                                                                                  */\n/*
+                Required params: msisdn                                                                                          */\n/*
+                ****************************************************************************************************************
+                */\n//record time in ms just after the invoke policy\nvar endTimeMS
+                = (new Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS
+                - apim.getvariable('startTimeMS');\nvar logString = apim.getvariable('logString');\n\nif
+                (apim.getvariable('message.status.code') != 200) {\n    apim.setvariable('errorName',
+                'BackendError');\n    var errorPropertyName = 'auth-' + apim.getvariable('message.status.code');\n
+                \   logString += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+                logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+                \   apim.error('BackendError', apim.getvariable('message.status.code'),
+                'Internal Error', apim.getvariable('error-message'));\n} else {\n
+                \   logString += \" | \" + apim.getvariable('policyName') + \":=\"
+                + timeTakenByPreviousPolicy + \" ms\";\n    apim.setvariable('logString',
+                logString);\n    \n    //load properties configuration from context
+                variable\n    var messages = apim.getvariable('messages-property.body');\n
+                \   //create phone number from msisdn received in request header\n
+                \   var msisdn = apim.getvariable('message.headers.msisdn');\n    var
+                phoneNumber = msisdn;\n    //load assets response in a variable\n
+                \   var assets = apim.getvariable('assets.body');\n    //get all assets\n
+                \   var assetTypes = ['PAYG'];\n    var filteredAssets = getAssets(assets,
+                assetTypes);\n    //evaluate assetType response to check if asset
+                is PAYG or not\n    var isPayg = false;\n    for (var i = 0; i < filteredAssets.length;
+                i++){\n        if (filteredAssets[i].asset_value.includes(msisdn)){\n
+                \           isPayg = true;\n        }\n    }\n    var productIdentifier
+                = \"product_id/PAYM\";\n    if (isPayg) {\n        productIdentifier
+                = \"product_id/PAYG\";\n    }\n    apim.setvariable('isPayg', isPayg);\n
+                \   //create disambiguationIdRequest with productIdentifier\n    var
+                disambiguationIdRequest = {\n    };\n    disambiguationIdRequest.selected_identifier_type
+                = productIdentifier;\n    disambiguationIdRequest.selected_identifier_value
+                = phoneNumber;\n    //read disambiguationId URL from config and set
+                it in a variable for next call\n    apim.setvariable('generateDisambiguationIdURL',
+                messages.authserver.generateDisambiguationId.uri);\n    //write disambiguationId
+                request in the context for next call\n    apim.setvariable('message.body',
+                disambiguationIdRequest);\n    //record time in ms just before the
+                invoke policy\n    apim.setvariable('startTimeMS', (new Date()).getTime());\n
+                \   apim.setvariable('policyName', 'Invoke-DisambiguationIdService');\n}\n\nfunction
+                getAssets(assets, assetTypes){\n    var filteredAssets = [];\n    for
+                (var i = 0; i < assets.length; i++){\n        for (var j = 0; j <
+                assetTypes.length; j++){\n            if (assets[i] != null && assets[i].asset_type
+                != null && assets[i].asset_type == assetTypes[j]){\n                filteredAssets.push(assets[i]);\n
+                \           }\n        }\n    }\n    return filteredAssets;\n}"
+              description: This GW Script file will process AssetType call response
+                and prepare the request for disambiguationId
+          - invoke:
+              title: Invoke-DisambiguationIdService
+              timeout: 60
+              verb: POST
+              cache-response: protocol
+              cache-ttl: 900
+              version: 1.0.0
+              description: Fetch disambiguationid from identity
+              target-url: $(generateDisambiguationIdURL)
+              output: disambiguationId
+          - gatewayscript:
+              title: GS-CreateDisambiguationIdResponse
+              version: 1.0.0
+              source: "/* ******************************************************************************************************************
+                */\n/* ******************************************************************************************************************
+                */\n/* FileName                           Version    Created By                  Modified
+                By               Date           */\n/* CreateDisambiguationIdResponse.js
+                \ 1.0        Dinesh Tomar                                          02-May-2018
+                \   */\n/*                                                                                                                    */\n/*
+                ******************************************************************************************************************
+                */\n/* Purpose: This GW Script file will consolidate auth responses
+                (authCode, accessToken, disambiguationId)             */\n/*          together
+                in a single response                                                                             */\n/*
+                Required params: x-authcode, x-device, clientId                                                                    */\n/*
+                ******************************************************************************************************************
+                */\n//record time in ms just after the invoke policy\nvar endTimeMS
+                = (new Date()).getTime();\nvar timeTakenByPreviousPolicy = endTimeMS
+                - apim.getvariable('startTimeMS');\nvar logString = apim.getvariable('logString');\n\nif
+                (apim.getvariable('message.status.code') != 201) {\n    apim.setvariable('errorName',
+                'BackendError');\n    var errorPropertyName = 'auth-' + apim.getvariable('message.status.code');\n
+                \   logString += \" | error-scenario:=\" + errorPropertyName;\n    apim.setvariable('logString',
+                logString);\n    apim.setvariable('error-message', apim.getvariable(errorPropertyName));\n
+                \   apim.error('BackendError', apim.getvariable('message.status.code'),
+                'Internal Error', apim.getvariable('error-message'));\n} else {\n
+                \   logString += \" | \" + apim.getvariable('policyName') + \":=\"
+                + timeTakenByPreviousPolicy + \" ms\";\n    apim.setvariable('logString',
+                logString);\n\n    //fetch transferAuthCode, sendToURL and failureURL
+                and generate sso link \n    var disambiguationIdResponse = apim.getvariable('disambiguationId.body');\n
+                \   var authCode = apim.getvariable('message.headers.x-authcode');\n
+                \   var access_token = apim.getvariable('accessToken.body').access_token;\n
+                \   disambiguationIdResponse.access_token = access_token;\n    disambiguationIdResponse.auth_code
+                = authCode;\n    apim.setvariable('message.body', disambiguationIdResponse);\n}\n\n//below
+                function checks if json object is null or not\nfunction isJSONEmpty(jsonObject)
+                {\n    var member;\n    var result = true;\n    for (member in jsonObject)
+                {\n        if (jsonObject[member] != null) {\n            result =
+                false;\n        }\n    }\n    return result;\n}"
+              description: This GW Script file will prepare disambiguationid response
+        otherwise: []
+        version: 1.0.0
+    - gatewayscript:
+        version: 1.0.0
+        title: GS-ExtractFinalLoggingData
+        source: |-
+          /* ************************************************************************************************************* */
+          /* ************************************************************************************************************* */
+          /* FileName                      Version    Created By                  Modified By               Date           */
+          /* ExtractFinalLoggingData.js    1.0        Dinesh Tomar                                          06-July-2018   */
+          /*                                                                                                               */
+          /* ************************************************************************************************************* */
+          /* Purpose: This GW Script will extract final metadata for logging                                               */
+          /*                                                                                                               */
+          /* Required params:                                                                                              */
+          /* ***************************************************************************************************************/
+          //Extract general metadata from system variables
+          var systemDateTime = apim.getvariable('system.datetime');
+          var apicTxId = apim.getvariable('apic-transaction-id');
+          var xGlobalTxId = apim.getvariable('request.headers.x-global-transaction-id');
+          var requestURI = apim.getvariable('request.uri');
+
+          //Extract response metadata from system variables
+          var responseHeaders = apim.getvariable('message.headers');
+
+          delete responseHeaders['Accept-Encoding'];
+          delete responseHeaders['X-Global-Transaction-ID'];
+          delete responseHeaders['User-Agent'];
+          delete responseHeaders['Via'];
+          delete responseHeaders['x-authcode'];
+          delete responseHeaders['authorization'];
+          delete responseHeaders['Authorization'];
+          delete responseHeaders['Access-Control-Allow-Methods'];
+          delete responseHeaders['Access-Control-Allow-Origin'];
+          delete responseHeaders['Access-Control-Allow-Headers'];
+          delete responseHeaders['Access-Control-Expose-Headers'];
+
+          var responseHeadersString = JSON.stringify(responseHeaders);
+          var responseStatusCode = apim.getvariable('message.status.code');
+          var responseStatusReason = apim.getvariable('message.status.reason');
+          //calculate time elapsed
+          var apiStartTimeMS = apim.getvariable('apiStartTimeMS');
+          var apiEndTimeMS = (new Date()).getTime();
+          var totalTimeElapsed = (apiEndTimeMS - apiStartTimeMS) + " ms";
+          var logString = "type:=response"
+                          + " | system-datetime:=" +        systemDateTime
+                          + " | apic-transaction-id:=" +    apicTxId
+                          + " | global-transaction-id:=" +  xGlobalTxId
+                          + " | request-uri:=" +            requestURI
+                          + apim.getvariable('logString')
+                          + " | response-http-headers:=" +  responseHeadersString
+                          + " | response-status-code:=" +   responseStatusCode
+                          + " | response-status-reason:=" + responseStatusReason
+                          + " | total-time-elapsed:=" +     totalTimeElapsed;
+                          ;
+          console.log(logString);
+        description: This GW Script will extract final metadata for logging
+    catch:
+    - errors:
+      - InvalidMsisdn
+      - ConnectionError
+      - OperationError
+      - SOAPError
+      - UnauthorizedError
+      - InvalidAuthCode
+      - InvalidDeviceType
+      - BackendError
+      execute:
+      - gatewayscript:
+          title: GS-ErrorHandling
+          version: 1.0.0
+          source: |-
+            /* ****************************************************************************************************************** */
+            /* ****************************************************************************************************************** */
+            /* FileName                           Version    Created By                  Modified By               Date           */
+            /* Errorhandling.js                   1.0        Dinesh Tomar                                          07-May-2018    */
+            /*                                                                                                                    */
+            /* ****************************************************************************************************************** */
+            /* Purpose: This GW Script file will read error config for the catch block error name and will set the necessary      */
+            /*          params like status code, reason phrase and will return the error json                                     */
+            /* Required params: errorName                                                                                         */
+            /* ****************************************************************************************************************** */
+            var urlOpen = require('urlopen');
+            //form url for to fetch errorConfig JSON
+            var requestURL = apim.getvariable('request.uri');
+            var orgName = apim.getvariable('api.org.name');
+            var hostName = requestURL.substr(0, requestURL.indexOf(orgName));
+            var catalog = apim.getvariable('env.path');
+            var errorConfigURL = hostName+orgName+'/'+catalog+'/'+'config/errorconfig';
+            var clientId = apim.getvariable('client.app.id');
+            apim.setvariable('message.headers.content-type', 'application/json');
+            var errorConfigURLOptions = {
+                target: errorConfigURL,
+                sslClientProfile: 'api-sslcli-all',
+                headers: {'x-ibm-client-id': clientId, 'content-type': 'application/json' }
+            };
+            //fetch errorName and errorConfig JSON from context variables
+            urlOpen.open(errorConfigURLOptions, function (error, response) {
+                if (error) {
+                    throw error;
+                } else {
+                    response.readAsJSON(function (error, errorConfigJSON) {
+                        if (error) {
+                            throw error;
+                        } else {
+                            var errorName = apim.getvariable('errorName');
+                            if (errorName == null && apim.getvariable('message.status.code') == null) {
+                                console.log("inside first if");
+                                errorName = 'default';
+                            } else if (errorName == null && apim.getvariable('message.status.reason') != null && apim.getvariable('message.status.reason').startsWith('APIC:') ) {
+                                errorName = 'default';
+                                apim.setvariable('message.status.code', apim.getvariable('message.status.code'));
+                                apim.setvariable('message.status.reason', apim.getvariable('message.status.reason'));
+                                apim.setvariable('message.body', apim.getvariable('message.body'));
+                            } else {
+                                if (errorName == 'BackendError') {
+                                    var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];
+                                    apim.setvariable('message.status.reason', errorDetails.reasonPhrase);
+                                    var errorMessage = errorDetails.errorMessage;
+                                    errorMessage.error.message = apim.getvariable('error-message');
+                                    apim.setvariable('message.body', errorMessage);
+                                }
+                                //fetch specific block from error config JSON
+                                else if (! isJSONEmpty(errorConfigJSON)) {
+                                    var errorDetails = errorConfigJSON.errorConfig.errorTypes[errorName];
+                                    var statusCode = errorDetails.statusCode;
+                                    var reasonPhrase = errorDetails.reasonPhrase;
+                                    var errorMessage = errorDetails.errorMessage;
+                                    apim.setvariable('message.status.code', statusCode);
+                                    apim.setvariable('message.status.reason', reasonPhrase);
+                                    apim.setvariable('message.body', errorMessage);
+                                }
+                                //else block executes in case error config file is not loaded. it will set a default error message
+                                else {
+                                    apim.setvariable('message.status.code', 500);
+                                    apim.setvariable('message.status.reason', 'Internal Error');
+                                    var errorMessage = {};
+                                    errorMessage.httpCode = 400;
+                                    errorMessage.httpMessage = "Internal Error";
+                                    errorMessage.moreInformation = "Something's wrong. Please try again later.";
+                                    apim.setvariable('message.body', errorMessage);
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            //below function checks if json object is null or not
+            function isJSONEmpty(jsonObject) {
+                var member;
+                var result = true;
+                for (member in jsonObject) {
+                    if (jsonObject[member] != null) {
+                        result = false;
+                    }
+                }
+                return result;
+            }
+          description: This GW Script file will read error config for the catch block
+            error name and will set the necessary params like status code, reason
+            phrase and will return the error json
+      - gatewayscript:
+          title: GS-ExtractErrorLoggingData
+          version: 1.0.0
+          source: "/* *************************************************************************************************************
+            */\n/* *************************************************************************************************************
+            */\n/* FileName                      Version    Created By                  Modified
+            By               Date           */\n/* ExtractErrorLoggingData.js    1.0
+            \       Dinesh Tomar                                          06-July-2018
+            \  */\n/*                                                                                                               */\n/*
+            *************************************************************************************************************
+            */\n/* Purpose: This GW Script will extract error metadata for logging
+            \                                              */\n/*                                                                                                               */\n/*
+            Required params:                                                                                              */\n/*
+            ***************************************************************************************************************/\n//Extract
+            general metadata from system variables\nvar systemDateTime = apim.getvariable('system.datetime');\nvar
+            apicTxId = apim.getvariable('apic-transaction-id');\nvar xGlobalTxId =
+            apim.getvariable('request.headers.x-global-transaction-id');\nvar requestURI
+            = apim.getvariable('request.uri');\n\n//Extract response metadata from
+            system variables\nvar responseHeaders = apim.getvariable('message.headers');\n\ndelete
+            responseHeaders['Accept-Encoding'];\ndelete responseHeaders['X-Global-Transaction-ID'];\ndelete
+            responseHeaders['User-Agent'];\ndelete responseHeaders['Via'];\ndelete
+            responseHeaders['x-authcode'];\ndelete responseHeaders['authorization'];\ndelete
+            responseHeaders['Authorization'];\ndelete responseHeaders['Access-Control-Allow-Methods'];\ndelete
+            responseHeaders['Access-Control-Allow-Origin'];\ndelete responseHeaders['Access-Control-Allow-Headers'];\ndelete
+            responseHeaders['Access-Control-Expose-Headers'];\n\nvar responseHeadersString
+            = JSON.stringify(responseHeaders);\nvar responseStatusCode = apim.getvariable('message.status.code');\nvar
+            responseStatusReason = apim.getvariable('message.status.reason');\nvar
+            errorName = apim.getvariable('errorName');\n//calculate time elapsed\nvar
+            apiStartTimeMS = apim.getvariable('apiStartTimeMS');\nvar apiEndTimeMS
+            = (new Date()).getTime();\nvar totalTimeElapsed = (apiEndTimeMS - apiStartTimeMS)
+            + \" ms\";\n\nvar logString = \"type:=error\"\n                + \" |
+            system-datetime:=\" +        systemDateTime\n                + \" | apic-transaction-id:=\"
+            +    apicTxId\n                + \" | global-transaction-id:=\" +  xGlobalTxId\n
+            \               + \" | request-uri:=\" +            requestURI\n                +
+            apim.getvariable('logString')\n                + \" | response-http-headers:=\"
+            +  responseHeadersString\n                + \" | response-status-code:=\"
+            +   responseStatusCode\n                + \" | response-status-reason:=\"
+            + responseStatusReason\n                + \" | error-name:=\" +             errorName\n
+            \               + \" | total-time-elapsed:=\" +     totalTimeElapsed;\n
+            \               \nconsole.log(logString);\n\n"
+          description: This GW Script will extract error metadata for logging
+  gateway: datapower-gateway
+  type: rest
+parameters:
+  msisdn:
+    name: msisdn
+    type: string
+    in: header
+    required: true
+  x-authcode:
+    name: x-authcode
+    type: string
+    in: header
+    required: true
+  x-device:
+    name: x-device
+    type: string
+    in: header
+    required: true
+tags: []
+definitions:
+  AccessToken:
+    properties:
+      access_token:
+        type: string
+    additionalProperties: false
+    required:
+    - access_token
+paths:
+  /getaccesstoken:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            $ref: '#/definitions/AccessToken'
+    parameters:
+    - $ref: '#/parameters/x-authcode'
+  /getconsolidatedauth:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+    parameters:
+    - $ref: '#/parameters/msisdn'
+    - $ref: '#/parameters/x-authcode'
+    - $ref: '#/parameters/x-device'
+  /getdisambiguationid:
+    get:
+      responses:
+        "200":
+          description: 200 OK
+    parameters:
+    - $ref: '#/parameters/msisdn'
+    - $ref: '#/parameters/x-authcode'
