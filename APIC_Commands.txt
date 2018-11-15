@@ -1,0 +1,21 @@
+LoginAPIC:
+apic login --username "prafullk" --password "Temp12$$" --server "mgmt.test1manager.apico2r53.co.uk" --realm provider/default-idp-2
+
+createPolicy:
+apic policies:create -c sandbox  --configured-gateway-service aws-gateway-service-1 -o o2apic -s mgmt.test1manager.apico2r53.co.uk --scope catalog validate-wsdl-policy.zip
+
+
+
+https://mgmt.test1manager.apico2r53.co.uk/api/catalogs/fabd11b0-6844-438e-b38a-ba0a88715b16/dd4c04f9-b70b-41aa-966f-05785cbc236f/configured-gateway-services/2548c81d-0c74-47ac-8003-b676deaba303/policies/2bb86d83-3ca6-417b-8db2-00bdf5286101
+
+
+import product:
+apic draft-products:create --format yaml -o o2apic -s mgmt.test1manager.apico2r53.co.uk postpaybilledcharges_1.0.0.yaml
+
+import API:
+apic draft-apis:create --api_type rest  --format yaml -o o2apic -s mgmt.test1manager.apico2r53.co.uk o2apic-novum-postpaybilledcharges_1.0.0.yaml
+
+
+https://www.ibm.com/support/knowledgecenter/SSMNED_2018/com.ibm.apic.apionprem.doc/tapim_env_policy.html
+
+
